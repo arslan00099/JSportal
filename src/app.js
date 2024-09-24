@@ -2,6 +2,8 @@
 const express = require('express');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
+const jobRoutes = require('./routes/job.routes');
+const notificationRoutes=require('./routes/notification.routes')
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 
@@ -41,6 +43,8 @@ async function testConnection() {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/job', jobRoutes);
+app.use('/api/notification',notificationRoutes)
 
 // Function to send test email
 async function sendTestMail(sendTo, testMessage, testValue) {
@@ -49,7 +53,7 @@ async function sendTestMail(sendTo, testMessage, testValue) {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: 'itsfabulous2058@gmail.com',
+      user: 'i2058@gmail.com',
       pass: 'dhhjdhiklmxcphne',
     },
   });

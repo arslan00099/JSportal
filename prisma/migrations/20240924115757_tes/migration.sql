@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `JobPost` ADD COLUMN `salary` VARCHAR(191) NULL,
+    ADD COLUMN `time` VARCHAR(191) NULL;

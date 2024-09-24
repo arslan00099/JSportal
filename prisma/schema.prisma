@@ -85,7 +85,8 @@ model User {
   Location      Location[]
   EmpolymentHistory EmpolymentHistory[]
   Documents     Documents[]
-
+  SaveJobpost             SaveJobpost[]
+  Notification     Notification[]
   @@index([email])
   @@index([role])
 }
@@ -111,8 +112,9 @@ model JobSeekerProfile {
   resume                  String?
   profileId               Int                       @unique
   profile                 Profile                   @relation(fields: [profileId], references: [id])
+
   JobApplication          JobApplication[]
-  MentorSessionManagement MentorSessionManagement[]
+  MentorSessionManagement MentorSessionManagement[] 
 }
 
 
@@ -169,6 +171,50 @@ userId            Int                 @unique
 user              User              @relation(fields: [userId], references: [id])
 }
 
+model JobPost {
+  id              Int              @id @default(autoincrement())
+  jobTitle        String
+  companyName     String
+  location        String
+  description     String
+  applicationLink String
+  companyIcon     String
+  time            String?
+  salary          String?
+  status          JobStatus        @default(OPEN)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  saveJobpost   SaveJobpost[]
+}
+
+model SaveJobpost{
+ id              Int              @id @default(autoincrement())
+ jobId           Int
+ jobpost   JobPost @relation(fields: [jobId], references: [id])
+ userId            Int
+ User   User @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id              Int       @id @default(autoincrement())
+  title           String
+  message         String
+  createdAt       DateTime  @default(now())
+  userId          Int
+  user            User      @relation(fields: [userId], references: [id])
+Review    Review[]
+}
+
+model Review {
+  id             Int       @id @default(autoincrement())
+  content        String    // Actual review content
+  notificationId Int       // Relation to Notification
+  notification   Notification @relation(fields: [notificationId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+
 model MentorProfile {
   id                      Int                       @id @default(autoincrement())
   name                    String
@@ -210,7 +256,6 @@ model EmployerProfile {
   resume          String?
   profile         Profile           @relation(fields: [profileId], references: [id])
   JobApplication  JobApplication[]
-  JobPost         JobPost[]
   RecruiterHiring RecruiterHiring[]
   Timesheet       TimeSheet[]
 }
@@ -227,7 +272,6 @@ model JobApplication {
   jobStatus        JobStatus
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
-  JobPost          JobPost?         @relation(fields: [jobPostId], references: [id])
   jobPostId        Int?
  
 
@@ -261,19 +305,7 @@ model MentorSessionManagement {
   updatedAt        DateTime         @updatedAt
 }
 
-model JobPost {
-  id              Int              @id @default(autoincrement())
-  title           String
-  description     String
-  location        String
-  applicationLink String
-  employerId      Int
-  employerProfile EmployerProfile  @relation(fields: [employerId], references: [id])
-  JobApplication  JobApplication[]
-  status          JobStatus        @default(OPEN)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-}
+
 
 model RecruiterHiring {
   id               Int              @id @default(autoincrement())
