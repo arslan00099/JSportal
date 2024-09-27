@@ -3,15 +3,23 @@ const express = require('express');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const jobRoutes = require('./routes/job.routes');
-const notificationRoutes=require('./routes/notification.routes')
+const notificationRoutes=require('./routes/notification.routes');
+const settingJS=require('./routes/settingJS.routes');
+const MentorProfile=require('./routes/mentorProfile.routes');
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 
 dotenv.config();
 const app = express();
+const cors = require('cors');
+const corsOptions = {
+  credentials: true,
+  origin: '*' // Allow requests from any origin
+};
 
 // Middleware
 app.use(express.json());
+app.use(cors(corsOptions));
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
 
@@ -45,6 +53,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/job', jobRoutes);
 app.use('/api/notification',notificationRoutes)
+app.use('/api/setting',settingJS)
+app.use('/api/mentor',MentorProfile);
 
 // Function to send test email
 async function sendTestMail(sendTo, testMessage, testValue) {
