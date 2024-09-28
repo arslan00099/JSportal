@@ -165,22 +165,26 @@ class UserProfileViewModel {
 
   
 
-  async deleteEducation(userId) {
-    const userProfile = await prisma.education.findUnique({
-      where: { userId }
+  async deleteEducation(userId, educationId) {
+    const userProfile = await prisma.education.findFirst({
+      where: {
+        userId: userId,
+        id: educationId,
+      },
     });
   
     if (!userProfile) {
-      throw new Error('Education for this user not exists');
+      throw new Error('Education for this user does not exist');
     }
   
-    // Perform the deletion
+    
     const deletedProfile = await prisma.education.delete({
-      where: { userId }
+      where: { id: educationId }
     });
   
     return deletedProfile;
   }
+  
 
   async insertCertificate(certName, orgName, description, from, to, userId) {
     const fromDate = new Date(from).toISOString();
@@ -221,10 +225,12 @@ class UserProfileViewModel {
   }
   
 
-  async  deleteCertificate(userId) {
+  async  deleteCertificate(userId,certificateId) {
     // Check if a certificate exists for the user
-    const certificate = await prisma.certificate.findUnique({
-      where: { userId }
+    const certificate = await prisma.certificate.findFirst({
+      where: { userId,
+        id:certificateId
+       }
     });
   
     if (!certificate) {
@@ -233,7 +239,7 @@ class UserProfileViewModel {
   
     // Perform the deletion
     const deletedCertificate = await prisma.certificate.delete({
-      where: { userId }
+      where: { id:certificateId }
     });
   
     return deletedCertificate;
@@ -387,23 +393,27 @@ class UserProfileViewModel {
   }
   
  
-  async deleteEmploymentHistory(userId) {
+  async deleteEmploymentHistory(userId, employmentId) {
     // Check if the employment history exists for the given userId
     const employmentHistory = await prisma.EmpolymentHistory.findFirst({
-      where: { userId }
+      where: {
+        userId: userId,
+        id: employmentId,
+      },
     });
   
     if (!employmentHistory) {
       throw new Error('Employment history for this user does not exist');
     }
   
-    // Now delete the found record using its unique ID
+    // Now delete the found record
     const deletedEmploymentHistory = await prisma.EmpolymentHistory.delete({
-      where: { id: employmentHistory.id } // Use the unique ID of the record
+      where: { id: employmentId },
     });
   
     return deletedEmploymentHistory;
   }
+  
   
 
 

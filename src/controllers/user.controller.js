@@ -106,10 +106,11 @@ catch(error){
 
 exports.deleteEducation=async(req,res)=>{
   try{
+    const {educationId}=req.body;
 const { userId, role } = req.user;
 console.log("**************");
 console.log(userId);
-const result=await userViewModel.deleteEducation(userId);
+const result=await userViewModel.deleteEducation(userId,educationId);
 res.status(200).json({sucess:true, data:result})
   }
   catch(error){
@@ -168,9 +169,10 @@ exports.updateCertificate = async (req, res) => {
 exports.deleteCertificate = async (req, res) => {
   try {
     const { userId } = req.user; // Assuming userId comes from a decoded JWT or session
+    const {certificateId}=req.body;
     console.log("Deleting certificate for user:", userId);
     
-    const result = await userViewModel.deleteCertificate(userId); // Call the delete function from the viewModel or service layer
+    const result = await userViewModel.deleteCertificate(userId,certificateId); // Call the delete function from the viewModel or service layer
     
     res.status(200).json({
       success: true,
@@ -236,8 +238,9 @@ exports.updateEmploymentHistory = async (req, res) => {
 exports.getEmploymentHistory = async (req, res) => {
   try {
     const { userId } = req.user;
+    const {employmentId}=req.body;
     
-    const result = await userViewModel.getEmploymentHistory(userId);
+    const result = await userViewModel.getEmploymentHistory(userId,employmentId);
     
     if (!result) {
       return res.status(404).json({

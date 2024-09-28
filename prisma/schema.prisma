@@ -91,7 +91,7 @@ model User {
   SaveJobpost       SaveJobpost[]
   Notification      Notification[]
   MentorSessionManagement   MentorSessionManagement[]
-  
+  JobApplied              JobApplied[]
   @@index([email])
   @@index([role])
 }
@@ -187,15 +187,25 @@ model JobPost {
   applicationLink String
   companyIcon     String
   time            String?
+  jobType         String
   salary          String?
   status          JobStatus        @default(OPEN)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   saveJobpost   SaveJobpost[]
+  JobApplied    JobApplied[]
 }
 
 model SaveJobpost{
  id              Int              @id @default(autoincrement())
+ jobId           Int
+ jobpost   JobPost @relation(fields: [jobId], references: [id])
+ userId            Int
+ User   User @relation(fields: [userId], references: [id])
+}
+
+model JobApplied{
+  id              Int              @id @default(autoincrement())
  jobId           Int
  jobpost   JobPost @relation(fields: [jobId], references: [id])
  userId            Int

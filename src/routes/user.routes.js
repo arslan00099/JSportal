@@ -36,19 +36,23 @@ const cvupload=multer({storage:cvstorage});
 router.post('/profile', middleware, upload.single('profilePic'), userController.postProfile);
 router.delete('/profile',middleware,userController.deleteProfile)
 router.get('/profile', middleware, userController.getProfile);
+
 router.post('/education',middleware,userController.postEducation);
 router.put('/education',middleware,userController.updateEducation);
 router.delete('/education',middleware,userController.deleteEducation);
+
 router.post('/certificate',middleware,userController.insertCertificate);
 router.put('/certificate',middleware,userController.updateCertificate);
 router.delete('/certificate',middleware,userController.deleteCertificate);
+
 router.post('/employment-history',middleware,userController.insertEmploymentHistory);
 router.put('/employment-history',middleware,userController.updateEmploymentHistory);
 router.get('/employment-history',middleware,userController.getEmploymentHistory);
 router.delete('/employment-history', middleware,userController.deleteEmploymentHistory);
+
 router.post('/location', middleware,userController.addLocation);
-router.delete('/location', middleware,userController.deleteLocation);
 router.get('/location', middleware, userController.getLocations);
+router.delete('/location', middleware,userController.deleteLocation);
 
 router.post('/documents', middleware, cvupload.fields([
   { name: 'resume', maxCount: 1 },
