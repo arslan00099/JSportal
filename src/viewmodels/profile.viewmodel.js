@@ -4,16 +4,19 @@ const { deleteDocument } = require('../controllers/user.controller');
 const prisma = new PrismaClient();
 
 class UserProfileViewModel {
+  
   async basicprofile(userId, fullname, phnumber, avatarId) {
+    const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
     console.log(avatarId);
     console.log("==============");
     console.log(userId);
   
     const userExists = await prisma.profile.findUnique({ where: { userId } });
   
+    let userProfile;
     if (userExists) {
       // Update the existing user profile
-      const updatedUser = await prisma.profile.update({
+      userProfile = await prisma.profile.update({
         where: { userId },
         data: {
           fullname,
@@ -21,10 +24,9 @@ class UserProfileViewModel {
           avatarId, // Update avatarId if necessary
         },
       });
-      return updatedUser;
     } else {
       // Create a new profile if the user doesn't exist
-      const newUser = await prisma.profile.create({
+      userProfile = await prisma.profile.create({
         data: {
           userId,
           avatarId,
@@ -32,8 +34,12 @@ class UserProfileViewModel {
           phnumber,
         },
       });
-      return newUser;
     }
+  
+    // Append base URL to avatarId before returning
+    userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
+  
+    return userProfile;
   }
   
 
@@ -65,8 +71,8 @@ class UserProfileViewModel {
       }
   
       // Base URLs for avatar and documents
-      const avatarBaseUrl = "http://your-server-url/utils/profilephotos"; // Replace with your actual URL
-      const resumeBaseUrl = "http://your-server-url/utils/resume";         // Replace with your actual URL
+      const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
+      const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume";         // Replace with your actual URL
   
       // Add full URL for avatar
       userDetails.Profile.forEach(profile => {
@@ -115,32 +121,49 @@ class UserProfileViewModel {
   }
 
   async insertEducation(degree, institution, description, from, to, userId) {
-    // Convert Date objects to ISO string format
-    const fromDate = new Date(from).toISOString(); // Convert to ISO 8601 string
-    const toDate = new Date(to).toISOString(); // Convert to ISO 8601 string
-  
-    // Use upsert to either update an existing record or create a new one
-    const updatedEducation = await prisma.education.upsert({
-      where: { userId }, // Match by userId
-      update: {
-        degreName: degree, // Corrected field name
+    const fromDate = new Date(from).toISOString();
+    const toDate = new Date(to).toISOString();
+    console.log(fromDate);
+    console.log(toDate);
+    const newEducation = await prisma.education.create({
+      data: {
+        degreName: degree,
         universityName: institution,
         description,
-        startFrom: fromDate, // Use ISO 8601 string
-        endIn: toDate, // Use ISO 8601 string
+        startFrom: fromDate,
+        endIn: toDate,
+        userId: userId, 
       },
-      create: {
-        degreName: degree, // Corrected field name
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { firstLogin: false }, 
+  });
+    return newEducation;
+  }
+
+  async updateEducation(educationId, degree, institution, description, from, to) {
+    const fromDate = new Date(from).toISOString();
+    const toDate = new Date(to).toISOString();
+  
+    const updatedEducation = await prisma.education.update({
+      where: { id: educationId },
+      data: {
+        degreName: degree,
         universityName: institution,
         description,
-        startFrom: fromDate, // Use ISO 8601 string
-        endIn: toDate, // Use ISO 8601 string
-        userId: userId,
+        startFrom: fromDate,
+        endIn: toDate,
       },
     });
   
     return updatedEducation;
   }
+  
+
+
+  
 
   async deleteEducation(userId) {
     const userProfile = await prisma.education.findUnique({
@@ -160,30 +183,43 @@ class UserProfileViewModel {
   }
 
   async insertCertificate(certName, orgName, description, from, to, userId) {
-    // Convert date strings to ISO 8601 format (if not already)
     const fromDate = new Date(from).toISOString();
     const toDate = new Date(to).toISOString();
   
-    // Use upsert to either update the existing certificate or insert a new one
-    const updatedCertificate = await prisma.certificate.upsert({
-      where: { userId }, // Match by userId to ensure uniqueness
-      update: {
+    // Insert a new certificate for the user
+    const newCertificate = await prisma.certificate.create({
+      data: {
         certName: certName,
         orgName: orgName,
-        startedOn:fromDate,
-        completedOn: toDate, // Assume `completedOn` is the "to" date
-      },
-      create: {
-        certName: certName,
-        orgName: orgName,
-        startedOn:fromDate,
+        description: description, // Optional certificate description
+        startedOn: fromDate,
         completedOn: toDate,
-        userId: userId,
+        userId: userId, // Foreign key to user
+      },
+    });
+  
+    return newCertificate;
+  }
+
+  async updateCertificate(certificateId, certName, orgName, description, from, to) {
+    const fromDate = new Date(from).toISOString();
+    const toDate = new Date(to).toISOString();
+  
+    // Update the certificate by its unique id
+    const updatedCertificate = await prisma.certificate.update({
+      where: { id: certificateId }, // Use certificateId to update the correct certificate
+      data: {
+        certName: certName,
+        orgName: orgName,
+        description: description, // Update description if provided
+        startedOn: fromDate,
+        completedOn: toDate,
       },
     });
   
     return updatedCertificate;
   }
+  
 
   async  deleteCertificate(userId) {
     // Check if a certificate exists for the user
@@ -320,28 +356,36 @@ class UserProfileViewModel {
 
 
     
-  async  upsertEmploymentHistory(company, jobTitle, description, startedOn, endOn, userId) {
-  
-    const result = await prisma.EmpolymentHistory.upsert({
-      where: { userId }, 
-      update: {
-        company,
-        jobTitle,
-        description,
-        startedOn: new Date(startedOn).toISOString(), 
-        endOn: new Date(endOn).toISOString(),
-      },
-      create: {
+  async insertEmploymentHistory(company, jobTitle, description, startedOn, endOn, userId) {
+    const result = await prisma.empolymentHistory.create({
+      data: {
         company,
         jobTitle,
         description,
         startedOn: new Date(startedOn).toISOString(),
         endOn: new Date(endOn).toISOString(),
-        userId,
+        userId,  // Foreign key linking to the user
       },
     });
+  
     return result;
   }
+
+  async updateEmploymentHistory(employmentId, company, jobTitle, description, startedOn, endOn) {
+    const result = await prisma.empolymentHistory.update({
+      where: { id: employmentId },  // Identify the record by its unique id
+      data: {
+        company,
+        jobTitle,
+        description,
+        startedOn: new Date(startedOn).toISOString(),
+        endOn: new Date(endOn).toISOString(),
+      },
+    });
+  
+    return result;
+  }
+  
  
   async deleteEmploymentHistory(userId) {
     // Check if the employment history exists for the given userId

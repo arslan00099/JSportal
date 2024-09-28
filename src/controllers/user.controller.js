@@ -80,9 +80,23 @@ exports.postEducation=async(req,res) => {
     console.log("added into education tab");
     const {degree,institution, description, from, to}=req.body;
     const { userId, role } = req.user;
+    console.log(userId);
     const result =await userViewModel.insertEducation(degree,institution, description, from, to,userId);
     res.status(200).json({ success: true, data: result });
 
+  }
+catch(error){
+  console.log("catch for education");
+  res.status(400).json({sucess:false, message : error.message});
+}
+}
+
+exports.updateEducation=async(req,res) => {
+  try{  
+    const {educationId,degree,institution, description, from, to}=req.body;
+    const { userId, role } = req.user;
+    const result =await userViewModel.updateEducation(educationId,degree,institution, description, from, to,userId);
+    res.status(200).json({ success: true, data: result });
   }
 catch(error){
   console.log("catch for education");
@@ -127,6 +141,29 @@ exports.insertCertificate = async (req, res) => {
   }
 };
 
+exports.updateCertificate = async (req, res) => {
+  try {
+    const { userId } = req.user; // Assuming userId comes from the authenticated user
+    const { certificateId,certName, orgName, description, from, to } = req.body; // Extract data from request body
+
+    console.log("Inserting certificate for user:", userId);
+
+    // Call the view model or service layer function to insert the certificate
+    const result = await userViewModel.updateCertificate(certificateId,certName, orgName, description, from, to, userId);
+
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.log("Error during certificate insertion:", error.message);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 exports.deleteCertificate = async (req, res) => {
   try {
@@ -154,9 +191,9 @@ exports.deleteCertificate = async (req, res) => {
 exports.insertEmploymentHistory = async (req, res) => {
   try {
     const { company, jobTitle, description, startedOn, endOn } = req.body;
-    const { userId } = req.user; // Assuming userId is from authentication
+    const { userId } = req.user; 
     
-    const result = await userViewModel.upsertEmploymentHistory(
+    const result = await userViewModel.insertEmploymentHistory(
       company, jobTitle, description, startedOn, endOn, userId
     );
     
@@ -166,6 +203,28 @@ exports.insertEmploymentHistory = async (req, res) => {
     });
   } catch (error) {
     console.error("Error inserting employment history:", error.message);
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.updateEmploymentHistory = async (req, res) => {
+  try {
+    const { employmentId,company, jobTitle, description, startedOn, endOn } = req.body;
+    const { userId } = req.user; 
+    
+    const result = await userViewModel.updateEmploymentHistory(employmentId,
+      company, jobTitle, description, startedOn, endOn, userId
+    );
+    
+    res.status(201).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error updating employment history:", error.message);
     res.status(400).json({
       success: false,
       message: error.message,

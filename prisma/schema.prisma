@@ -81,6 +81,7 @@ model User {
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   isActive          Boolean             @default(true) // Add for Deactivation Feature
+  firstLogin          Boolean             @default(true)
   Profile           Profile[]
   Education         Education[]
   Certificate       Certificate[]
@@ -122,24 +123,26 @@ model JobSeekerProfile {
 }
 
 
-model Education{
-id              Int               @id @default(autoincrement())
-degreName       String
-universityName  String
-description     String
-startFrom       String
-endIn           String 
-userId          Int               @unique
-user            User              @relation(fields: [userId], references: [id])
+model Education {
+  id              Int     @id @default(autoincrement())
+  degreName       String
+  universityName  String
+  description     String
+  startFrom       String
+  endIn           String
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  @@index([userId]) // Index userId to allow multiple records
 }
 
 model Certificate{
 id              Int               @id @default(autoincrement())
 certName       String
 orgName        String
+description    String
 completedOn    String 
-startedOn      String?    //for prisma error remove it when setup new db 
-userId         Int               @unique
+startedOn      String   
+userId         Int               
 user           User              @relation(fields: [userId], references: [id])
 }
 
@@ -150,7 +153,7 @@ jobTitle       String
 description    String 
 startedOn      String
 endOn          String
-userId         Int               @unique
+userId         Int               
 user           User              @relation(fields: [userId], references: [id])
 }
 
