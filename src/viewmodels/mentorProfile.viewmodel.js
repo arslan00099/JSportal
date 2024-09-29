@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 class MentorViewModel {
   // Method to create a new job post
-  async insert( name, tagline, about, languages, resume, rating, totalReview, profileId, linkedinProfile, services) {
+  async insert( name, tagline, about, languages, resume, rating, totalReview, userId, linkedinProfile, services,industry,discipline,location,yearOfExperience) {
     // Create the job post
     try {
         const newMentorProfile = await prisma.mentorProfile.create({
@@ -15,8 +15,9 @@ class MentorViewModel {
             resume,
             rating,
             totalReview,
-            profileId,
+            userId,
             linkedinProfile,
+            industry,discipline,location,yearOfExperience,
             services: {
               create: services.map(service => ({
                 name: service.name,
@@ -37,19 +38,30 @@ class MentorViewModel {
   }
 
   // Method to search for job posts based on dynamic filters
-  async getMentorProfile() {
+  async getMentorProfile({ serviceName, location, discipline, industry, yearOfExperience }) {
     try {
-        const mentorProfiles = await prisma.mentorProfile.findMany({
-          include: {
-            services: true,  
-          }
-        });
-    
-        return (mentorProfiles);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
+      const mentorProfiles = await prisma.mentorProfile.findMany({
+        where: {
+          AND: [
+            serviceName ? { services: { some: { name: { contains: serviceName } } } } : undefined,
+            location ? { location: { contains: location } } : undefined,
+            discipline ? { discipline: { contains: discipline } } : undefined,
+            industry ? { industry: { contains: industry } } : undefined,
+            yearOfExperience ? { yearOfExperience: { gte: parseInt(yearOfExperience, 10) } } : undefined,
+          ].filter(Boolean), // Filters out undefined conditions
+        },
+        include: {
+          services: true,
+        },
+      });
+  
+      return mentorProfiles;
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
+  
+  
 
 }
 

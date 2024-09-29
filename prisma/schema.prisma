@@ -92,6 +92,7 @@ model User {
   Notification      Notification[]
   MentorSessionManagement   MentorSessionManagement[]
   JobApplied              JobApplied[]
+  MentorProfile     MentorProfile[]
   @@index([email])
   @@index([role])
 }
@@ -107,7 +108,6 @@ model Profile {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   JobSeekerProfile JobSeekerProfile?
-  MentorProfile    MentorProfile?
   RecruiterProfile RecruiterProfile?
   EmployerProfile  EmployerProfile?
   AdminProfile     AdminProfile?
@@ -239,10 +239,14 @@ model MentorProfile {
   about                   String
   languages               String
   resume                  String?
+  industry                String?
+  discipline              String?
+  location                String?
+  yearOfExperience        Int?
   rating                  Int
   totalReview             Int?
-  profileId               Int?                       @unique
-  profile                 Profile?                   @relation(fields: [profileId], references: [id])
+  userId                  Int                    
+  user                    User                   @relation(fields: [userId], references: [id])
   linkedinProfile         String?
   MentorSessionManagement MentorSessionManagement[]
   services                Service[]
@@ -264,23 +268,19 @@ model Service {
 
 model MentorSessionManagement {
   id               Int              @id @default(autoincrement())
-  selectedService  Int
-  Service          Service          @relation(fields: [selectedService], references: [id])
-  selectedDateTime DateTime
-  price            Int
-  status           SessionStatus
-  userId           Int              // This is the JobSeeker id
-  user             User             @relation(fields: [userId], references: [id])
-
-  // Relation to MentorProfile model
-  mentorId         Int
-  MentorProfile    MentorProfile    @relation(fields: [mentorId], references: [id])
-
-  paymentStatus    PaymentStatus    @default(PENDING)  // Default value set to "PENDING"
-  
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  selectedService  Int?             // Optional field
+  Service          Service?         @relation(fields: [selectedService], references: [id])
+  selectedDateTime DateTime?        // Optional field
+  status           SessionStatus?   @default(ACCEPTED)  // Optional field
+  userId           Int             // Optional field
+  user             User            @relation(fields: [userId], references: [id])
+  mentorProfileId  Int?             // Optional field
+  MentorProfile    MentorProfile?   @relation(fields: [mentorProfileId], references: [id])
+  paymentStatus    PaymentStatus?   @default(COMPLETED)  // Optional field with default value
+  createdAt        DateTime?        @default(now())      // Optional field
+  updatedAt        DateTime?        @updatedAt           // Optional field
 }
+
 
 model RecruiterProfile {
   id              Int               @id @default(autoincrement())
@@ -335,11 +335,6 @@ model JobApplication {
 }
 
 
-
-
-
-
-
 model RecruiterHiring {
   id               Int              @id @default(autoincrement())
   employerId       Int
@@ -351,7 +346,7 @@ model RecruiterHiring {
   status           HiringStatus
 }
 
-model TimeSheet {   // needs to be fixed for only Fuse admin, employer, Recruiter
+model TimeSheet {   
   id          Int              @id @default(autoincrement())
   employerId       Int
   job         EmployerProfile   @relation(fields: [employerId], references: [id])
@@ -364,7 +359,7 @@ model TimeSheet {   // needs to be fixed for only Fuse admin, employer, Recruite
   updatedAt   DateTime         @updatedAt
 }
 
-model Blog {   //Mentor will write  the Blog
+model Blog {   
   id          Int           @id @default(autoincrement())
   title       String
   content     String
@@ -377,7 +372,7 @@ model Blog {   //Mentor will write  the Blog
   updatedAt   DateTime      @updatedAt
 }
 
-model Booking { // 
+model Booking { 
   id          Int               @id @default(autoincrement())
   date        DateTime
   duration    Int // Duration in minutes

@@ -54,6 +54,9 @@ router.post('/location', middleware,userController.addLocation);
 router.get('/location', middleware, userController.getLocations);
 router.delete('/location', middleware,userController.deleteLocation);
 
+router.post("/book-session",middleware,userController.createMentorSession);
+router.get("/book-session",middleware,userController.fetchMentorSession);
+
 router.post('/documents', middleware, cvupload.fields([
   { name: 'resume', maxCount: 1 },
   { name: 'portfolio', maxCount: 1 }

@@ -7,40 +7,46 @@ class UserProfileViewModel {
   
   async basicprofile(userId, fullname, phnumber, avatarId) {
     const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
-    console.log(avatarId);
-    console.log("==============");
-    console.log(userId);
   
     const userExists = await prisma.profile.findUnique({ where: { userId } });
+  
+    let updateData = {
+      fullname,
+      phnumber,
+    };
+  
+    // Only add avatarId to updateData if a new file is uploaded
+    if (avatarId) {
+      updateData.avatarId = avatarId;
+    }
   
     let userProfile;
     if (userExists) {
       // Update the existing user profile
       userProfile = await prisma.profile.update({
         where: { userId },
-        data: {
-          fullname,
-          phnumber,
-          avatarId, // Update avatarId if necessary
-        },
+        data: updateData, // Conditionally update avatarId if necessary
       });
     } else {
       // Create a new profile if the user doesn't exist
       userProfile = await prisma.profile.create({
         data: {
           userId,
-          avatarId,
           fullname,
           phnumber,
+          avatarId, // Save avatarId when creating a new profile
         },
       });
     }
   
-    // Append base URL to avatarId before returning
-    userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
+    // If the avatarId exists in the profile, append the base URL to it
+    if (userProfile.avatarId) {
+      userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
+    }
   
     return userProfile;
   }
+  
   
 
   async getProfile(userId) {
@@ -444,7 +450,55 @@ async deleteDocument(userId) {
 }
 
 
+async createMentorSession({ selectedService, selectedDateTime, userId, mentorId }) {
+  console.log(selectedService, selectedDateTime, userId, mentorId);
+  try {
+    const mentorSession = await prisma.mentorSessionManagement.create({
+      data: {
+        selectedService, // This is the service ID
+        selectedDateTime: new Date(selectedDateTime),  // Ensure the date format is correct
+        userId,
+        mentorProfileId: mentorId, // Linking mentorId with mentorProfileId
+        status: "ACCEPTED",        // Default session status
+        paymentStatus: "PENDING",  // Set initial payment status
 
+      },
+      include: {
+        Service: true,        // Optionally include the Service details in the response
+        user: true,           // Include the user (JobSeeker) details
+        MentorProfile: true,  // Include the mentor details
+      },
+    });
+
+    return mentorSession;
+  } catch (error) {
+    throw new Error(error.message);
+  }
 }
 
+
+async getBookedMentorSessions(userId) {
+  try {
+    const sessions = await prisma.mentorSessionManagement.findMany({
+      where: {
+        userId: userId, // Just pass the value directly
+      },
+      include: {
+        Service: true,          // Include related Service details
+        user: true,             // Include user details
+        MentorProfile: true,    // Include mentor profile details
+      },
+    });
+
+    return sessions;
+  } catch (error) {
+    console.error("Error fetching mentor sessions:", error);
+    throw error;
+  }
+};
+
+
+
+
+}
 module.exports = new UserProfileViewModel();

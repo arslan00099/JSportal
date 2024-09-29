@@ -5,20 +5,21 @@ exports.postProfile = async (req, res) => {
   try {
     const { fullname, phnumber } = req.body;
     const { userId, role } = req.user;
-    const phoneNumber = parseInt(phnumber, 10);  //
+    const phoneNumber = parseInt(phnumber, 10);
     
     // Check if a file is uploaded
     let avatarId = null;
     if (req.file) {
       avatarId = req.file.filename; // Save the file name to use as avatarId
     }
-console.log(userId);
+
     const result = await userViewModel.basicprofile(userId, fullname, phoneNumber, avatarId);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 exports.uploadDocuments=async(req,res) =>{
 try {
@@ -338,5 +339,37 @@ exports.deleteDocuments = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+
+
+exports.createMentorSession = async (req, res) => {
+  const { selectedService, selectedDateTime, mentorId } = req.body;
+let {userId}=req.user;
+  try {
+    const newSession = await userViewModel.createMentorSession({
+      selectedService,
+      selectedDateTime,
+      userId,
+      mentorId,
+    });
+    res.status(201).json({ success: true, data: newSession });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.fetchMentorSession = async (req, res) => {
+ 
+let {userId}=req.user;
+console.log(userId);
+  try {
+    const newSession = await userViewModel.getBookedMentorSessions(
+      userId
+  );
+    res.status(201).json({ success: true, data: newSession });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
   }
 };
