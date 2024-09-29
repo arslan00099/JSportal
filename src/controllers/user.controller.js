@@ -268,8 +268,9 @@ exports.getEmploymentHistory = async (req, res) => {
 exports.deleteEmploymentHistory = async (req, res) => {
   try {
     const { userId } = req.user;
+    const { employmentId}=req.body;
     
-    const result = await userViewModel.deleteEmploymentHistory(userId);
+    const result = await userViewModel.deleteEmploymentHistory(userId, employmentId);
     
     res.status(200).json({
       success: true,

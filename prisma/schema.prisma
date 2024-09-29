@@ -240,7 +240,7 @@ model MentorProfile {
   languages               String
   resume                  String?
   rating                  Int
-  totalReview             Int
+  totalReview             Int?
   profileId               Int?                       @unique
   profile                 Profile?                   @relation(fields: [profileId], references: [id])
   linkedinProfile         String?
@@ -250,6 +250,7 @@ model MentorProfile {
   Booking                 Booking[]
   Earning                 Earning[]
 }
+
 model Service {
   id              Int               @id @default(autoincrement())
   name            String
@@ -263,18 +264,11 @@ model Service {
 
 model MentorSessionManagement {
   id               Int              @id @default(autoincrement())
-  
-  // Relation to Service model
   selectedService  Int
   Service          Service          @relation(fields: [selectedService], references: [id])
-
-  // Use DateTime for date and time together
   selectedDateTime DateTime
-
   price            Int
   status           SessionStatus
-
-  // Relation to User (JobSeekerProfile) model
   userId           Int              // This is the JobSeeker id
   user             User             @relation(fields: [userId], references: [id])
 
