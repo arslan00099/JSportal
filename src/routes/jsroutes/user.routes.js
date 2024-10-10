@@ -9,7 +9,7 @@ const middleware = require('../../middleware/middleware');
 // Set up multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../utils/profilephotos')); // Adjust the path as needed
+    cb(null, path.join(__dirname, '../../utils/profilephotos')); // Adjust the path as needed
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 
 const cvstorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../utils/resume')); // Adjust the path as needed
+    cb(null, path.join(__dirname, '../../utils/resume')); // Adjust the path as needed
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);

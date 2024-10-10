@@ -7,7 +7,7 @@ exports.getMentorSession = async (req, res) => {
     let { userId } = req.user;
     let { startDate, endDate } = req.query;
 
-    const result = await viewmodel.getBookedMentorSessions(9, startDate, endDate);
+    const result = await viewmodel.getBookedMentorSessions(userId, startDate, endDate);
 
     res.status(200).json({ success: true, data: result });
   } catch (error) {
@@ -23,7 +23,7 @@ exports.getMentorEarnings = async (req, res) => {
     console.log(startDate); // Logs the start date
     console.log(endDate);
 
-    const result = await viewmodel.getBookedMentorEarnings(9, startDate, endDate);
+    const result = await viewmodel.getBookedMentorEarnings(userId, startDate, endDate);
 
     res.status(200).json({ success: true, data: result });
   } catch (error) {

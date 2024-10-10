@@ -56,8 +56,8 @@ class UserProfileViewModel {
         include: {
           Profile: {
             include: {
-              JobSeekerProfile: true,  // Fetch Job Seeker Profile details
-              //     MentorProfile: true,     // Fetch Mentor Profile details
+            //  JobSeekerProfile: true,  // Fetch Job Seeker Profile details
+                   MentorProfile: true,     // Fetch Mentor Profile details
               //   RecruiterProfile: true,  // Fetch Recruiter Profile details
               //   EmployerProfile: true,   // Fetch Employer Profile details
               //   AdminProfile: true       // Fetch Admin Profile details
@@ -514,6 +514,26 @@ class UserProfileViewModel {
 
 
 
+  async insert_about(about, userId) {
+    const result = await prisma.MentorProfile.upsert({
+      where: { userId }, // Check if MentorProfile with this userId exists
+      update: { about }, // Update the 'about' field if the record exists
+      create: { about, userId }, // Create a new MentorProfile if no record exists
+    });
+  
+    return result;
+  }
+
+  
+  async get_about(userId) {
+    const result = await prisma.MentorProfile.findUnique({
+      where: { userId }, // Find the MentorProfile by userId
+      select: { about: true }, // Only return the 'about' field
+    });
+  
+    return result ? result.about : null; // Return 'about' if found, otherwise return null
+  }
+  
 
 
 }
