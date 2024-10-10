@@ -1,11 +1,16 @@
 // src/app.js
+
+
 const express = require('express');
 const authRoutes = require('./routes/auth.routes');
-const userRoutes = require('./routes/user.routes');
-const jobRoutes = require('./routes/job.routes');
-const notificationRoutes=require('./routes/notification.routes');
-const settingJS=require('./routes/settingJS.routes');
-const MentorProfile=require('./routes/mentorProfile.routes');
+const userRoutes = require('./routes/jsroutes/user.routes');
+const jobRoutes = require('./routes/jsroutes/job.routes');
+const notificationRoutes=require('./routes/jsroutes/notification.routes');
+const settingJS=require('./routes/jsroutes/settingJS.routes');
+
+const MentorProfile=require('./routes/mentorroutes/mentorProfile.routes');
+
+
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
 
@@ -47,14 +52,22 @@ async function testConnection() {
   testConnection();
 
 
-
-// Routes
+////////////////////////////////////////////////////
+///////////    JOB SEEKER ROUTERS   ////////////////
+////////////////////////////////////////////////////
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/job', jobRoutes);
 app.use('/api/notification',notificationRoutes)
 app.use('/api/setting',settingJS)
-app.use('/api/mentor',MentorProfile);
+
+
+////////////////////////////////////////////////////
+/////////////    MENTOR ROUTERS   //////////////////
+////////////////////////////////////////////////////
+app.use('/api/mentor/',MentorProfile);
+
+
 
 // Function to send test email
 async function sendTestMail(sendTo, testMessage, testValue) {

@@ -70,33 +70,33 @@ enum BookingStatus {
 }
 
 model User {
-  id                Int                 @id @default(autoincrement())
-  email             String              @unique
-  secondaryEmail    String?
-  password          String
-  role              UserRole
-  resume            String?
-  email_confirm     Boolean             @default(false)
-  profileId         Int?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  isActive          Boolean             @default(true) // Add for Deactivation Feature
-  firstLogin          Boolean             @default(true)
-  Profile           Profile[]
-  Education         Education[]
-  Certificate       Certificate[]
-  Location          Location[]
-  EmpolymentHistory EmpolymentHistory[]
-  Documents         Documents[]
-  SaveJobpost       SaveJobpost[]
-  Notification      Notification[]
-  MentorSessionManagement   MentorSessionManagement[]
+  id                      Int                       @id @default(autoincrement())
+  email                   String                    @unique
+  secondaryEmail          String?
+  password                String
+  role                    UserRole
+  resume                  String?
+  email_confirm           Boolean                   @default(false)
+  profileId               Int?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  isActive                Boolean                   @default(true) // Add for Deactivation Feature
+  firstLogin              Boolean                   @default(true)
+  Profile                 Profile[]
+  Education               Education[]
+  Certificate             Certificate[]
+  Location                Location[]
+  EmpolymentHistory       EmpolymentHistory[]
+  Documents               Documents[]
+  SaveJobpost             SaveJobpost[]
+  Notification            Notification[]
+  MentorSessionManagement MentorSessionManagement[]
   JobApplied              JobApplied[]
-  MentorProfile     MentorProfile[]
+  MentorProfile           MentorProfile[]
+
   @@index([email])
   @@index([role])
 }
-
 
 model Profile {
   id               Int               @id @default(autoincrement())
@@ -114,72 +114,70 @@ model Profile {
 }
 
 model JobSeekerProfile {
-  id                      Int                       @id @default(autoincrement())
-  resume                  String?
-  profileId               Int                       @unique
-  profile                 Profile                   @relation(fields: [profileId], references: [id])
-
-  JobApplication          JobApplication[]
+  id             Int              @id @default(autoincrement())
+  resume         String?
+  profileId      Int              @unique
+  profile        Profile          @relation(fields: [profileId], references: [id])
+  JobApplication JobApplication[]
 }
 
-
 model Education {
-  id              Int     @id @default(autoincrement())
-  degreName       String
-  universityName  String
-  description     String
-  startFrom       String
-  endIn           String
-  userId          Int
-  user            User     @relation(fields: [userId], references: [id])
+  id             Int    @id @default(autoincrement())
+  degreName      String
+  universityName String
+  description    String
+  startFrom      String
+  endIn          String
+  userId         Int
+  user           User   @relation(fields: [userId], references: [id])
+
   @@index([userId]) // Index userId to allow multiple records
 }
 
-model Certificate{
-id              Int               @id @default(autoincrement())
-certName       String
-orgName        String
-description    String
-completedOn    String 
-startedOn      String   
-userId         Int               
-user           User              @relation(fields: [userId], references: [id])
+model Certificate {
+  id          Int    @id @default(autoincrement())
+  certName    String
+  orgName     String
+  description String
+  completedOn String
+  startedOn   String
+  userId      Int
+  user        User   @relation(fields: [userId], references: [id])
 }
 
-model EmpolymentHistory{
-id             Int               @id @default(autoincrement())
-company        String
-jobTitle       String
-description    String 
-startedOn      String
-endOn          String
-userId         Int               
-user           User              @relation(fields: [userId], references: [id])
+model EmpolymentHistory {
+  id          Int    @id @default(autoincrement())
+  company     String
+  jobTitle    String
+  description String
+  startedOn   String
+  endOn       String
+  userId      Int
+  user        User   @relation(fields: [userId], references: [id])
 }
 
-
-model Location{
-id              Int              @id @default(autoincrement())
-city            String
-state           String
-country         String
-postalCode      Int
-userId          Int               @unique
-user            User              @relation(fields: [userId], references: [id])
+model Location {
+  id         Int    @id @default(autoincrement())
+  city       String
+  state      String
+  country    String
+  postalCode Int
+  userId     Int    @unique
+  user       User   @relation(fields: [userId], references: [id])
 }
 
-model Documents{
-id              Int              @id @default(autoincrement())
-resumeLink        String
-portfolioLink     String
-websiteLink       String?
-additionalLink      String?
-userId            Int                 @unique
-user              User              @relation(fields: [userId], references: [id])
+model Documents {
+  id             Int     @id @default(autoincrement())
+  resumeLink     String
+  portfolioLink  String
+  websiteLink    String?
+  additionalLink String?
+  userId         Int     @unique
+  user           User    @relation(fields: [userId], references: [id])
 }
 
 model JobPost {
-  id              Int              @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   jobTitle        String
   companyName     String
   location        String
@@ -189,48 +187,49 @@ model JobPost {
   time            String?
   jobType         String
   salary          String?
-  status          JobStatus        @default(OPEN)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  saveJobpost   SaveJobpost[]
-  JobApplied    JobApplied[]
+  status          JobStatus     @default(OPEN)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  saveJobpost     SaveJobpost[]
+  JobApplied      JobApplied[]
 }
 
-model SaveJobpost{
- id              Int              @id @default(autoincrement())
- jobId           Int
- jobpost   JobPost @relation(fields: [jobId], references: [id])
- userId            Int
- User   User @relation(fields: [userId], references: [id])
+model SaveJobpost {
+  id      Int     @id @default(autoincrement())
+  jobId   Int
+  jobpost JobPost @relation(fields: [jobId], references: [id])
+  userId  Int
+  User    User    @relation(fields: [userId], references: [id])
 }
 
-model JobApplied{
-  id              Int              @id @default(autoincrement())
- jobId           Int
- jobpost   JobPost @relation(fields: [jobId], references: [id])
- userId            Int
- User   User @relation(fields: [userId], references: [id])
+model JobApplied {
+  id      Int     @id @default(autoincrement())
+  jobId   Int
+  jobpost JobPost @relation(fields: [jobId], references: [id])
+  userId  Int
+  User    User    @relation(fields: [userId], references: [id])
 }
 
 model Notification {
-  id              Int       @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   title           String
   message         String
-  createdAt       DateTime  @default(now())
+  mentorProfileId Int
+  mentorProfile   MentorProfile @relation(fields: [mentorProfileId], references: [id])
+  createdAt       DateTime      @default(now())
   userId          Int
-  user            User      @relation(fields: [userId], references: [id])
-Review    Review[]
+  user            User          @relation(fields: [userId], references: [id])
+  Review          Review[]
 }
 
 model Review {
-  id             Int       @id @default(autoincrement())
-  content        String    // Actual review content
-  notificationId Int       // Relation to Notification
+  id             Int          @id @default(autoincrement())
+  content        String // Actual review content
+  notificationId Int // Relation to Notification
   notification   Notification @relation(fields: [notificationId], references: [id])
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
-
 
 model MentorProfile {
   id                      Int                       @id @default(autoincrement())
@@ -245,42 +244,42 @@ model MentorProfile {
   yearOfExperience        Int?
   rating                  Int
   totalReview             Int?
-  userId                  Int                    
-  user                    User                   @relation(fields: [userId], references: [id])
+  userId                  Int
+  user                    User                      @relation(fields: [userId], references: [id])
   linkedinProfile         String?
   MentorSessionManagement MentorSessionManagement[]
   services                Service[]
   Blog                    Blog[]
   Booking                 Booking[]
   Earning                 Earning[]
+  Notification            Notification[]
 }
 
 model Service {
-  id              Int               @id @default(autoincrement())
-  name            String
-  description     String
-  pricing         Int
-  mentorProfileId Int
-  mentorProfile   MentorProfile     @relation(fields: [mentorProfileId], references: [id])
-  RecruiterHiring RecruiterHiring[]
-  MentorSessionManagement    MentorSessionManagement[]
+  id                      Int                       @id @default(autoincrement())
+  name                    String
+  description             String
+  pricing                 Int
+  mentorProfileId         Int
+  mentorProfile           MentorProfile             @relation(fields: [mentorProfileId], references: [id])
+  RecruiterHiring         RecruiterHiring[]
+  MentorSessionManagement MentorSessionManagement[]
 }
 
 model MentorSessionManagement {
-  id               Int              @id @default(autoincrement())
-  selectedService  Int?             // Optional field
-  Service          Service?         @relation(fields: [selectedService], references: [id])
-  selectedDateTime DateTime?        // Optional field
-  status           SessionStatus?   @default(ACCEPTED)  // Optional field
-  userId           Int             // Optional field
-  user             User            @relation(fields: [userId], references: [id])
-  mentorProfileId  Int?             // Optional field
-  MentorProfile    MentorProfile?   @relation(fields: [mentorProfileId], references: [id])
-  paymentStatus    PaymentStatus?   @default(COMPLETED)  // Optional field with default value
-  createdAt        DateTime?        @default(now())      // Optional field
-  updatedAt        DateTime?        @updatedAt           // Optional field
+  id               Int            @id @default(autoincrement())
+  selectedService  Int? // Optional field
+  Service          Service?       @relation(fields: [selectedService], references: [id])
+  selectedDateTime DateTime? // Optional field
+  status           SessionStatus? @default(ACCEPTED) // Optional field
+  userId           Int // Optional field
+  user             User           @relation(fields: [userId], references: [id])
+  mentorProfileId  Int? // Optional field
+  MentorProfile    MentorProfile? @relation(fields: [mentorProfileId], references: [id])
+  paymentStatus    PaymentStatus? @default(COMPLETED) // Optional field with default value
+  createdAt        DateTime?      @default(now()) // Optional field
+  updatedAt        DateTime?      @updatedAt // Optional field
 }
-
 
 model RecruiterProfile {
   id              Int               @id @default(autoincrement())
@@ -326,14 +325,12 @@ model JobApplication {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   jobPostId        Int?
- 
 
   @@index([tags])
   @@index([jobTitle])
   @@index([jsId])
   @@index([postedBy])
 }
-
 
 model RecruiterHiring {
   id               Int              @id @default(autoincrement())
@@ -346,10 +343,10 @@ model RecruiterHiring {
   status           HiringStatus
 }
 
-model TimeSheet {   
+model TimeSheet {
   id          Int              @id @default(autoincrement())
-  employerId       Int
-  job         EmployerProfile   @relation(fields: [employerId], references: [id])
+  employerId  Int
+  job         EmployerProfile  @relation(fields: [employerId], references: [id])
   recruiterId Int
   recruiter   RecruiterProfile @relation(fields: [recruiterId], references: [id])
   fuseAdminId Int?
@@ -359,7 +356,7 @@ model TimeSheet {
   updatedAt   DateTime         @updatedAt
 }
 
-model Blog {   
+model Blog {
   id          Int           @id @default(autoincrement())
   title       String
   content     String
@@ -372,7 +369,7 @@ model Blog {
   updatedAt   DateTime      @updatedAt
 }
 
-model Booking { 
+model Booking {
   id          Int               @id @default(autoincrement())
   date        DateTime
   duration    Int // Duration in minutes

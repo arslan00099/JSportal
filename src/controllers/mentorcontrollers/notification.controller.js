@@ -1,16 +1,16 @@
 // src/controllers/notification.controller.js
-const notificationViewModel = require('../viewmodels/notification.viewmodel');
+const notificationViewModel = require('../../viewmodels/mentorviewmodels/notification.viewmodel');
 
 // POST a new notification
 exports.createNotification = async (req, res) => {
   try {
-    const { title, message } = req.body;
+    const { title, message,mentorId } = req.body;
     const { userId } = req.user;
     console.log(title);
     console.log(message);
     console.log(userId);
 
-    const result = await notificationViewModel.createNotification(userId, title, message);
+    const result = await notificationViewModel.createNotification(userId, title, message,mentorId);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

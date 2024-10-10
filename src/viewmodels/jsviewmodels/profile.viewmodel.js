@@ -1,25 +1,25 @@
 // src/viewmodels/profile.viewmodel.js
 const { PrismaClient } = require('@prisma/client');
-const { deleteDocument } = require('../controllers/user.controller');
+const { deleteDocument } = require('../../controllers/jscontrollers/user.controller');
 const prisma = new PrismaClient();
 
 class UserProfileViewModel {
-  
+
   async basicprofile(userId, fullname, phnumber, avatarId) {
     const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
-  
+
     const userExists = await prisma.profile.findUnique({ where: { userId } });
-  
+
     let updateData = {
       fullname,
       phnumber,
     };
-  
+
     // Only add avatarId to updateData if a new file is uploaded
     if (avatarId) {
       updateData.avatarId = avatarId;
     }
-  
+
     let userProfile;
     if (userExists) {
       // Update the existing user profile
@@ -38,16 +38,16 @@ class UserProfileViewModel {
         },
       });
     }
-  
+
     // If the avatarId exists in the profile, append the base URL to it
     if (userProfile.avatarId) {
       userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
     }
-  
+
     return userProfile;
   }
-  
-  
+
+
 
   async getProfile(userId) {
     try {
@@ -57,10 +57,10 @@ class UserProfileViewModel {
           Profile: {
             include: {
               JobSeekerProfile: true,  // Fetch Job Seeker Profile details
-              MentorProfile: true,     // Fetch Mentor Profile details
-              RecruiterProfile: true,  // Fetch Recruiter Profile details
-              EmployerProfile: true,   // Fetch Employer Profile details
-              AdminProfile: true       // Fetch Admin Profile details
+              //     MentorProfile: true,     // Fetch Mentor Profile details
+              //   RecruiterProfile: true,  // Fetch Recruiter Profile details
+              //   EmployerProfile: true,   // Fetch Employer Profile details
+              //   AdminProfile: true       // Fetch Admin Profile details
             },
           },
           Education: true,            // Fetch all Education details
@@ -70,23 +70,23 @@ class UserProfileViewModel {
           Documents: true             // Fetch all Documents details
         }
       });
-  
+
       // If no user found, return null or handle as needed
       if (!userDetails) {
         throw new Error('User not found');
       }
-  
+
       // Base URLs for avatar and documents
       const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
       const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume";         // Replace with your actual URL
-  
+
       // Add full URL for avatar
       userDetails.Profile.forEach(profile => {
         if (profile.avatarId) {
           profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
         }
       });
-  
+
       // Add full URL for resume and portfolio documents
       userDetails.Documents.forEach(document => {
         if (document.resumeLink) {
@@ -96,33 +96,33 @@ class UserProfileViewModel {
           document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
         }
       });
-  
+
       // Remove password field
       delete userDetails.password;
-  
+
       return userDetails;
     } catch (error) {
       throw new Error('Error fetching user details: ' + error.message);
     }
   }
-  
-  
-  
+
+
+
 
   async deleteProfile(userId) {
     const userProfile = await prisma.profile.findUnique({
       where: { userId }
     });
-  
+
     if (!userProfile) {
       throw new Error('Profile not found');
     }
-  
+
     // Perform the deletion
     const deletedProfile = await prisma.profile.delete({
       where: { userId }
     });
-  
+
     return deletedProfile;
   }
 
@@ -138,21 +138,21 @@ class UserProfileViewModel {
         description,
         startFrom: fromDate,
         endIn: toDate,
-        userId: userId, 
+        userId: userId,
       },
     });
 
     await prisma.user.update({
       where: { id: userId },
-      data: { firstLogin: false }, 
-  });
+      data: { firstLogin: false },
+    });
     return newEducation;
   }
 
   async updateEducation(educationId, degree, institution, description, from, to) {
     const fromDate = new Date(from).toISOString();
     const toDate = new Date(to).toISOString();
-  
+
     const updatedEducation = await prisma.education.update({
       where: { id: educationId },
       data: {
@@ -163,13 +163,13 @@ class UserProfileViewModel {
         endIn: toDate,
       },
     });
-  
+
     return updatedEducation;
   }
-  
 
 
-  
+
+
 
   async deleteEducation(userId, educationId) {
     const userProfile = await prisma.education.findFirst({
@@ -178,24 +178,24 @@ class UserProfileViewModel {
         id: educationId,
       },
     });
-  
+
     if (!userProfile) {
       throw new Error('Education for this user does not exist');
     }
-  
-    
+
+
     const deletedProfile = await prisma.education.delete({
       where: { id: educationId }
     });
-  
+
     return deletedProfile;
   }
-  
+
 
   async insertCertificate(certName, orgName, description, from, to, userId) {
     const fromDate = new Date(from).toISOString();
     const toDate = new Date(to).toISOString();
-  
+
     // Insert a new certificate for the user
     const newCertificate = await prisma.certificate.create({
       data: {
@@ -207,14 +207,14 @@ class UserProfileViewModel {
         userId: userId, // Foreign key to user
       },
     });
-  
+
     return newCertificate;
   }
 
   async updateCertificate(certificateId, certName, orgName, description, from, to) {
     const fromDate = new Date(from).toISOString();
     const toDate = new Date(to).toISOString();
-  
+
     // Update the certificate by its unique id
     const updatedCertificate = await prisma.certificate.update({
       where: { id: certificateId }, // Use certificateId to update the correct certificate
@@ -226,30 +226,31 @@ class UserProfileViewModel {
         completedOn: toDate,
       },
     });
-  
+
     return updatedCertificate;
   }
-  
 
-  async  deleteCertificate(userId,certificateId) {
+
+  async deleteCertificate(userId, certificateId) {
     // Check if a certificate exists for the user
     const certificate = await prisma.certificate.findFirst({
-      where: { userId,
-        id:certificateId
-       }
+      where: {
+        userId,
+        id: certificateId
+      }
     });
-  
+
     if (!certificate) {
       throw new Error('Certificate for this user does not exist');
     }
-  
+
     // Perform the deletion
     const deletedCertificate = await prisma.certificate.delete({
-      where: { id:certificateId }
+      where: { id: certificateId }
     });
-  
+
     return deletedCertificate;
-  } 
+  }
 
   async addLocation(userId, city, state, country, postalCode) {
     try {
@@ -257,7 +258,7 @@ class UserProfileViewModel {
       const existingLocation = await prisma.location.findFirst({
         where: { userId }
       });
-  
+
       if (existingLocation) {
         // Update the existing location
         const updatedLocation = await prisma.location.update({
@@ -287,9 +288,9 @@ class UserProfileViewModel {
       throw new Error('Error adding or updating location: ' + error.message);
     }
   }
-  
-  
-  
+
+
+
   // ViewModel for deleting a location by ID
   async deleteLocation(userId) {
     try {
@@ -297,25 +298,25 @@ class UserProfileViewModel {
       const location = await prisma.location.findFirst({
         where: { userId }
       });
-  
+
       if (!location) {
         throw new Error('Location for this user does not exist');
       }
-  
+
       // Proceed to delete the found location
       const deletedLocation = await prisma.location.delete({
         where: { id: location.id }, // Use the unique identifier of the found location
       });
-  
+
       return deletedLocation;
     } catch (error) {
       throw new Error('Error deleting location: ' + error.message);
     }
   }
-  
-  
+
+
   // ViewModel for getting locations by userId
-  async getLocations (userId){
+  async getLocations(userId) {
     try {
       const locations = await prisma.location.findMany({
         where: { userId },
@@ -333,7 +334,7 @@ class UserProfileViewModel {
       const existingDocument = await prisma.documents.findFirst({
         where: { userId }
       });
-  
+
       if (existingDocument) {
         console.log("data updated");
         // Update the existing document
@@ -367,7 +368,7 @@ class UserProfileViewModel {
   }
 
 
-    
+
   async insertEmploymentHistory(company, jobTitle, description, startedOn, endOn, userId) {
     const result = await prisma.empolymentHistory.create({
       data: {
@@ -379,7 +380,7 @@ class UserProfileViewModel {
         userId,  // Foreign key linking to the user
       },
     });
-  
+
     return result;
   }
 
@@ -394,11 +395,11 @@ class UserProfileViewModel {
         endOn: new Date(endOn).toISOString(),
       },
     });
-  
+
     return result;
   }
-  
- 
+
+
   async deleteEmploymentHistory(userId, employmentId) {
     // Check if the employment history exists for the given userId
     const employmentHistory = await prisma.EmpolymentHistory.findFirst({
@@ -407,95 +408,110 @@ class UserProfileViewModel {
         id: employmentId,
       },
     });
-  
+
     if (!employmentHistory) {
       throw new Error('Employment history for this user does not exist');
     }
-  
+
     // Now delete the found record
     const deletedEmploymentHistory = await prisma.EmpolymentHistory.delete({
       where: { id: employmentId },
     });
-  
+
     return deletedEmploymentHistory;
   }
-  
-  
 
 
-async getEmploymentHistory(userId) {
-  const result = await prisma.employmentHistory.findUnique({
-    where: { userId },
-  });
-  return result;
-}
-  
 
-async deleteDocument(userId) {
-  // Check if the document exists for the given userId
-  const document = await prisma.documents.findFirst({
-    where: { userId }
-  });
 
-  if (!document) {
-    throw new Error('Document for this user does not exist');
+  async getEmploymentHistory(userId) {
+    const result = await prisma.employmentHistory.findUnique({
+      where: { userId },
+    });
+    return result;
   }
 
-  // Now delete the found document using its unique ID
-  const deletedDocument = await prisma.documents.delete({
-    where: { id: document.id } // Use the unique ID of the document
-  });
 
-  return deletedDocument;
-}
-
-
-async createMentorSession({ selectedService, selectedDateTime, userId, mentorId }) {
-  console.log(selectedService, selectedDateTime, userId, mentorId);
-  try {
-    const mentorSession = await prisma.mentorSessionManagement.create({
-      data: {
-        selectedService, // This is the service ID
-        selectedDateTime: new Date(selectedDateTime),  // Ensure the date format is correct
-        userId,
-        mentorProfileId: mentorId, // Linking mentorId with mentorProfileId
-        status: "ACCEPTED",        // Default session status
-        paymentStatus: "PENDING",  // Set initial payment status
-
-      },
-      include: {
-        Service: true,        // Optionally include the Service details in the response
-        user: true,           // Include the user (JobSeeker) details
-        MentorProfile: true,  // Include the mentor details
-      },
+  async deleteDocument(userId) {
+    // Check if the document exists for the given userId
+    const document = await prisma.documents.findFirst({
+      where: { userId }
     });
 
-    return mentorSession;
-  } catch (error) {
-    throw new Error(error.message);
-  }
-}
+    if (!document) {
+      throw new Error('Document for this user does not exist');
+    }
 
-
-async getBookedMentorSessions(userId) {
-  try {
-    const sessions = await prisma.mentorSessionManagement.findMany({
-      where: {
-        userId: userId, // Just pass the value directly
-      },
-      include: {
-        Service: true,          // Include related Service details
-        user: true,             // Include user details
-        MentorProfile: true,    // Include mentor profile details
-      },
+    // Now delete the found document using its unique ID
+    const deletedDocument = await prisma.documents.delete({
+      where: { id: document.id } // Use the unique ID of the document
     });
 
-    return sessions;
-  } catch (error) {
-    console.error("Error fetching mentor sessions:", error);
-    throw error;
+    return deletedDocument;
   }
-};
+
+
+  async createMentorSession({ selectedService, selectedDateTime, userId, mentorId }) {
+    console.log(selectedService, selectedDateTime, userId, mentorId);
+    try {
+      const mentorSession = await prisma.mentorSessionManagement.create({
+        data: {
+          selectedService, // This is the service ID
+          selectedDateTime: new Date(selectedDateTime),  // Ensure the date format is correct
+          userId,
+          mentorProfileId: mentorId, // Linking mentorId with mentorProfileId
+          status: "ACCEPTED",        // Default session status
+          paymentStatus: "PENDING",  // Set initial payment status
+
+        },
+        include: {
+          Service: true,        // Optionally include the Service details in the response
+          user: true,           // Include the user (JobSeeker) details
+          MentorProfile: true,  // Include the mentor details
+        },
+      });
+
+      return mentorSession;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
+
+  async getBookedMentorSessions(userId) {
+    try {
+      const sessions = await prisma.mentorSessionManagement.findMany({
+        where: {
+          userId: userId, // Filter by userId
+        },
+        include: {
+          Service: {
+            select: {
+              name: true, // Only select service name
+            },
+          },
+          MentorProfile: {
+            select: {
+              name: true, // Only select mentor name
+            },
+          },
+        },
+      });
+
+      // Return only the required fields in list format
+      const filteredSessions = sessions.map(session => ({
+        mentorName: session.MentorProfile?.name || "N/A",
+        serviceName: session.Service?.name || "N/A",
+        selectedDateTime: session.selectedDateTime,
+      }));
+
+      return filteredSessions;
+    } catch (error) {
+      console.error("Error fetching mentor sessions:", error);
+      throw error;
+    }
+  };
+
 
 
 

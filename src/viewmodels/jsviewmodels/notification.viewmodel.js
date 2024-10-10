@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 class NotificationViewModel {
   // Method to create a new notification
-  async createNotification(userId, title, message) {
+  async createNotification(userId, title, message,mentorId) {
     console.log(userId);
     console.log(title);
     console.log(message);
@@ -14,7 +14,8 @@ class NotificationViewModel {
         data: {
           title,
           message,
-          userId
+          userId,
+          mentorId
         },
       });
 
