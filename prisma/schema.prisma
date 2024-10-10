@@ -211,14 +211,14 @@ model JobApplied {
 }
 
 model Notification {
-  id              Int           @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   title           String
   message         String
-  mentorProfileId Int
-  mentorProfile   MentorProfile @relation(fields: [mentorProfileId], references: [id])
-  createdAt       DateTime      @default(now())
+  mentorProfileId Int?
+  mentorProfile   MentorProfile? @relation(fields: [mentorProfileId], references: [id])
+  createdAt       DateTime       @default(now())
   userId          Int
-  user            User          @relation(fields: [userId], references: [id])
+  user            User           @relation(fields: [userId], references: [id])
   Review          Review[]
 }
 
