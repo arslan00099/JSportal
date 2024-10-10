@@ -461,21 +461,21 @@ class UserProfileViewModel {
           userId,
           mentorProfileId: mentorId, // Linking mentorId with mentorProfileId
           status: "ACCEPTED",        // Default session status
-          paymentStatus: "PENDING",  // Set initial payment status
-
+          paymentStatus: "COMPLETED",  // Set initial payment status
         },
         include: {
-          Service: true,        // Optionally include the Service details in the response
-          user: true,           // Include the user (JobSeeker) details
-          MentorProfile: true,  // Include the mentor details
+          Service: true,  // Include the Service details in the response
+          user: true,     // Include the user (JobSeeker) details
+          mentor: true,   // Include the mentor details (use mentor, not MentorProfile)
         },
       });
-
+  
       return mentorSession;
     } catch (error) {
       throw new Error(error.message);
     }
   }
+  
 
 
   async getBookedMentorSessions(userId) {

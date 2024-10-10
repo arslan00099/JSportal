@@ -90,13 +90,15 @@ model User {
   Documents               Documents[]
   SaveJobpost             SaveJobpost[]
   Notification            Notification[]
-  MentorSessionManagement MentorSessionManagement[]
+  MentorSessionManagement MentorSessionManagement[] @relation("UserSessions")
   JobApplied              JobApplied[]
   MentorProfile           MentorProfile[]
+  mentorSessions          MentorSessionManagement[] @relation("MentorSessions")
 
   @@index([email])
   @@index([role])
 }
+
 
 model Profile {
   id               Int               @id @default(autoincrement())
@@ -247,7 +249,6 @@ model MentorProfile {
   userId                  Int
   user                    User                      @relation(fields: [userId], references: [id])
   linkedinProfile         String?
-  MentorSessionManagement MentorSessionManagement[]
   services                Service[]
   Blog                    Blog[]
   Booking                 Booking[]
@@ -272,14 +273,17 @@ model MentorSessionManagement {
   Service          Service?       @relation(fields: [selectedService], references: [id])
   selectedDateTime DateTime? // Optional field
   status           SessionStatus? @default(ACCEPTED) // Optional field
-  userId           Int // Optional field
-  user             User           @relation(fields: [userId], references: [id])
-  mentorProfileId  Int? // Optional field
-  MentorProfile    MentorProfile? @relation(fields: [mentorProfileId], references: [id])
+  userId           Int
+  user             User           @relation("UserSessions", fields: [userId], references: [id], map: "FK_User_Session")
+  mentorProfileId  Int?
+  mentor           User?          @relation("MentorSessions", fields: [mentorProfileId], references: [id], map: "FK_Mentor_Session")
   paymentStatus    PaymentStatus? @default(COMPLETED) // Optional field with default value
   createdAt        DateTime?      @default(now()) // Optional field
   updatedAt        DateTime?      @updatedAt // Optional field
 }
+
+
+
 
 model RecruiterProfile {
   id              Int               @id @default(autoincrement())

@@ -18,7 +18,7 @@ class MentorViewModel {
   
       const sessions = await prisma.mentorSessionManagement.findMany({
         where: {
-          mentorProfileId: userId, // Filter by mentorProfileId
+          mentorProfileId: userId, // Filter by mentorProfileId (mentor is the current user)
           ...(startDate || endDate ? { selectedDateTime: dateFilter } : {}), // Apply date filter if provided
         },
         include: {
@@ -29,9 +29,9 @@ class MentorViewModel {
               description: true,
             },
           },
-          user: { // Access the related User
+          user: { // Access the related User (Job Seeker)
             select: {
-              Profile: {
+              Profile: { // Fetch the related Profile
                 select: {
                   fullname: true, // Select the fullname from the Profile model
                 },
@@ -42,8 +42,8 @@ class MentorViewModel {
       });
   
       // Return only the required fields in list format
-      const filteredSessions = sessions.map(session => ({
-        jsName: session.user?.Profile?.fullname || "N/A", // User's fullname
+      const filteredSessions = sessions.map((session) => ({
+        jsName: session.user?.Profile?.fullname || "N/A", // User's fullname (Job Seeker)
         serviceName: session.Service?.name || "N/A",
         servicePrice: session.Service?.pricing || "N/A",
         serviceDes: session.Service?.description || "N/A",
@@ -55,7 +55,8 @@ class MentorViewModel {
       console.error("Error fetching mentor sessions:", error);
       throw error;
     }
-  };
+  }
+  
 
 
 
