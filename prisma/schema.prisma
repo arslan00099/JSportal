@@ -244,7 +244,7 @@ model MentorProfile {
   yearOfExperience        Int?
   rating                  Int
   totalReview             Int?
-  userId                  Int                       @unique
+  userId                  Int
   user                    User                      @relation(fields: [userId], references: [id])
   linkedinProfile         String?
   MentorSessionManagement MentorSessionManagement[]

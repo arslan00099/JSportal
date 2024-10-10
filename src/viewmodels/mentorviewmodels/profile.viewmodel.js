@@ -49,62 +49,106 @@ class UserProfileViewModel {
 
 
 
+  // async getProfile(userId) {
+  //   try {
+  //     const userDetails = await prisma.user.findUnique({
+  //       where: { id: userId },
+  //       include: {
+  //         MentorProfile: true,
+  //       }
+  //     });
+
+  //     // If no user found, return null or handle as needed
+  //     if (!userDetails) {
+  //       throw new Error('User not found');
+  //     }
+
+  //     // Base URLs for avatar and documents
+  //     const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
+  //     const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume";         // Replace with your actual URL
+
+  //     // Add full URL for avatar in Profile
+  //     userDetails.Profile.forEach(profile => {
+  //       if (profile.avatarId) {
+  //         profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
+  //       }
+  //     });
+
+  //     // Add full URL for resume and portfolio documents
+  //     userDetails.Documents.forEach(document => {
+  //       if (document.resumeLink) {
+  //         document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
+  //       }
+  //       if (document.portfolioLink) {
+  //         document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
+  //       }
+  //     });
+
+  //     // Remove sensitive data
+  //     delete userDetails.password;
+
+  //     return userDetails;
+  //   } catch (error) {
+  //     throw new Error('Error fetching user details: ' + error.message);
+  //   }
+  // }
+
   async getProfile(userId) {
     try {
       const userDetails = await prisma.user.findUnique({
         where: { id: userId },
         include: {
-          Profile: {
-            include: {
-            //  JobSeekerProfile: true,  // Fetch Job Seeker Profile details
-                   MentorProfile: true,     // Fetch Mentor Profile details
-              //   RecruiterProfile: true,  // Fetch Recruiter Profile details
-              //   EmployerProfile: true,   // Fetch Employer Profile details
-              //   AdminProfile: true       // Fetch Admin Profile details
-            },
-          },
-          Education: true,            // Fetch all Education details
-          Certificate: true,          // Fetch all Certificate details
-          Location: true,             // Fetch all Location details
-          EmpolymentHistory: true,    // Fetch all Employment History
-          Documents: true             // Fetch all Documents details
+          MentorProfile: true,
+          Profile: true, // Fetch related Profile data
+          Education: true,
+          Certificate: true,
+          Location: true,
+          EmpolymentHistory: true,
+          Documents: true // Include Documents relation
         }
       });
-
+  
       // If no user found, return null or handle as needed
       if (!userDetails) {
         throw new Error('User not found');
       }
-
+  
       // Base URLs for avatar and documents
       const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
       const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume";         // Replace with your actual URL
-
-      // Add full URL for avatar
-      userDetails.Profile.forEach(profile => {
-        if (profile.avatarId) {
-          profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
-        }
-      });
-
-      // Add full URL for resume and portfolio documents
-      userDetails.Documents.forEach(document => {
-        if (document.resumeLink) {
-          document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
-        }
-        if (document.portfolioLink) {
-          document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
-        }
-      });
-
-      // Remove password field
+  
+      // Add full URL for avatar in Profile (check if Profile exists first)
+      if (userDetails.Profile && userDetails.Profile.length > 0) {
+        userDetails.Profile.forEach(profile => {
+          if (profile.avatarId) {
+            profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
+          }
+        });
+      }
+  
+      // Add full URL for resume and portfolio documents (check if Documents exist first)
+      if (userDetails.Documents && userDetails.Documents.length > 0) {
+        userDetails.Documents.forEach(document => {
+          if (document.resumeLink) {
+            document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
+          }
+          if (document.portfolioLink) {
+            document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
+          }
+        });
+      }
+  
+      // Remove sensitive data
       delete userDetails.password;
-
+  
       return userDetails;
     } catch (error) {
       throw new Error('Error fetching user details: ' + error.message);
     }
   }
+  
+      
+
 
 
 
@@ -515,25 +559,40 @@ class UserProfileViewModel {
 
 
   async insert_about(about, userId) {
-    const result = await prisma.MentorProfile.upsert({
-      where: { userId }, // Check if MentorProfile with this userId exists
-      update: { about }, // Update the 'about' field if the record exists
-      create: { about, userId }, // Create a new MentorProfile if no record exists
+    const existingProfile = await prisma.MentorProfile.findFirst({
+      where: { userId },  // Find the first MentorProfile with this userId
     });
-  
+
+    let result;
+
+    if (existingProfile) {
+      // If a profile exists, update it
+      result = await prisma.MentorProfile.update({
+        where: { id: existingProfile.id },  // Use the unique id for updating
+        data: { about },
+      });
+    } else {
+      // If no profile exists, create a new one
+      result = await prisma.MentorProfile.create({
+        data: { about, userId },
+      });
+    }
+
     return result;
   }
 
-  
+
+
+
   async get_about(userId) {
     const result = await prisma.MentorProfile.findUnique({
       where: { userId }, // Find the MentorProfile by userId
       select: { about: true }, // Only return the 'about' field
     });
-  
+
     return result ? result.about : null; // Return 'about' if found, otherwise return null
   }
-  
+
 
 
 }

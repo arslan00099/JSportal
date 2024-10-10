@@ -36,8 +36,8 @@ const cvstorage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const cvupload = multer({ storage: cvstorage });
 
-router.post('/testprofile',middleware, controller.insert);
-router.get('/testprofile',middleware, controller.getMentorProfile);
+router.post('/testprofile', middleware,controller.insert);
+router.get('/testprofile', controller.getMentorProfile);
 router.get('/session',middleware,booking.getMentorSession);
 router.get('/earnings',middleware,booking.getMentorEarnings);
 

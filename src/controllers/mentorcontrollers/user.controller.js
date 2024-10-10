@@ -43,7 +43,7 @@ exports.uploadDocuments = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const { userId } = req.user;
-
+console.log(userId);
     const userProfile = await userViewModel.getProfile(userId);
 
     if (!userProfile) {
@@ -377,14 +377,12 @@ exports.fetchMentorSession = async (req, res) => {
 ///////////////////////////////////////////////////////////////////////////////
 
 exports.post_about = async (req, res) => {
-  const { selectedService, selectedDateTime, mentorId } = req.body;
+  const { about } = req.body;
   let { userId } = req.user;
   try {
-    const newSession = await userViewModel.createMentorSession({
-      selectedService,
-      selectedDateTime,
+    const newSession = await userViewModel.insert_about({
       userId,
-      mentorId,
+      about,
     });
     res.status(201).json({ success: true, data: newSession });
   } catch (error) {
@@ -397,7 +395,7 @@ exports.get_about = async (req, res) => {
   let { userId } = req.user;
   console.log(userId);
   try {
-    const newSession = await userViewModel.getBookedMentorSessions(
+    const newSession = await userViewModel.get_about(
       userId
     );
     res.status(201).json({ success: true, data: newSession });
