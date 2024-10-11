@@ -5,7 +5,7 @@ const middleware = require('../../middleware/auth.middleware');    // Ensure the
 
 // Notification routes
 router.get('/', middleware, notificationController.getNotifications);
-router.post('/', middleware, notificationController.createNotification);
+router.post('/', notificationController.createNotification);
 
 // Review routes
 router.post('/review', middleware, notificationController.submitReview);

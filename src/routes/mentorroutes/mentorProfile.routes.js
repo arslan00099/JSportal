@@ -8,7 +8,7 @@ const booking=require('../../controllers/mentorcontrollers/session.controller');
 const notificationController = require('../../controllers/mentorcontrollers/notification.controller');
 const userController=require ('../../controllers/mentorcontrollers/user.controller');
 const middleware = require('../../middleware/middleware');
-
+const settingController = require('../../controllers/mentorcontrollers/setting.controller');
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -71,15 +71,25 @@ router.delete('/location', middleware, userController.deleteLocation);
 router.post("/book-session", middleware, userController.createMentorSession);
 router.get("/book-session", middleware, userController.fetchMentorSession);
 
+
+
+
 router.delete('/documents', middleware, userController.deleteDocuments);
 router.post('/documents', middleware, cvupload.fields([
   { name: 'resume', maxCount: 1 },
   { name: 'portfolio', maxCount: 1 }
 ]), userController.uploadDocuments);
 
+
 router.post("/about",middleware,userController.post_about);
 router.get("/about",middleware,userController.get_about);
+router.get("/notification",middleware, userController.getNotification);
+router.get("/review",middleware, userController.getReview);
 
+router.put('/change-email', middleware, settingController.changeEmail);
+router.put('/change-password', middleware, settingController.changePassword);
+router.put('/deactivate', middleware, settingController.deactivateUser);
+router.delete('/delete', middleware, settingController.deleteUser);
 
 
 module.exports = router;

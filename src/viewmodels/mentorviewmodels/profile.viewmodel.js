@@ -594,6 +594,104 @@ class UserProfileViewModel {
   }
 
 
+  async getNotification(userId) {
+    try {
+      const result = await prisma.Notification.findMany({
+        where: { mentorId: userId },  
+        select: {
+          id: true,
+          title: true,
+          message: true,
+          userId: true,
+          createdAt: true,
+        },
+      });
+  
+      return result; // Return the array of notifications or empty array if none found
+    } catch (error) {
+      throw new Error(`Error fetching notifications: ${error.message}`);
+    }
+  }
+
+
+  async getReview(userId) {
+    try {
+      const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos";
+      
+      // Step 1: Fetch notifications with reviews where mentorId = userId
+      const notifications = await prisma.Notification.findMany({
+        where: {
+          mentorId: userId,  // Mentor is the current user
+          Review: {
+            some: {},  // Ensures at least one Review exists
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+          message: true,
+          userId: true,  // Fetch userId for the notification
+          createdAt: true,
+          Review: {
+            select: {
+              content: true,  // Include review content
+              rating: true,   // Include review rating
+            },
+          },
+        },
+      });
+  
+      // Step 2: Get all userIds from the notifications
+      const userIds = notifications.map((notification) => notification.userId);
+  
+      // Step 3: Fetch all profiles for the userIds in a single query
+      const profiles = await prisma.Profile.findMany({
+        where: {
+          userId: { in: userIds },
+        },
+        select: {
+          userId: true,
+          fullname: true,
+          avatarId: true,
+        },
+      });
+  
+      // Create a map of profiles for faster access
+      const profileMap = profiles.reduce((map, profile) => {
+        const avatarUrl = profile.avatarId
+          ? `${avatarBaseUrl}/${profile.avatarId}`
+          : null;
+        
+        map[profile.userId] = {
+          fullname: profile.fullname,
+          profilePhoto: avatarUrl,
+        };
+        return map;
+      }, {});
+  
+      // Step 4: Structure the notifications with profile data
+      const notificationWithProfiles = notifications.map((notification) => ({
+        profilePhoto: profileMap[notification.userId]?.profilePhoto || null,
+        fullname: profileMap[notification.userId]?.fullname || null,
+        rating: notification.Review[0]?.rating || 0,
+        review: notification.Review[0]?.content || '',
+      }));
+  
+      // Return data with profiles
+      return { success: true, data: notificationWithProfiles };
+  
+    } catch (error) {
+      throw new Error(`Error fetching notifications: ${error.message}`);
+    }
+  }
+  
+  
+  
+  
+  
+  
+
+
 
 }
 module.exports = new UserProfileViewModel();

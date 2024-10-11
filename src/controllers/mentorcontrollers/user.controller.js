@@ -403,3 +403,31 @@ exports.get_about = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+
+exports.getNotification = async (req, res) => {
+  let { userId } = req.user;
+  console.log(userId);
+  try {
+    const result = await userViewModel.getNotification(
+      userId
+    );
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+
+exports.getReview = async (req, res) => {
+  let { userId } = req.user;
+  console.log(userId);
+  try {
+    const result = await userViewModel.getReview(
+      userId
+    );
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

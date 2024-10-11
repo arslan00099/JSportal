@@ -89,16 +89,16 @@ model User {
   EmpolymentHistory       EmpolymentHistory[]
   Documents               Documents[]
   SaveJobpost             SaveJobpost[]
-  Notification            Notification[]
   MentorSessionManagement MentorSessionManagement[] @relation("UserSessions")
+  Notification            Notification[]            @relation("UserNotification")
   JobApplied              JobApplied[]
   MentorProfile           MentorProfile[]
   mentorSessions          MentorSessionManagement[] @relation("MentorSessions")
+  mentorNotification      Notification[]            @relation("MentorNotification")
 
   @@index([email])
   @@index([role])
 }
-
 
 model Profile {
   id               Int               @id @default(autoincrement())
@@ -213,47 +213,47 @@ model JobApplied {
 }
 
 model Notification {
-  id              Int            @id @default(autoincrement())
-  title           String
-  message         String
-  mentorProfileId Int?
-  mentorProfile   MentorProfile? @relation(fields: [mentorProfileId], references: [id])
-  createdAt       DateTime       @default(now())
-  userId          Int
-  user            User           @relation(fields: [userId], references: [id])
-  Review          Review[]
+  id        Int      @id @default(autoincrement())
+  title     String
+  message   String
+  userId    Int
+  user      User     @relation("UserNotification", fields: [userId], references: [id], map: "FK_User_Notification")
+  mentorId  Int?
+  mentor    User?    @relation("MentorNotification", fields: [mentorId], references: [id], map: "FK_Mentor_Notification")
+  createdAt DateTime @default(now())
+  Review    Review[]
 }
 
 model Review {
   id             Int          @id @default(autoincrement())
   content        String // Actual review content
   notificationId Int // Relation to Notification
+  rating         Int
   notification   Notification @relation(fields: [notificationId], references: [id])
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
 
 model MentorProfile {
-  id                      Int                       @id @default(autoincrement())
-  name                    String
-  tagline                 String
-  about                   String
-  languages               String
-  resume                  String?
-  industry                String?
-  discipline              String?
-  location                String?
-  yearOfExperience        Int?
-  rating                  Int
-  totalReview             Int?
-  userId                  Int
-  user                    User                      @relation(fields: [userId], references: [id])
-  linkedinProfile         String?
-  services                Service[]
-  Blog                    Blog[]
-  Booking                 Booking[]
-  Earning                 Earning[]
-  Notification            Notification[]
+  id               Int       @id @default(autoincrement())
+  name             String
+  tagline          String
+  about            String
+  languages        String
+  resume           String?
+  industry         String?
+  discipline       String?
+  location         String?
+  yearOfExperience Int?
+  rating           Int
+  totalReview      Int?
+  userId           Int
+  user             User      @relation(fields: [userId], references: [id])
+  linkedinProfile  String?
+  services         Service[]
+  Blog             Blog[]
+  Booking          Booking[]
+  Earning          Earning[]
 }
 
 model Service {
@@ -281,9 +281,6 @@ model MentorSessionManagement {
   createdAt        DateTime?      @default(now()) // Optional field
   updatedAt        DateTime?      @updatedAt // Optional field
 }
-
-
-
 
 model RecruiterProfile {
   id              Int               @id @default(autoincrement())

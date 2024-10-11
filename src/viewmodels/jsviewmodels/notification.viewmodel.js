@@ -4,26 +4,30 @@ const prisma = new PrismaClient();
 
 class NotificationViewModel {
   // Method to create a new notification
-  async createNotification(userId, title, message,mentorId) {
-    console.log(userId);
-    console.log(title);
-    console.log(message);
+  async createNotification(userId, title, message, mentorId = null) {
     try {
-        console.log("inside try ");
+      // Log the incoming parameters for debugging
+      console.log("UserID:", userId);
+      console.log("Title:", title);
+      console.log("Message:", message);
+      console.log("MentorID:", mentorId);
+  
+      // Create the notification
       const newNotification = await prisma.notification.create({
         data: {
           title,
           message,
-          userId,
-          mentorId
+          userId,    // Foreign key for the user
+          mentorId,  // Optional foreign key for the mentor
         },
       });
-
+  
       return { notification: newNotification };
     } catch (error) {
       throw new Error(`Error creating notification: ${error.message}`);
     }
   }
+  
 
   // Method to get notifications for a specific user
   async getNotifications(userId) {
@@ -49,12 +53,13 @@ class NotificationViewModel {
     }
   }
 
-  async submitReview(notificationId, message) {
+  async submitReview(notificationId, message, rating) {
     try {
       const review = await prisma.review.create({
         data: {
           content: message,
           notificationId,
+          rating
         },
       });
   
