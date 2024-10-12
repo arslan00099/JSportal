@@ -9,7 +9,7 @@ const notificationRoutes=require('./routes/jsroutes/notification.routes');
 const settingJS=require('./routes/jsroutes/settingJS.routes');
 
 const MentorProfile=require('./routes/mentorroutes/mentorProfile.routes');
-
+const getMentorforJS=require('./routes/jsroutes/getmentor.routes');
 
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
@@ -58,9 +58,9 @@ async function testConnection() {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/job', jobRoutes);
-app.use('/api/notification',notificationRoutes)
-app.use('/api/setting',settingJS)
-
+app.use('/api/notification',notificationRoutes);
+app.use('/api/setting',settingJS);
+app.use('/api/getMentorforJs', getMentorforJS);
 
 ////////////////////////////////////////////////////
 /////////////    MENTOR ROUTERS   //////////////////
