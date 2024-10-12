@@ -262,8 +262,8 @@ model Service {
   name                    String
   description             String
   pricing                 Int
-  mentorId                Int
-  user                    User                      @relation(fields: [mentorId], references: [id])
+  mentorId                Int?
+  user                    User?                     @relation(fields: [mentorId], references: [id])
   RecruiterHiring         RecruiterHiring[]
   MentorSessionManagement MentorSessionManagement[]
 }
