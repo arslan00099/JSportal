@@ -95,6 +95,7 @@ model User {
   MentorProfile           MentorProfile[]
   mentorSessions          MentorSessionManagement[] @relation("MentorSessions")
   mentorNotification      Notification[]            @relation("MentorNotification")
+  services                Service[]
 
   @@index([email])
   @@index([role])
@@ -235,7 +236,7 @@ model Review {
 }
 
 model MentorProfile {
-  id               Int       @id @default(autoincrement())
+  id               Int     @id @default(autoincrement())
   name             String
   tagline          String
   about            String
@@ -248,12 +249,12 @@ model MentorProfile {
   rating           Int
   totalReview      Int?
   userId           Int
-  user             User      @relation(fields: [userId], references: [id])
+  user             User    @relation(fields: [userId], references: [id])
   linkedinProfile  String?
-  services         Service[]
-  Blog             Blog[]
-  Booking          Booking[]
-  Earning          Earning[]
+
+  Blog    Blog[]
+  Booking Booking[]
+  Earning Earning[]
 }
 
 model Service {
@@ -261,8 +262,8 @@ model Service {
   name                    String
   description             String
   pricing                 Int
-  mentorProfileId         Int
-  mentorProfile           MentorProfile             @relation(fields: [mentorProfileId], references: [id])
+  mentorId                Int
+  user                    User                      @relation(fields: [mentorId], references: [id])
   RecruiterHiring         RecruiterHiring[]
   MentorSessionManagement MentorSessionManagement[]
 }

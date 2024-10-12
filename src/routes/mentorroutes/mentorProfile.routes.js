@@ -9,6 +9,7 @@ const notificationController = require('../../controllers/mentorcontrollers/noti
 const userController=require ('../../controllers/mentorcontrollers/user.controller');
 const middleware = require('../../middleware/middleware');
 const settingController = require('../../controllers/mentorcontrollers/setting.controller');
+const serviceController = require('../../controllers/mentorcontrollers/service.controller');
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -90,6 +91,12 @@ router.put('/change-email', middleware, settingController.changeEmail);
 router.put('/change-password', middleware, settingController.changePassword);
 router.put('/deactivate', middleware, settingController.deactivateUser);
 router.delete('/delete', middleware, settingController.deleteUser);
+
+
+// Route to add a new service
+router.post('/service', serviceController.addService);
+router.put('/service', serviceController.updateService);
+router.delete('/service', serviceController.deleteService);
 
 
 module.exports = router;
