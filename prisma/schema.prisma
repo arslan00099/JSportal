@@ -108,6 +108,11 @@ model Profile {
   fullname         String
   phnumber         Int
   avatarId         String?
+  location         String?
+  companyName      String?
+  about            String?
+  language         String?
+  tagline          String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   JobSeekerProfile JobSeekerProfile?
@@ -237,7 +242,7 @@ model Review {
 
 model MentorProfile {
   id               Int     @id @default(autoincrement())
-  name             String
+  name             String?
   tagline          String
   about            String
   languages        String

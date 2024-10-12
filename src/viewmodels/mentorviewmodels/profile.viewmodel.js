@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 class UserProfileViewModel {
 
-  async basicprofile(userId, fullname, phnumber, avatarId) {
+  async basicprofile(userId, fullname, phnumber, avatarId, location, companyName, about, language, tagline) {
     const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
 
     const userExists = await prisma.profile.findUnique({ where: { userId } });
@@ -13,6 +13,11 @@ class UserProfileViewModel {
     let updateData = {
       fullname,
       phnumber,
+      location,
+      companyName,
+      about,
+      language,
+      tagline,
     };
 
     // Only add avatarId to updateData if a new file is uploaded
@@ -34,7 +39,8 @@ class UserProfileViewModel {
           userId,
           fullname,
           phnumber,
-          avatarId, // Save avatarId when creating a new profile
+          avatarId,
+          location, companyName, about, language, tagline
         },
       });
     }
@@ -98,13 +104,18 @@ class UserProfileViewModel {
       const userDetails = await prisma.user.findUnique({
         where: { id: userId },
         include: {
-          MentorProfile: true,
           Profile: true, // Fetch related Profile data
           Education: true,
           Certificate: true,
           Location: true,
           EmpolymentHistory: true,
-          Documents: true // Include Documents relation
+          services: true,
+          Documents: true, // Include Documents relation
+          Notification: {
+            include: {
+              Review: true // Fetch related Review data for each Notification
+            }
+          }
         }
       });
   
@@ -115,7 +126,7 @@ class UserProfileViewModel {
   
       // Base URLs for avatar and documents
       const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
-      const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume";         // Replace with your actual URL
+      const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume"; // Replace with your actual URL
   
       // Add full URL for avatar in Profile (check if Profile exists first)
       if (userDetails.Profile && userDetails.Profile.length > 0) {
@@ -138,6 +149,22 @@ class UserProfileViewModel {
         });
       }
   
+      // Format reviews under notifications
+      if (userDetails.Notification && userDetails.Notification.length > 0) {
+        userDetails.Notification.forEach(notification => {
+          if (notification.Review && notification.Review.length > 0) {
+            notification.Reviews = notification.Review.map(review => ({
+              id: review.id,
+              content: review.content,
+              rating: review.rating,
+              createdAt: review.createdAt,
+            }));
+          } else {
+            notification.Reviews = [];
+          }
+        });
+      }
+  
       // Remove sensitive data
       delete userDetails.password;
   
@@ -147,7 +174,8 @@ class UserProfileViewModel {
     }
   }
   
-      
+
+
 
 
 
@@ -597,7 +625,7 @@ class UserProfileViewModel {
   async getNotification(userId) {
     try {
       const result = await prisma.Notification.findMany({
-        where: { mentorId: userId },  
+        where: { mentorId: userId },
         select: {
           id: true,
           title: true,
@@ -606,7 +634,7 @@ class UserProfileViewModel {
           createdAt: true,
         },
       });
-  
+
       return result; // Return the array of notifications or empty array if none found
     } catch (error) {
       throw new Error(`Error fetching notifications: ${error.message}`);
@@ -617,7 +645,7 @@ class UserProfileViewModel {
   async getReview(userId) {
     try {
       const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos";
-      
+
       // Step 1: Fetch notifications with reviews where mentorId = userId
       const notifications = await prisma.Notification.findMany({
         where: {
@@ -640,10 +668,10 @@ class UserProfileViewModel {
           },
         },
       });
-  
+
       // Step 2: Get all userIds from the notifications
       const userIds = notifications.map((notification) => notification.userId);
-  
+
       // Step 3: Fetch all profiles for the userIds in a single query
       const profiles = await prisma.Profile.findMany({
         where: {
@@ -655,20 +683,20 @@ class UserProfileViewModel {
           avatarId: true,
         },
       });
-  
+
       // Create a map of profiles for faster access
       const profileMap = profiles.reduce((map, profile) => {
         const avatarUrl = profile.avatarId
           ? `${avatarBaseUrl}/${profile.avatarId}`
           : null;
-        
+
         map[profile.userId] = {
           fullname: profile.fullname,
           profilePhoto: avatarUrl,
         };
         return map;
       }, {});
-  
+
       // Step 4: Structure the notifications with profile data
       const notificationWithProfiles = notifications.map((notification) => ({
         profilePhoto: profileMap[notification.userId]?.profilePhoto || null,
@@ -676,20 +704,20 @@ class UserProfileViewModel {
         rating: notification.Review[0]?.rating || 0,
         review: notification.Review[0]?.content || '',
       }));
-  
+
       // Return data with profiles
       return { success: true, data: notificationWithProfiles };
-  
+
     } catch (error) {
       throw new Error(`Error fetching notifications: ${error.message}`);
     }
   }
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
 
 
 

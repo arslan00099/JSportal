@@ -3,7 +3,8 @@
 const userViewModel=require('../../viewmodels/mentorviewmodels/profile.viewmodel');
 exports.postProfile = async (req, res) => {
   try {
-    const { fullname, phnumber } = req.body;
+    const { fullname, phnumber,location,companyName,about,language,tagline } = req.body;
+    console.log(location);
     const { userId, role } = req.user;
     const phoneNumber = parseInt(phnumber, 10);
 
@@ -13,7 +14,7 @@ exports.postProfile = async (req, res) => {
       avatarId = req.file.filename; // Save the file name to use as avatarId
     }
 
-    const result = await userViewModel.basicprofile(userId, fullname, phoneNumber, avatarId);
+    const result = await userViewModel.basicprofile(userId, fullname, phoneNumber,avatarId, location,companyName,about,language,tagline);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
