@@ -42,16 +42,22 @@ class MentorViewModel {
       });
 
       // Return only the required fields in list format
-      const filteredSessions = sessions.map((session) => ({
-        jsName: session.user?.Profile?.fullname || "N/A", // User's fullname (Job Seeker)
-        serviceName: session.Service?.name || "N/A",
-        servicePrice: session.Service?.pricing || "N/A",
-        serviceDes: session.Service?.description || "N/A",
-        sessionStatus: session.status || "N/A",
+      const filteredSessions = sessions.map((session) => {
+        const selectedDateTime = new Date(session.selectedDateTime);
 
+        // Extract date and time
+        const date = selectedDateTime.toISOString().split('T')[0]; // Extract date (YYYY-MM-DD)
+        const time = selectedDateTime.toTimeString().split(' ')[0]; // Extract time (HH:mm:ss)
 
-        selectedDateTime: session.selectedDateTime,
-      }));
+        return {
+          id: session.id,
+          jobSeekerName: session.user?.Profile?.fullname || "N/A", // User's fullname (Job Seeker)
+          serviceName: session.Service?.name || "N/A",
+          status: session.status || "N/A",
+          date: date,  // Extracted date
+          time: time,  // Extracted time
+        };
+      });
 
       return filteredSessions;
     } catch (error) {
@@ -86,7 +92,6 @@ class MentorViewModel {
             select: {
               name: true, // Select service name
               pricing: true,
-              description: true,
             },
           },
           user: { // Access the related User
@@ -102,21 +107,32 @@ class MentorViewModel {
       });
 
       // Return only the required fields in list format
-      const filteredSessions = sessions.map(session => ({
-        jsName: session.user?.Profile?.fullname || "N/A", // Mentor's fullname
-        serviceName: session.Service?.name || "N/A",
-        servicePrice: session.Service?.pricing || "N/A",
-        serviceDes: session.Service?.description || "N/A",
-        paymentStatus: session.paymentStatus || "N/A", // Access paymentStatus from MentorSessionManagement
-        selectedDateTime: session.selectedDateTime,
-      }));
+      const filteredSessions = sessions.map(session => {
+        const selectedDateTime = new Date(session.selectedDateTime);
+        
+        // Format date as YYYY-MM-DD and time as HH:mm:ss
+        const date = selectedDateTime.toISOString().split('T')[0];
+        const time = selectedDateTime.toTimeString().split(' ')[0];
+
+        return {
+          id: session.id,
+          date: date,  // Extracted date
+          time: time,  // Extracted time
+          jobseekerName: session.user?.Profile?.fullname || "N/A", // Mentor's fullname
+          servicename: session.Service?.name || "N/A",
+          earningPrice: session.Service?.pricing || "N/A",
+          paymentStatus: session.paymentStatus || "N/A", // Access paymentStatus from MentorSessionManagement
+          status: session.status || "N/A",
+        };
+      });
 
       return filteredSessions;
     } catch (error) {
       console.error("Error fetching mentor earnings:", error);
       throw error;
     }
-  };
+  }
+
 
 }
 
