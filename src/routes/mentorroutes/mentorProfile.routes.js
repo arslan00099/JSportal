@@ -34,8 +34,22 @@ const cvstorage = multer.diskStorage({
   },
 });
 
+const videostorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../utils/video')); // Path for storing videos
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const uniqueName = `${Date.now()}-${file.fieldname}${ext}`; // Create a unique name
+    cb(null, uniqueName);
+  },
+});
+
+
+
 const upload = multer({ storage: storage });
 const cvupload = multer({ storage: cvstorage });
+const uploadVideo = multer({ storage: videostorage });
 
 router.post('/testprofile', middleware,controller.insert);
 router.get('/testprofile', controller.getMentorProfile);
@@ -97,6 +111,9 @@ router.delete('/delete', middleware, settingController.deleteUser);
 router.post('/service', serviceController.addService);
 router.put('/service', serviceController.updateService);
 router.delete('/service', serviceController.deleteService);
+
+
+router.post('/upload-video', uploadVideo.single('mentorVideo'),middleware, userController.uploadVideo);
 
 
 module.exports = router;

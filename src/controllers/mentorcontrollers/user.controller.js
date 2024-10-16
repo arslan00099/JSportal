@@ -1,6 +1,10 @@
 // src/controllers/user.controller.js
 //const userViewModel = require('../../viewmodels/mentorviewmodels/profile.viewmodel');
 const userViewModel=require('../../viewmodels/mentorviewmodels/profile.viewmodel');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+
 exports.postProfile = async (req, res) => {
   try {
     const { fullname, phnumber,location,companyName,about,language,tagline } = req.body;
@@ -54,6 +58,9 @@ console.log(userId);
     // Construct the URL to access the profile picture
     if (userProfile.avatarId) {
       userProfile.profilePhotoUrl = `${req.protocol}://${req.get('host')}/utils/profilephotos/${userProfile.avatarId}`;
+    }
+    if (userProfile.mentorvideolink) {
+      userProfile.profileVideoUrl = `${req.protocol}://${req.get('host')}/utils/video/${userProfile.mentorvideolink}`;
     }
 
     res.status(200).json({ success: true, data: userProfile });
@@ -430,5 +437,35 @@ exports.getReview = async (req, res) => {
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+exports.uploadVideo = async (req, res) => {
+  try {
+    const { userId } = req.user;
+
+    // Check if the file is available
+    if (!req.file) {
+      return res.status(400).json({ error: 'No video file uploaded' });
+    }
+
+    // Get the video filename (no need for path.join here)
+    const videoPath = req.file.filename;
+
+    // Update the user's profile with the video link
+    const updatedProfile = await prisma.profile.update({
+      where: { userId: parseInt(userId) },
+      data: {
+        mentorvideolink: videoPath, // Store the relative video path in the database
+      },
+    });
+
+    return res.status(200).json({
+      message: 'Video uploaded and profile updated successfully',
+      profile: updatedProfile,
+    });
+  } catch (error) {
+    console.error('Error uploading video:', error);
+    return res.status(500).json({ error: 'An error occurred while uploading the video' });
   }
 };

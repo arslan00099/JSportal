@@ -31,6 +31,7 @@ const path = require('path');
 // Serve static files from the 'utils/profilephoto' directory
 app.use('/utils/profilephotos', express.static(path.join(__dirname, 'utils/profilephotos')));
 app.use('/utils/resume', express.static(path.join(__dirname, 'utils/resume')));
+app.use('/utils/video', express.static(path.join(__dirname, 'utils/video')));
 
 // Initialize Prisma Client
 const prisma = new PrismaClient();

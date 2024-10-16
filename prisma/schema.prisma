@@ -107,6 +107,7 @@ model Profile {
   user             User              @relation(fields: [userId], references: [id])
   fullname         String
   phnumber         Int
+  mentorvideolink  String?
   avatarId         String?
   location         String?
   companyName      String?
