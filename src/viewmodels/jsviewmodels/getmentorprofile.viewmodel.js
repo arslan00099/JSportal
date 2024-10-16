@@ -1,4 +1,3 @@
-// src/viewmodels/settingJS.viewmodel.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -19,7 +18,8 @@ class SettingJSViewmodel {
               tagline: true,
               location: true,
               about: true,
-              language: true
+              language: true,
+              mentorvideolink: true,
             }
           },
           services: {
@@ -36,11 +36,20 @@ class SettingJSViewmodel {
 
       // Base URLs for avatar and resume
       const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos";
+      const videoBaseUrl = "http://54.144.76.160:5000/utils/video";
 
-      // Add full URL for avatar in Profile (if available)
+      // Iterate over mentors and construct full URLs
       mentors.forEach(mentor => {
-        if (mentor.Profile && mentor.Profile.avatarId) {
-          mentor.Profile.avatarUrl = `${avatarBaseUrl}/${mentor.Profile.avatarId}`;
+        if (mentor.Profile && mentor.Profile.length > 0) {
+          const profile = mentor.Profile[0]; // Assuming only one profile per user
+
+          if (profile.avatarId) {
+            profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
+          }
+
+          if (profile.mentorvideolink) {
+            profile.mentorvideolink = `${videoBaseUrl}/${profile.mentorvideolink}`;
+          }
         }
       });
 
@@ -49,9 +58,6 @@ class SettingJSViewmodel {
       throw new Error('Error fetching mentors: ' + error.message);
     }
   }
-
-
-
 }
 
 module.exports = new SettingJSViewmodel();
