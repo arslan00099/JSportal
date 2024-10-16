@@ -51,7 +51,7 @@ class MentorViewModel {
 
         return {
           id: session.id,
-          jobSeekerName: session.user?.Profile?.fullname || "N/A", // User's fullname (Job Seeker)
+          jobSeekerName: session.user?.Profile?.fullname || "jstest", // User's fullname (Job Seeker)
           serviceName: session.Service?.name || "N/A",
           status: session.status || "N/A",
           date: date,  // Extracted date
@@ -109,7 +109,7 @@ class MentorViewModel {
       // Return only the required fields in list format
       const filteredSessions = sessions.map(session => {
         const selectedDateTime = new Date(session.selectedDateTime);
-        
+
         // Format date as YYYY-MM-DD and time as HH:mm:ss
         const date = selectedDateTime.toISOString().split('T')[0];
         const time = selectedDateTime.toTimeString().split(' ')[0];
@@ -118,7 +118,7 @@ class MentorViewModel {
           id: session.id,
           date: date,  // Extracted date
           time: time,  // Extracted time
-          jobseekerName: session.user?.Profile?.fullname || "N/A", // Mentor's fullname
+          jobseekerName: session.user?.Profile?.fullname || "jstest", // Mentor's fullname
           servicename: session.Service?.name || "N/A",
           earningPrice: session.Service?.pricing || "N/A",
           paymentStatus: session.paymentStatus || "N/A", // Access paymentStatus from MentorSessionManagement
