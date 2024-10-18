@@ -8,9 +8,10 @@ const router = express.Router();
 // const notificationController = require('../../controllers/mentorcontrollers/notification.controller');
 const profileController=require ('../../controllers/recruitercontrollers/profile.controller');
 const middleware = require('../../middleware/middleware');
-// const settingController = require('../../controllers/mentorcontrollers/setting.controller');
- const serviceController = require('../../controllers/recruitercontrollers/service.controller');
- 
+const settingController = require('../../controllers/recruitercontrollers/setting.controller');
+const serviceController = require('../../controllers/recruitercontrollers/service.controller');
+const bookingController = require ('../../controllers/recruitercontrollers/booking.controller');
+
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -82,8 +83,8 @@ router.delete('/employment-history', middleware, profileController.deleteEmploym
 router.post('/location', middleware, profileController.addLocation);
 router.delete('/location', middleware, profileController.deleteLocation);
 
-// router.post("/book-session", middleware, profileController.createMentorSession);
-// router.get("/book-session", middleware, profileController.fetchMentorSession);
+router.post("/booking", middleware, bookingController.postBooking);
+//router.get("/booking", middleware, bookingController.fetchBooking);
 
 
 
@@ -100,10 +101,10 @@ router.post('/documents', middleware, cvupload.fields([
 // router.get("/notification",middleware, userController.getNotification);
 // router.get("/review",middleware, userController.getReview);
 
-// router.put('/change-email', middleware, settingController.changeEmail);
-// router.put('/change-password', middleware, settingController.changePassword);
-// router.put('/deactivate', middleware, settingController.deactivateUser);
-// router.delete('/delete', middleware, settingController.deleteUser);
+router.put('/change-email', middleware, settingController.changeEmail);
+router.put('/change-password', middleware, settingController.changePassword);
+router.put('/deactivate', middleware, settingController.deactivateUser);
+router.delete('/delete', middleware, settingController.deleteUser);
 
 
 // // Route to add a new service

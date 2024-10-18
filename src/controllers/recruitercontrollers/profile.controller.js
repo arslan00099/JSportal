@@ -713,35 +713,7 @@ exports.uploadVideo = async (req, res) => {
 
 //////////////////////////////////////////////////////   NOT USED
 
-exports.createMentorSession = async (req, res) => {
-  const { selectedService, selectedDateTime, mentorId } = req.body;
-  let { userId } = req.user;
-  try {
-    const newSession = await userViewModel.createMentorSession({
-      selectedService,
-      selectedDateTime,
-      userId,
-      mentorId,
-    });
-    res.status(201).json({ success: true, data: newSession });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
-exports.fetchMentorSession = async (req, res) => {
-
-  let { userId } = req.user;
-  console.log(userId);
-  try {
-    const newSession = await userViewModel.getBookedMentorSessions(
-      userId
-    );
-    res.status(201).json({ success: true, data: newSession });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 

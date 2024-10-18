@@ -80,8 +80,10 @@ model User {
   profileId               Int?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
-  isActive                Boolean                   @default(true) // Add for Deactivation Feature
+  isActive                Boolean                   @default(true)  // Add for Deactivation Feature
   firstLogin              Boolean                   @default(true)
+
+  // Relations
   Profile                 Profile[]
   Education               Education[]
   Certificate             Certificate[]
@@ -93,10 +95,17 @@ model User {
   Notification            Notification[]            @relation("UserNotification")
   JobApplied              JobApplied[]
   MentorProfile           MentorProfile[]
+  
+  // Employer bookings (One user can have many employer bookings)
+  employerBookings        Booking[]                 @relation("EmployerBookings")
+
+  // Recruiter bookings (One user can have many recruiter bookings)
+  recruiterBookings       Booking[]                 @relation("RecruiterBookings")
+
   mentorSessions          MentorSessionManagement[] @relation("MentorSessions")
   mentorNotification      Notification[]            @relation("MentorNotification")
   services                Service[]
-
+  
   @@index([email])
   @@index([role])
 }
@@ -261,7 +270,6 @@ model MentorProfile {
   linkedinProfile  String?
 
   Blog    Blog[]
-  Booking Booking[]
   Earning Earning[]
 }
 
@@ -274,6 +282,7 @@ model Service {
   user                    User?                     @relation(fields: [mentorId], references: [id])
   RecruiterHiring         RecruiterHiring[]
   MentorSessionManagement MentorSessionManagement[]
+  Booking                 Booking[]
 }
 
 model MentorSessionManagement {
@@ -300,7 +309,6 @@ model RecruiterProfile {
   profile         Profile           @relation(fields: [profileId], references: [id])
   RecruiterHiring RecruiterHiring[]
   TimeSheet       TimeSheet[]
-  Booking         Booking[]
   Earning         Earning[]
 }
 
@@ -380,16 +388,18 @@ model Blog {
 }
 
 model Booking {
-  id          Int               @id @default(autoincrement())
-  date        DateTime
-  duration    Int // Duration in minutes
-  mentorId    Int?
-  mentor      MentorProfile?    @relation(fields: [mentorId], references: [id])
-  recruiterId Int?
-  recruiter   RecruiterProfile? @relation(fields: [recruiterId], references: [id])
-  status      BookingStatus     @default(PENDING)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id               Int            @id @default(autoincrement())
+  selectedService  Int?           // Optional field
+  Service          Service?       @relation(fields: [selectedService], references: [id])
+  selectedDateTime DateTime?      // Optional field
+  status           SessionStatus? @default(ACCEPTED) // Optional field
+  employerId       Int
+  employer         User           @relation("EmployerBookings", fields: [employerId], references: [id], onDelete: Cascade)
+  recId            Int
+  recruiter        User           @relation("RecruiterBookings", fields: [recId], references: [id], onDelete: Cascade)
+  paymentStatus    PaymentStatus? @default(COMPLETED) // Optional field with default value
+  createdAt        DateTime?      @default(now())     // Optional field
+  updatedAt        DateTime?      @updatedAt          // Optional field
 }
 
 model Earning {
