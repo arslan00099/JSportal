@@ -10,6 +10,7 @@ const settingJS=require('./routes/jsroutes/settingJS.routes');
 
 const MentorProfile=require('./routes/mentorroutes/mentorProfile.routes');
 const getMentorforJS=require('./routes/jsroutes/getmentor.routes');
+const RecruiterProfile=require('./routes/recruiterroutes/recruiterProfile.routes');
 
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
@@ -67,6 +68,12 @@ app.use('/api/getMentorforJs', getMentorforJS);
 /////////////    MENTOR ROUTERS   //////////////////
 ////////////////////////////////////////////////////
 app.use('/api/mentor/',MentorProfile);
+
+
+////////////////////////////////////////////////////
+/////////////    Recruiter ROUTERS   //////////////////
+////////////////////////////////////////////////////
+app.use('/api/Recruiter/',RecruiterProfile);
 
 
 

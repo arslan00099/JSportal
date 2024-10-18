@@ -105,8 +105,8 @@ model Profile {
   id               Int               @id @default(autoincrement())
   userId           Int               @unique
   user             User              @relation(fields: [userId], references: [id])
-  fullname         String
-  phnumber         Int
+  fullname         String?
+  phnumber         Int?
   mentorvideolink  String?
   avatarId         String?
   location         String?
@@ -114,6 +114,8 @@ model Profile {
   about            String?
   language         String?
   tagline          String?
+  industry         String?
+  services         String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   JobSeekerProfile JobSeekerProfile?
