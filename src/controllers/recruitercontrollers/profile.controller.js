@@ -79,62 +79,85 @@ exports.postProfile = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const { userId } = req.user; // Assuming userId is set in the request user object
-
-    // Fetch the user profile from the database
-    const userProfile = await prisma.profile.findUnique({
-      where: { userId },
-      select: {
-        fullname: true,
-        phnumber: true,
-        location: true,
-        companyName: true,
-        about: true,
-        language: true,
+    const userDetails = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        Profile: true, // Fetch related Profile data
+        Education: true,
+        Certificate: true,
+        Location: true,
+        EmpolymentHistory: true,
         services: true,
-        industry: true,
-        avatarId: true,
-        mentorvideolink: true, // Assuming this is the field in the database
-      },
+        Documents: true, // Include Documents relation
+        Notification: {
+          include: {
+            Review: true // Fetch related Review data for each Notification
+          }
+        }
+      }
     });
 
-    // Check if the user profile exists
-    if (!userProfile) {
-      return res.status(404).json({ success: false, message: 'Profile not found' });
+    // If no user found, return null or handle as needed
+    if (!userDetails) {
+      throw new Error('User not found');
     }
 
-    // If the avatarId exists in the profile, append the base URL to it
-    const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
-    if (userProfile.avatarId) {
-      userProfile.avatarUrl = `${req.protocol}://${req.get('host')}/utils/profilephotos/${userProfile.avatarId}`;
+    // Base URLs for avatar and documents
+    const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
+    const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume"; // Replace with your actual URL
+    const videoBaseUrl = "http://54.144.76.160:5000/utils/video";
+
+    // Add full URL for avatar in Profile (check if Profile exists first)
+    if (userDetails.Profile && userDetails.Profile.length > 0) {
+      userDetails.Profile.forEach(profile => {
+        if (profile.avatarId) {
+          profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
+        }
+        if (profile.mentorvideolink) {
+          profile.mentorvideolink = `${videoBaseUrl}/${profile.mentorvideolink}`;
+        }
+      });
     }
 
-    // If the mentorvideolink exists, append the correct URL for it
-    if (userProfile.mentorvideolink) {
-      userProfile.profileVideoUrl = `${req.protocol}://${req.get('host')}/utils/video/${userProfile.mentorvideolink}`;
+    // Add full URL for resume and portfolio documents (check if Documents exist first)
+    if (userDetails.Documents && userDetails.Documents.length > 0) {
+      userDetails.Documents.forEach(document => {
+        if (document.resumeLink) {
+          document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
+        }
+        if (document.portfolioLink) {
+          document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
+        }
+        
+      });
     }
 
-    // Map the database field names to more user-friendly ones if needed
-    const profileData = {
-      fullname: userProfile.fullname,
-      phoneNumber: userProfile.phnumber,
-      about: userProfile.about,
-      language: userProfile.language,
-      services: userProfile.services,
-      industry: userProfile.industry,
-      avatarUrl: userProfile.avatarUrl, // Only included if avatarId exists
-      profileVideoUrl: userProfile.mentorvideolink ? `${req.protocol}://${req.get('host')}/utils/video/${userProfile.mentorvideolink}` : 'N/A',
-    };
+    // Format reviews under notifications
+    if (userDetails.Notification && userDetails.Notification.length > 0) {
+      userDetails.Notification.forEach(notification => {
+        if (notification.Review && notification.Review.length > 0) {
+          notification.Reviews = notification.Review.map(review => ({
+            id: review.id,
+            content: review.content,
+            rating: review.rating,
+            createdAt: review.createdAt,
+          }));
+        } else {
+          notification.Reviews = [];
+        }
+      });
+    }
 
-    // Remove fields with null or undefined values
-    const filteredProfile = Object.fromEntries(
-      Object.entries(profileData).filter(([_, v]) => v != null)
-    );
+    // Remove sensitive data
+    delete userDetails.password;
 
-    res.status(200).json({ success: true, data: profileData });
+    res.status(200).json({ success: true, data: userDetails });
+
+    return ;
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    throw new Error('Error fetching user details: ' + error.message);
   }
+
 };
 
 

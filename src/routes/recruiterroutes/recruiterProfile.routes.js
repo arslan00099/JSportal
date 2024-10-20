@@ -84,7 +84,7 @@ router.post('/location', middleware, profileController.addLocation);
 router.delete('/location', middleware, profileController.deleteLocation);
 
 router.post("/booking", middleware, bookingController.postBooking);
-//router.get("/booking", middleware, bookingController.fetchBooking);
+router.get("/booking", middleware, bookingController.fetchBooking);
 
 
 

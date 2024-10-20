@@ -39,6 +39,42 @@ exports.postBooking = async (req, res) => {
 };
 
 
+exports.fetchBooking = async (req, res) => {
+  try {
+    const { userId } = req.user; // Get the authenticated user's ID
+
+    // Fetch bookings where recId matches the user's ID
+    const bookings = await prisma.booking.findMany({
+      where: {
+        recId: userId, // Fetch bookings for this recruiter (recId matches userId)
+      },
+      include: {
+        Service: {
+          select: {
+            name: true, // Optionally fetch the service name
+          },
+        },
+        employer: {
+          select: {
+            email: true, // Optionally fetch the employer's email
+          },
+        },
+      },
+    });
+
+    if (!bookings.length) {
+      return res.status(404).json({ success: false, message: 'No bookings found for this recruiter' });
+    }
+
+    // Return the fetched bookings
+    res.status(200).json({ success: true, data: bookings });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ success: false, message: 'Error fetching bookings' });
+  }
+};
+
+
 exports.getMentorSession = async (req, res) => {
   try {
     let { userId } = req.user;
