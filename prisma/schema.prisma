@@ -42,12 +42,23 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   CANCELLED
+  PAID
 }
 
-enum HiringStatus {
+enum HiringStatusRec {
   ACCEPTED
+  APPROVED
   DECLINED
   CANCELLED
+  PENDING
+}
+
+enum HiringStatusAdmin {
+  ACCEPTED
+  APPROVED
+  DECLINED
+  CANCELLED
+  PENDING
 }
 
 enum TimesheetStatus {
@@ -70,18 +81,18 @@ enum BookingStatus {
 }
 
 model User {
-  id                      Int                       @id @default(autoincrement())
-  email                   String                    @unique
-  secondaryEmail          String?
-  password                String
-  role                    UserRole
-  resume                  String?
-  email_confirm           Boolean                   @default(false)
-  profileId               Int?
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime                  @updatedAt
-  isActive                Boolean                   @default(true)  // Add for Deactivation Feature
-  firstLogin              Boolean                   @default(true)
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  secondaryEmail String?
+  password       String
+  role           UserRole
+  resume         String?
+  email_confirm  Boolean  @default(false)
+  profileId      Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isActive       Boolean  @default(true)
+  firstLogin     Boolean  @default(true)
 
   // Relations
   Profile                 Profile[]
@@ -95,17 +106,21 @@ model User {
   Notification            Notification[]            @relation("UserNotification")
   JobApplied              JobApplied[]
   MentorProfile           MentorProfile[]
-  
+
   // Employer bookings (One user can have many employer bookings)
-  employerBookings        Booking[]                 @relation("EmployerBookings")
+  employerBookings Booking[] @relation("EmployerBookings")
 
   // Recruiter bookings (One user can have many recruiter bookings)
-  recruiterBookings       Booking[]                 @relation("RecruiterBookings")
+  recruiterBookings Booking[] @relation("RecruiterBookings")
 
-  mentorSessions          MentorSessionManagement[] @relation("MentorSessions")
-  mentorNotification      Notification[]            @relation("MentorNotification")
-  services                Service[]
-  
+  // Recruiter hiring relations
+  employerRecruiterHirings  RecruiterHiring[] @relation("EmployerRecruiterHirings")
+  recruiterRecruiterHirings RecruiterHiring[] @relation("RecruiterRecruiterHirings")
+
+  mentorSessions     MentorSessionManagement[] @relation("MentorSessions")
+  mentorNotification Notification[]            @relation("MentorNotification")
+  services           Service[]
+
   @@index([email])
   @@index([role])
 }
@@ -301,13 +316,12 @@ model MentorSessionManagement {
 }
 
 model RecruiterProfile {
-  id              Int               @id @default(autoincrement())
+  id              Int         @id @default(autoincrement())
   name            String
   resume          String?
   linkedinProfile String
-  profileId       Int               @unique
-  profile         Profile           @relation(fields: [profileId], references: [id])
-  RecruiterHiring RecruiterHiring[]
+  profileId       Int         @unique
+  profile         Profile     @relation(fields: [profileId], references: [id])
   TimeSheet       TimeSheet[]
   Earning         Earning[]
 }
@@ -321,13 +335,12 @@ model AdminProfile {
 }
 
 model EmployerProfile {
-  id              Int               @id @default(autoincrement())
-  profileId       Int               @unique
-  resume          String?
-  profile         Profile           @relation(fields: [profileId], references: [id])
-  JobApplication  JobApplication[]
-  RecruiterHiring RecruiterHiring[]
-  Timesheet       TimeSheet[]
+  id             Int              @id @default(autoincrement())
+  profileId      Int              @unique
+  resume         String?
+  profile        Profile          @relation(fields: [profileId], references: [id])
+  JobApplication JobApplication[]
+  Timesheet      TimeSheet[]
 }
 
 model JobApplication {
@@ -351,14 +364,25 @@ model JobApplication {
 }
 
 model RecruiterHiring {
-  id               Int              @id @default(autoincrement())
-  employerId       Int
-  serviceId        Int
-  service          Service          @relation(fields: [serviceId], references: [id])
-  employerProfile  EmployerProfile  @relation(fields: [employerId], references: [id])
-  recruiterId      Int
-  RecruiterProfile RecruiterProfile @relation(fields: [recruiterId], references: [id])
-  status           HiringStatus
+  id                      Int               @id @default(autoincrement())
+  startDate               DateTime
+  endDate                 DateTime
+  jobDetail               String
+  serviceName             String
+  adminApprovalStatus     HiringStatusAdmin
+  recruiterApprovalStatus HiringStatusRec
+  jobStatus               JobStatus
+  paymentStatus           PaymentStatus?
+  employerId              Int
+  employer                User              @relation("EmployerRecruiterHirings", fields: [employerId], references: [id], map: "FK_EmployerId")
+  serviceId               Int
+  service                 Service           @relation(fields: [serviceId], references: [id])
+  recruiterId             Int?
+  recruiter               User?             @relation("RecruiterRecruiterHirings", fields: [recruiterId], references: [id], map: "FK_RecId")
+  createdAt               DateTime?         @default(now())
+  updatedAt               DateTime?         @updatedAt
+
+  @@map("RecruiterHiring")
 }
 
 model TimeSheet {
@@ -389,17 +413,17 @@ model Blog {
 
 model Booking {
   id               Int            @id @default(autoincrement())
-  selectedService  Int?           // Optional field
+  selectedService  Int? // Optional field
   Service          Service?       @relation(fields: [selectedService], references: [id])
-  selectedDateTime DateTime?      // Optional field
+  selectedDateTime DateTime? // Optional field
   status           SessionStatus? @default(ACCEPTED) // Optional field
   employerId       Int
   employer         User           @relation("EmployerBookings", fields: [employerId], references: [id], onDelete: Cascade)
   recId            Int
   recruiter        User           @relation("RecruiterBookings", fields: [recId], references: [id], onDelete: Cascade)
   paymentStatus    PaymentStatus? @default(COMPLETED) // Optional field with default value
-  createdAt        DateTime?      @default(now())     // Optional field
-  updatedAt        DateTime?      @updatedAt          // Optional field
+  createdAt        DateTime?      @default(now()) // Optional field
+  updatedAt        DateTime?      @updatedAt // Optional field
 }
 
 model Earning {

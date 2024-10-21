@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `RecruiterHiring` MODIFY `adminApprovalStatus` ENUM('ACCEPTED', 'APPROVED', 'DECLINED', 'CANCELLED', 'PENDING') NOT NULL,
+    MODIFY `recruiterApprovalStatus` ENUM('ACCEPTED', 'APPROVED', 'DECLINED', 'CANCELLED', 'PENDING') NOT NULL;

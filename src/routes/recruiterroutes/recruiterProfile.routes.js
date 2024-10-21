@@ -11,7 +11,7 @@ const middleware = require('../../middleware/middleware');
 const settingController = require('../../controllers/recruitercontrollers/setting.controller');
 const serviceController = require('../../controllers/recruitercontrollers/service.controller');
 const bookingController = require ('../../controllers/recruitercontrollers/booking.controller');
-
+const timesheet=require('../../controllers/timesheetcontrollers/timesheet');
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -114,6 +114,9 @@ router.delete('/service', serviceController.deleteService);
 
 
 router.post('/upload-video', uploadVideo.single('mentorVideo'),middleware, profileController.uploadVideo);
+router.get('/notification',middleware,timesheet.getRecNotification);
+router.get('/recruting/details', timesheet.getDetails);
+router.post('/job/approve',timesheet.updateRecApprovalStatus);
 
 
 module.exports = router;
