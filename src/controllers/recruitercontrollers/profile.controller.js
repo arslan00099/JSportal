@@ -78,6 +78,7 @@ exports.postProfile = async (req, res) => {
 
 
 exports.getProfile = async (req, res) => {
+  const { userId }=req.user;
   try {
     const userDetails = await prisma.user.findUnique({
       where: { id: userId },
@@ -152,8 +153,6 @@ exports.getProfile = async (req, res) => {
     delete userDetails.password;
 
     res.status(200).json({ success: true, data: userDetails });
-
-    return ;
   } catch (error) {
     throw new Error('Error fetching user details: ' + error.message);
   }
