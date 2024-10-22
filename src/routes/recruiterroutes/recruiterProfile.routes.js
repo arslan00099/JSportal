@@ -120,6 +120,7 @@ router.post('/job/approve',timesheet.updateRecApprovalStatus);
 router.get('/upcommingbookings',middleware,timesheet.getUpcommingBookings)
 router.post('/job/status',timesheet.markedasCompleted);
 router.post('/timesheet',timesheet.createTimesheets);
+router.get('/getRecruiterAndEmployerDetails',timesheet.getRecruiterAndEmployerDetailsByHiringId)
 
 
 

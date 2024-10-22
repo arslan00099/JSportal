@@ -36,6 +36,7 @@ enum SessionStatus {
   DECLINED
   CANCELLED
   WAITING
+  DECLINE
 }
 
 enum PaymentStatus {
@@ -45,6 +46,7 @@ enum PaymentStatus {
   REFUNDED
   CANCELLED
   PAID
+  DECLINE
 }
 
 enum HiringStatusRec {
@@ -53,12 +55,14 @@ enum HiringStatusRec {
   DECLINED
   CANCELLED
   PENDING
+  DECLINE
 }
 
 enum HiringStatusAdmin {
   ACCEPTED
   APPROVED
   DECLINED
+  DECLINE
   CANCELLED
   PENDING
 }
@@ -399,21 +403,23 @@ model RecruiterHiring {
 }
 
 model TimeSheet {
-  id                 Int             @id @default(autoincrement())
-  day                Days
-  date               DateTime
-  projectName        String
-  projectDiscription String
-  industries         String
-  services           String
-  serviceFee         Int
-  hours              Int
-  approvalStatusEmp  TimesheetStatus @default(PENDING)
-  recruitingId       Int // Foreign key to RecruiterHiring
-  recruiterHiring    RecruiterHiring @relation(fields: [recruitingId], references: [id]) // Relation to RecruiterHiring
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  id                    Int             @id @default(autoincrement())
+  weeklyTimesheet       Json?
+  approvalStatusEmp     TimesheetStatus @default(PENDING)
+  recruitingId          Int
+  recruiterHiring       RecruiterHiring @relation(fields: [recruitingId], references: [id])
+  independentContracter Boolean? // Made optional
+  sendingtoclient       Boolean? // Made optional
+  sendChargestoFuse     Boolean? // Made optional
+  managingSupervion     String? // Made optional
+  recruiterName         String? // Made optional
+  HiredBy               String? // Made optional
+  phoneNumber           String? // Made optional
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
 }
+
+//npx prisma migrate dev --name add_optional_columns
 
 model Blog {
   id          Int           @id @default(autoincrement())

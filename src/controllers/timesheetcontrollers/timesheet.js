@@ -344,42 +344,69 @@ exports.markedasCompleted = async (req, res) => {
 
 exports.createTimesheets = async (req, res) => {
     try {
-        const { recruitingId, timesheets } = req.body; // Extract recruiterId and timesheet data from request body
+        const {
+            recruitingId,
+            weeklyTimesheet, // Corrected to match the casing
+            independentContracter,
+            sendingtoclient,
+            sendChargestoFuse,
+            managingSupervion,
+            recruiterName,
+            HiredBy,
+            phoneNumber
+        } = req.body;
 
-        // Validate input
-        if (!recruitingId || !Array.isArray(timesheets)) {
+        // Validate recruitingId and weeklyTimesheet input
+        if (!recruitingId || !Array.isArray(weeklyTimesheet)) { // Corrected here
             return res.status(400).json({
                 success: false,
-                message: 'Invalid input. Please provide a recruiterId and an array of timesheet data.',
+                message: 'Invalid input. Please provide recruitingId and an array of weekly timesheet data.',
             });
         }
 
-        // Map the timesheet entries to the correct format for Prisma
-        const timesheetEntries = timesheets.map(timesheet => ({
-            day: timesheet.day,
-            date: new Date(timesheet.date), // Ensure the date is a Date object
-            projectName: timesheet.projectName,
-            projectDiscription: timesheet.projectDescription, // Change this to projectDiscription
-            industries: timesheet.industries,
-            services: timesheet.services,
-            serviceFee: timesheet.serviceFee,
-            hours: timesheet.hours,
-            approvalStatusEmp: timesheet.approvalStatusEmp || 'PENDING', // Default to PENDING if not provided
-            recruitingId // Attach recruiterId from request
-        }));
+        // Validate that phoneNumber is a string (to handle leading zeroes)
+        if (typeof phoneNumber !== 'string') {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid phoneNumber format. It should be a string.',
+            });
+        }
 
-        // Create timesheets in bulk
-        const createdTimesheets = await prismaClient.timeSheet.createMany({
-            data: timesheetEntries,
+        // Validate that the boolean values are present
+        if (typeof independentContracter !== 'boolean' ||
+            typeof sendingtoclient !== 'boolean' ||
+            typeof sendChargestoFuse !== 'boolean') {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid boolean values for independentContracter, sendingtoclient, or sendChargestoFuse.',
+            });
+        }
+
+        // Create a single timesheet entry and store the entire weeklyTimesheet as JSON in weeklyDatasheet
+        const timesheetEntry = {
+            recruitingId, // Attach recruitingId from request body
+            weeklyTimesheet, // Corrected here
+            independentContracter,
+            sendingtoclient,
+            sendChargestoFuse,
+            managingSupervion,
+            recruiterName,
+            HiredBy,
+            phoneNumber
+        };
+
+        // Create the timesheet entry using Prisma
+        const createdTimesheet = await prismaClient.timeSheet.create({
+            data: timesheetEntry,
         });
 
         res.status(201).json({
             success: true,
-            message: 'Timesheets created successfully.',
-            data: createdTimesheets, // Return created timesheet records
+            message: 'Timesheet created successfully.',
+            data: createdTimesheet, // Return created timesheet record
         });
     } catch (error) {
-        console.error('Error creating timesheets:', error);
+        console.error('Error creating timesheet:', error);
         res.status(500).json({
             success: false,
             message: 'Server error',
@@ -388,15 +415,85 @@ exports.createTimesheets = async (req, res) => {
     }
 };
 
-exports.approveTimesheet = async (req, res) => {
-    try {
-        const { timesheetIds, status } = req.body; // Get the timesheetIds and status from the request body
 
-        // Validate that timesheetIds are provided and is an array
-        if (!timesheetIds || !Array.isArray(timesheetIds) || timesheetIds.length === 0) {
+
+exports.getTimesheetsByRecruitingId = async (req, res) => {
+    try {
+        const { recruitingId } = req.query; // Get recruitingId from query parameters
+
+        // Validate that recruitingId is provided and is a valid number
+        if (!recruitingId) {
             return res.status(400).json({
                 success: false,
-                message: 'A list of timesheet IDs is required.',
+                message: 'recruitingId is required.',
+            });
+        }
+
+        const parsedRecruitingId = parseInt(recruitingId, 10);
+
+        // Check if parsedRecruitingId is a valid number
+        if (isNaN(parsedRecruitingId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid recruitingId. It must be a number.',
+            });
+        }
+
+        // Fetch timesheets based on recruitingId
+        const timesheets = await prismaClient.timeSheet.findMany({
+            where: {
+                recruitingId: parsedRecruitingId, // Use the parsed integer
+            },
+            select: {
+                id: true, // Add any other fields you want to include in the response
+                weeklyTimesheet: true,
+                approvalStatusEmp: true,
+                independentContracter: true,
+                sendingtoclient: true,
+                sendChargestoFuse: true,
+                managingSupervion: true,
+                recruiterName: true,
+                HiredBy: true,
+                phoneNumber: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+
+        // If no timesheets found
+        if (timesheets.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No timesheets found for the given recruitingId.',
+            });
+        }
+
+        // Return the fetched timesheets
+        res.status(200).json({
+            success: true,
+            data: timesheets,
+        });
+    } catch (error) {
+        console.error('Error fetching timesheets:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};
+
+
+
+exports.approveTimesheet = async (req, res) => {
+    try {
+        const { recruitingId, status } = req.body; // Get recruitingId and status from the request body
+
+        // Validate that recruitingId is provided
+        if (!recruitingId) {
+            return res.status(400).json({
+                success: false,
+                message: 'recruitingId is required.',
             });
         }
 
@@ -404,14 +501,14 @@ exports.approveTimesheet = async (req, res) => {
         if (!status || !['APPROVED', 'REJECT'].includes(status.toUpperCase())) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid status. It must be either "APPROVED" or "REJECT" ',
+                message: 'Invalid status. It must be either "APPROVED" or "REJECT".',
             });
         }
 
-        // Find all the timesheets with the given IDs and where the status is "PENDING"
+        // Find all the timesheets with the given recruitingId and where the status is "PENDING"
         const pendingTimesheets = await prismaClient.timeSheet.findMany({
             where: {
-                id: { in: timesheetIds },
+                recruitingId: parseInt(recruitingId), // Ensure recruitingId is an integer
                 approvalStatusEmp: 'PENDING'
             }
         });
@@ -420,18 +517,18 @@ exports.approveTimesheet = async (req, res) => {
         if (pendingTimesheets.length === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'No timesheets found with PENDING status for the given IDs.',
+                message: 'No timesheets found with PENDING status for the given recruitingId.',
             });
         }
 
         // Update all timesheets with PENDING status to the new status (APPROVE or REJECT)
         const updatedTimesheets = await prismaClient.timeSheet.updateMany({
             where: {
-                id: { in: timesheetIds },
+                recruitingId: parseInt(recruitingId),
                 approvalStatusEmp: 'PENDING'
             },
             data: {
-                approvalStatusEmp: status.toUpperCase()
+                approvalStatusEmp: status.toUpperCase() // Set the new status
             }
         });
 
@@ -449,6 +546,98 @@ exports.approveTimesheet = async (req, res) => {
         });
     }
 };
+
+
+exports.getdetial=async(req,res) =>{
+
+};
+
+
+exports.getRecruiterAndEmployerDetailsByHiringId = async (req, res) => {
+    try {
+        const { id } = req.query; // Get id from query parameters
+
+        // Fetching recruiter hiring details by the given id
+        const recruiterHirings = await prismaClient.recruiterHiring.findMany({
+            where: {
+                id: Number(id), // Convert id to number if it's not already
+            },
+            include: {
+                employer: {
+                    select: {
+                        id: true,
+                    },
+                },
+                recruiter: {
+                    select: {
+                        id: true,
+                    },
+                },
+            },
+        });
+
+        // Check if any recruiter hiring details were found
+        if (recruiterHirings.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No recruiter hiring details found for the given ID',
+            });
+        }
+
+        // Log employer and recruiter IDs
+        const employerId = recruiterHirings[0].employer?.id; // Use optional chaining in case employer is null
+        const recruiterId = recruiterHirings[0].recruiter?.id; // Use optional chaining in case recruiter is null
+
+        // Fetch the full name of the employer from the profile model
+        const employerProfile = await prismaClient.profile.findUnique({
+            where: {
+                userId: employerId, // Assuming userId is the field that links to the employer
+            },
+            select: {
+                fullname: true, // Select the fullName field
+                phnumber: true,
+            },
+        });
+
+
+        const recProfile = await prismaClient.profile.findUnique({
+            where: {
+                userId: recruiterId, // Assuming userId is the field that links to the employer
+            },
+            select: {
+                fullname: true, // Select the fullName field
+                phnumber:true
+            },
+        });
+
+        
+        console.log('HireBy :', employerProfile?.fullname || 'Not Found');
+        console.log('phoneNumber :', employerProfile?.phonenumber || 'Not Found');
+        console.log('RecruiterName:', recProfile?.fullname || 'Not Found');
+
+        const result={
+            "hireBy":employerProfile?.fullname || 'N/A',
+            "phoneNumber":employerProfile?.phonenumber || 'N/A',
+"RecruiterName":recProfile?.fullname || 'N/A',
+        }
+        // Respond with the fetched details
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        console.error('Error fetching recruiter and employer details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};
+
+
+
+
 
 
 

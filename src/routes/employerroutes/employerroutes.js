@@ -6,9 +6,8 @@ const timesheet = require('../../controllers/timesheetcontrollers/timesheet');
 
 router.get('/getallrecruiter', allrecruiter.getallRecruiterProfile);
 router.post('/postjob',timesheet.postJob);
-router.post('/approveTimesheet',timesheet.approveTimesheet)
-
-
+router.post('/approveTimesheet',timesheet.approveTimesheet);
+router.get('/timesheet',timesheet.getTimesheetsByRecruitingId);
 
 
 
