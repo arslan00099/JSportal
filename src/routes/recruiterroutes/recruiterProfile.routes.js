@@ -117,6 +117,10 @@ router.post('/upload-video', uploadVideo.single('mentorVideo'),middleware, profi
 router.get('/notification',middleware,timesheet.getRecNotification);
 router.get('/recruting/details', timesheet.getDetails);
 router.post('/job/approve',timesheet.updateRecApprovalStatus);
+router.get('/upcommingbookings',middleware,timesheet.getUpcommingBookings)
+router.post('/job/status',timesheet.markedasCompleted);
+router.post('/timesheet',timesheet.createTimesheets);
+
 
 
 module.exports = router;

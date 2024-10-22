@@ -27,6 +27,8 @@ enum JobStatus {
   CLOSED
   CANCELLED
   ONHOLD
+  IN_PROGRESS
+  COMPLETED
 }
 
 enum SessionStatus {
@@ -78,6 +80,16 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+enum Days {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
 }
 
 model User {
@@ -316,22 +328,22 @@ model MentorSessionManagement {
 }
 
 model RecruiterProfile {
-  id              Int         @id @default(autoincrement())
+  id              Int     @id @default(autoincrement())
   name            String
   resume          String?
   linkedinProfile String
-  profileId       Int         @unique
-  profile         Profile     @relation(fields: [profileId], references: [id])
-  TimeSheet       TimeSheet[]
-  Earning         Earning[]
+  profileId       Int     @unique
+  profile         Profile @relation(fields: [profileId], references: [id])
+
+  Earning Earning[]
 }
 
 model AdminProfile {
-  id        Int         @id @default(autoincrement())
-  profileId Int         @unique
-  profile   Profile     @relation(fields: [profileId], references: [id])
-  TimeSheet TimeSheet[]
-  Blog      Blog[]
+  id        Int     @id @default(autoincrement())
+  profileId Int     @unique
+  profile   Profile @relation(fields: [profileId], references: [id])
+
+  Blog Blog[]
 }
 
 model EmployerProfile {
@@ -340,7 +352,6 @@ model EmployerProfile {
   resume         String?
   profile        Profile          @relation(fields: [profileId], references: [id])
   JobApplication JobApplication[]
-  Timesheet      TimeSheet[]
 }
 
 model JobApplication {
@@ -364,11 +375,12 @@ model JobApplication {
 }
 
 model RecruiterHiring {
-  id                      Int               @id @default(autoincrement())
-  startDate               DateTime
-  endDate                 DateTime
-  jobDetail               String
-  serviceName             String
+  id          Int      @id @default(autoincrement())
+  startDate   DateTime
+  endDate     DateTime
+  jobDetail   String
+  serviceName String
+
   adminApprovalStatus     HiringStatusAdmin
   recruiterApprovalStatus HiringStatusRec
   jobStatus               JobStatus
@@ -379,6 +391,7 @@ model RecruiterHiring {
   service                 Service           @relation(fields: [serviceId], references: [id])
   recruiterId             Int?
   recruiter               User?             @relation("RecruiterRecruiterHirings", fields: [recruiterId], references: [id], map: "FK_RecId")
+  timeSheets              TimeSheet[] // One-to-Many relationship with TimeSheet
   createdAt               DateTime?         @default(now())
   updatedAt               DateTime?         @updatedAt
 
@@ -386,16 +399,20 @@ model RecruiterHiring {
 }
 
 model TimeSheet {
-  id          Int              @id @default(autoincrement())
-  employerId  Int
-  job         EmployerProfile  @relation(fields: [employerId], references: [id])
-  recruiterId Int
-  recruiter   RecruiterProfile @relation(fields: [recruiterId], references: [id])
-  fuseAdminId Int?
-  fuseAdmin   AdminProfile?    @relation(fields: [fuseAdminId], references: [id])
-  status      TimesheetStatus  @default(PENDING)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                 Int             @id @default(autoincrement())
+  day                Days
+  date               DateTime
+  projectName        String
+  projectDiscription String
+  industries         String
+  services           String
+  serviceFee         Int
+  hours              Int
+  approvalStatusEmp  TimesheetStatus @default(PENDING)
+  recruitingId       Int // Foreign key to RecruiterHiring
+  recruiterHiring    RecruiterHiring @relation(fields: [recruitingId], references: [id]) // Relation to RecruiterHiring
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 }
 
 model Blog {
