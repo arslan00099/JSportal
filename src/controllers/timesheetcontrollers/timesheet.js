@@ -101,7 +101,7 @@ exports.getRecNotification = async (req, res) => {
                 jobStatus: true,
                 adminApprovalStatus: true,
                 recruiterApprovalStatus: true,
-                paymentStatus: true,
+               // paymentStatus: true,
             },
         });
 
@@ -136,7 +136,7 @@ exports.getRecNotification = async (req, res) => {
                 jobStatus: record.jobStatus,
                 adminApprovalStatus: record.adminApprovalStatus,
                 recruiterApprovalStatus: record.recruiterApprovalStatus,
-                paymentStatus: paymentStatus
+               // paymentStatus: paymentStatus
             };
         });
 
