@@ -97,7 +97,11 @@ exports.getRecNotification = async (req, res) => {
             select: {
                 id: true,        // Selecting the 'id' from recruiterHiring
                 employerId: true, // Selecting the 'employerId'
-                updatedAt:true
+                updatedAt: true,
+                jobStatus: true,
+                adminApprovalStatus: true,
+                recruiterApprovalStatus: true,
+                paymentStatus: true,
             },
         });
 
@@ -128,7 +132,11 @@ exports.getRecNotification = async (req, res) => {
             return {
                 id: record.id,           // RecruiterHiring ID
                 fullname: profile ? profile.fullname : 'N/A', // Profile fullname, fallback if not found
-          Datetime:record.updatedAt,
+                Datetime: record.updatedAt,
+                jobStatus: record.jobStatus,
+                adminApprovalStatus: record.adminApprovalStatus,
+                recruiterApprovalStatus: record.recruiterApprovalStatus,
+                paymentStatus: paymentStatus
             };
         });
 
@@ -379,6 +387,70 @@ exports.createTimesheets = async (req, res) => {
         });
     }
 };
+
+exports.approveTimesheet = async (req, res) => {
+    try {
+        const { timesheetIds, status } = req.body; // Get the timesheetIds and status from the request body
+
+        // Validate that timesheetIds are provided and is an array
+        if (!timesheetIds || !Array.isArray(timesheetIds) || timesheetIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'A list of timesheet IDs is required.',
+            });
+        }
+
+        // Validate the provided status
+        if (!status || !['APPROVED', 'REJECT'].includes(status.toUpperCase())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid status. It must be either "APPROVED" or "REJECT" ',
+            });
+        }
+
+        // Find all the timesheets with the given IDs and where the status is "PENDING"
+        const pendingTimesheets = await prismaClient.timeSheet.findMany({
+            where: {
+                id: { in: timesheetIds },
+                approvalStatusEmp: 'PENDING'
+            }
+        });
+
+        // If no pending timesheets are found
+        if (pendingTimesheets.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No timesheets found with PENDING status for the given IDs.',
+            });
+        }
+
+        // Update all timesheets with PENDING status to the new status (APPROVE or REJECT)
+        const updatedTimesheets = await prismaClient.timeSheet.updateMany({
+            where: {
+                id: { in: timesheetIds },
+                approvalStatusEmp: 'PENDING'
+            },
+            data: {
+                approvalStatusEmp: status.toUpperCase()
+            }
+        });
+
+        // Return success response
+        res.status(200).json({
+            success: true,
+            message: `Timesheet approval status updated to ${status.toUpperCase()} for ${updatedTimesheets.count} timesheets.`,
+        });
+    } catch (error) {
+        console.error('Error updating approval status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};
+
+
 
 
 
