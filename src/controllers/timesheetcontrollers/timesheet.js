@@ -235,21 +235,43 @@ exports.updateRecApprovalStatus = async (req, res) => {
     }
 };
 
-exports.getUpcommingBookings = async (req, res) => {
+exports.getUpcomingBookings = async (req, res) => {
+    console.log("fetching upcomming bookings");
     try {
         const { userId } = req.user;
+        const { startDate, endDate } = req.query; // Get startDate and endDate from query parameters
         console.log("User ID:", userId);
+        console.log("Start Date:", startDate);
+        console.log("End Date:", endDate);
 
-        // Fetching all hiring records where recruiterId matches the userId
+        // Build the filters for the query
+        const filters = {
+            recruiterId: userId,
+        };
+
+        // Add createdAt date range filters if provided
+        if (startDate || endDate) {
+            filters.createdAt = {}; // Initialize createdAt filter
+            
+            if (startDate) {
+                filters.createdAt.gte = new Date(startDate); // Greater than or equal to startDate
+            }
+
+            if (endDate) {
+                filters.createdAt.lte = new Date(endDate); // Less than or equal to endDate
+            }
+        }
+
+        // Fetching all hiring records based on the filters
         const hiringRecords = await prismaClient.recruiterHiring.findMany({
-            where: {
-                recruiterId: userId,
-            },
+            where: filters,
             select: {
-                id: true,        // Selecting the 'id' from recruiterHiring
-                employerId: true, // Selecting the 'employerId'
+                id: true,
+                employerId: true,
                 jobStatus: true,
                 startDate: true,
+                serviceName: true,
+                createdAt: true,
             },
         });
 
@@ -266,37 +288,39 @@ exports.getUpcommingBookings = async (req, res) => {
         // Fetch profiles of all employers where userId matches employerId
         const profiles = await prismaClient.profile.findMany({
             where: {
-                userId: { in: employerIds }, // Fetch profiles for the employerIds
+                userId: { in: employerIds },
             },
             select: {
-                userId: true,  // Include userId to map with employerId
-                fullname: true,  // Fetch the fullname field
+                userId: true,
+                fullname: true,
             },
         });
 
         // Create a custom response by mapping hiring records to profiles
-        const response = hiringRecords.map(record => {
+        const result = hiringRecords.map(record => {
             const profile = profiles.find(p => p.userId === record.employerId);
             return {
-                id: record.id,           // RecruiterHiring ID
-                fullname: profile ? profile.fullname : 'N/A', // Profile fullname, fallback if not found
+                id: record.id,
+                fullname: profile ? profile.fullname : 'N/A',
+                serviceName: record.serviceName,
+                datetime: record.createdAt,
             };
         });
 
         res.status(200).json({
             success: true,
             message: 'Here is the response',
-            data: response, // Returning the custom response
+            data: result,
         });
     } catch (error) {
-        console.error('Error fetching notifications:', error);
+        console.error('Error fetching upcoming bookings:', error);
         res.status(500).json({
             success: false,
             message: 'Server error',
             error: error.message,
         });
     }
-};
+};    
 
 exports.markedasCompleted = async (req, res) => {
     try {
@@ -618,7 +642,7 @@ exports.getRecruiterAndEmployerDetailsByHiringId = async (req, res) => {
         const result={
             "hireBy":employerProfile?.fullname || 'N/A',
             "phoneNumber":employerProfile?.phonenumber || 'N/A',
-"RecruiterName":recProfile?.fullname || 'N/A',
+            "RecruiterName":recProfile?.fullname || 'N/A',
         }
         // Respond with the fetched details
         res.status(200).json({
@@ -636,10 +660,175 @@ exports.getRecruiterAndEmployerDetailsByHiringId = async (req, res) => {
 };
 
 
+exports.getTimeSheetsByRecruiterId = async (req, res) => {
+    try {
+        const { recruiterId } = req.query; // Get recruiterId from query parameters
+
+        // Fetching all recruiter hiring records by the given recruiterId
+        const recruiterHirings = await prismaClient.recruiterHiring.findMany({
+            where: {
+                recruiterId: Number(recruiterId), // Convert recruiterId to number if it's not already
+            },
+            include: {
+                timeSheets: true, // Include related TimeSheet data
+            },
+        });
+
+        // Check if any recruiter hiring details were found
+        if (recruiterHirings.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No recruiter hiring details found for the given recruiter ID',
+            });
+        }
+
+        // Extracting all timesheets from the recruiter hirings
+        const timeSheets = recruiterHirings.flatMap(hiring => hiring.timeSheets);
+
+        // Respond with the fetched timesheets
+        res.status(200).json({
+            success: true,
+            data: timeSheets,
+        });
+    } catch (error) {
+        console.error('Error fetching timesheet details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};
 
 
 
 
+exports.getRoles = async (req, res) => {
+    try {
+        const { userId } = req.user; // Assuming userId is provided in req.user
 
+        // Fetching recruiter hiring records
+        const recruiterHirings = await prismaClient.recruiterHiring.findMany({
+            where: {
+                recruiterId: Number(userId), // Convert userId to number
+            },
+            include: {
+                employer: {
+                    select: {
+                        id: true,       // Include employer ID
+                        createdAt: true, // Include createdAt date
+                    },
+                },
+            },
+        });
 
+        // Check if any recruiter hiring details were found
+        if (recruiterHirings.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No recruiter hiring details found for the given recruiter ID',
+            });
+        }
 
+        // Fetch the full name of the employer for each recruiter hiring record
+        const results = await Promise.all(recruiterHirings.map(async (hiring) => {
+            const employerProfile = await prismaClient.profile.findUnique({
+                where: {
+                    userId: hiring.employer.id, // Assuming userId links to the employer
+                },
+                select: {
+                    fullname: true, // Select the fullname field
+                    companyName: true,
+                },
+            });
+
+            // Format the date to return only the date part (YYYY-MM-DD)
+            const formattedDate = new Date(hiring.createdAt).toISOString().split('T')[0];
+
+            return {
+                bookingId: hiring.id,                       // Booking ID
+                employerName: employerProfile?.fullname || 'N/A', // Employer's fullname
+                date: formattedDate,                       // Formatted date (YYYY-MM-DD)
+            };
+        }));
+
+        // Respond with the fetched details
+        res.status(200).json({
+            success: true,
+            message:'Roles fetched successfully',
+            data: results, // Return all results in an array
+        });
+    } catch (error) {
+        console.error('Error fetching recruiter hiring details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};
+
+exports.addtimesheet = async (req, res) => {
+    try {
+        const { userId } = req.user; // Assuming userId is provided in req.user
+
+        // Fetching recruiter hiring records
+        const recruiterHirings = await prismaClient.recruiterHiring.findMany({
+            where: {
+                recruiterId: Number(userId), // Convert userId to number
+            },
+            include: {
+                employer: {
+                    select: {
+                        id: true,       // Include employer ID
+                        createdAt: true, // Include createdAt date
+                    },
+                },
+            },
+        });
+
+        // Check if any recruiter hiring details were found
+        if (recruiterHirings.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No recruiter hiring details found for the given recruiter ID',
+            });
+        }
+
+        // Fetch the full name of the employer for each recruiter hiring record
+        const results = await Promise.all(recruiterHirings.map(async (hiring) => {
+            const employerProfile = await prismaClient.profile.findUnique({
+                where: {
+                    userId: hiring.employer.id, // Assuming userId links to the employer
+                },
+                select: {
+                    fullname: true, // Select the fullname field
+                    companyName: true,
+                },
+            });
+
+            // Format the date to return only the date part (YYYY-MM-DD)
+            const formattedDate = new Date(hiring.createdAt).toISOString().split('T')[0];
+
+            return {
+                bookingId: hiring.id,                       // Booking ID
+                CompanyName: employerProfile?.companyName || 'N/A', // Employer's fullname
+                date: formattedDate,                       // Formatted date (YYYY-MM-DD)
+            };
+        }));
+
+        // Respond with the fetched details
+        res.status(200).json({
+            success: true,
+            message:'Timesheet list fethced successfully',
+            data: results, // Return all results in an array
+        });
+    } catch (error) {
+        console.error('Error fetching recruiter hiring details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message,
+        });
+    }
+};

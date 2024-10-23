@@ -384,7 +384,6 @@ model RecruiterHiring {
   endDate     DateTime
   jobDetail   String
   serviceName String
-
   adminApprovalStatus     HiringStatusAdmin
   recruiterApprovalStatus HiringStatusRec
   jobStatus               JobStatus
