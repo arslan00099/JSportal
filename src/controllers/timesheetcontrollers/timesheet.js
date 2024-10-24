@@ -703,7 +703,7 @@ exports.getTimeSheetsByRecruiterId = async (req, res) => {
 
 
 
-exports.getRoles = async (req, res) => {
+exports.getProgressRole = async (req, res) => {
     try {
         const { userId } = req.user; // Assuming userId is provided in req.user
 
@@ -755,7 +755,7 @@ exports.getRoles = async (req, res) => {
         // Respond with the fetched details
         res.status(200).json({
             success: true,
-            message:'Roles fetched successfully',
+            message:'Progess role fetched successfully',
             data: results, // Return all results in an array
         });
     } catch (error) {
@@ -768,7 +768,8 @@ exports.getRoles = async (req, res) => {
     }
 };
 
-exports.addtimesheet = async (req, res) => {
+
+exports.getRole = async (req, res) => {
     try {
         const { userId } = req.user; // Assuming userId is provided in req.user
 
@@ -820,7 +821,7 @@ exports.addtimesheet = async (req, res) => {
         // Respond with the fetched details
         res.status(200).json({
             success: true,
-            message:'Timesheet list fethced successfully',
+            message:'Role fetched successfully',
             data: results, // Return all results in an array
         });
     } catch (error) {

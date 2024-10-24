@@ -122,8 +122,8 @@ router.post('/job/status',timesheet.markedasCompleted);
 router.post('/timesheet',timesheet.createTimesheets);
 router.get('/getRecruiterAndEmployerDetails',timesheet.getRecruiterAndEmployerDetailsByHiringId)
 router.get('/timesheet',timesheet.getTimeSheetsByRecruiterId);
-router.get('/roles',middleware,timesheet.getRoles);
-router.get('/progress-roles',middleware,timesheet.addtimesheet);
+router.get('/progress-roles',middleware,timesheet.getProgressRole);
+router.get('/roles',middleware,timesheet.getRole);
 //router.get('/view-timesheet-list',middleware,viewTimesheet);
 
 module.exports = router;
