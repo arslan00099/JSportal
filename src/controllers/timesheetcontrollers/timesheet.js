@@ -101,7 +101,7 @@ exports.getRecNotification = async (req, res) => {
                 jobStatus: true,
                 adminApprovalStatus: true,
                 recruiterApprovalStatus: true,
-               // paymentStatus: true,
+                // paymentStatus: true,
             },
         });
 
@@ -136,7 +136,7 @@ exports.getRecNotification = async (req, res) => {
                 jobStatus: record.jobStatus,
                 adminApprovalStatus: record.adminApprovalStatus,
                 recruiterApprovalStatus: record.recruiterApprovalStatus,
-               // paymentStatus: paymentStatus
+                // paymentStatus: paymentStatus
             };
         });
 
@@ -252,7 +252,7 @@ exports.getUpcomingBookings = async (req, res) => {
         // Add createdAt date range filters if provided
         if (startDate || endDate) {
             filters.createdAt = {}; // Initialize createdAt filter
-            
+
             if (startDate) {
                 filters.createdAt.gte = new Date(startDate); // Greater than or equal to startDate
             }
@@ -320,7 +320,7 @@ exports.getUpcomingBookings = async (req, res) => {
             error: error.message,
         });
     }
-};    
+};
 
 exports.markedasCompleted = async (req, res) => {
     try {
@@ -371,6 +371,9 @@ exports.createTimesheets = async (req, res) => {
         const {
             recruitingId,
             weeklyTimesheet, // Corrected to match the casing
+            totalHourWorked,
+            totalAmountDue,
+            totalPayableAmount,
             independentContracter,
             sendingtoclient,
             sendChargestoFuse,
@@ -410,6 +413,9 @@ exports.createTimesheets = async (req, res) => {
         const timesheetEntry = {
             recruitingId, // Attach recruitingId from request body
             weeklyTimesheet, // Corrected here
+            totalHourWorked,
+            totalAmountDue,
+            totalPayableAmount,
             independentContracter,
             sendingtoclient,
             sendChargestoFuse,
@@ -572,7 +578,7 @@ exports.approveTimesheet = async (req, res) => {
 };
 
 
-exports.getdetial=async(req,res) =>{
+exports.getdetial = async (req, res) => {
 
 };
 
@@ -630,19 +636,19 @@ exports.getRecruiterAndEmployerDetailsByHiringId = async (req, res) => {
             },
             select: {
                 fullname: true, // Select the fullName field
-                phnumber:true
+                phnumber: true
             },
         });
 
-        
+
         console.log('HireBy :', employerProfile?.fullname || 'Not Found');
         console.log('phoneNumber :', employerProfile?.phonenumber || 'Not Found');
         console.log('RecruiterName:', recProfile?.fullname || 'Not Found');
 
-        const result={
-            "hireBy":employerProfile?.fullname || 'N/A',
-            "phoneNumber":employerProfile?.phonenumber || 'N/A',
-            "RecruiterName":recProfile?.fullname || 'N/A',
+        const result = {
+            "hireBy": employerProfile?.fullname || 'N/A',
+            "phoneNumber": employerProfile?.phonenumber || 'N/A',
+            "RecruiterName": recProfile?.fullname || 'N/A',
         }
         // Respond with the fetched details
         res.status(200).json({
@@ -755,7 +761,7 @@ exports.getProgressRole = async (req, res) => {
         // Respond with the fetched details
         res.status(200).json({
             success: true,
-            message:'Progess role fetched successfully',
+            message: 'Progess role fetched successfully',
             data: results, // Return all results in an array
         });
     } catch (error) {
@@ -821,7 +827,7 @@ exports.getRole = async (req, res) => {
         // Respond with the fetched details
         res.status(200).json({
             success: true,
-            message:'Role fetched successfully',
+            message: 'Role fetched successfully',
             data: results, // Return all results in an array
         });
     } catch (error) {
@@ -887,7 +893,7 @@ exports.addTimeSheet = async (req, res) => {
         // Respond with the fetched details
         res.status(200).json({
             success: true,
-            message:'Timesheet list fethced successfully',
+            message: 'Timesheet list fethced successfully',
             data: results, // Return all results in an array
         });
     } catch (error) {
@@ -900,10 +906,10 @@ exports.addTimeSheet = async (req, res) => {
     }
 };
 
-exports.viewTimeSheet = async (req,res) =>{
+exports.viewTimeSheet = async (req, res) => {
     try {
         const { userId } = req.user; // Assuming userId is provided in req.user
-console.log(userId);
+        console.log(userId);
         // Fetching recruiter hiring records
         const recruiterHirings = await prismaClient.recruiterHiring.findMany({
             where: {
@@ -922,7 +928,7 @@ console.log(userId);
                 },
             },
         });
-    
+
         // Check if any timesheets were found
         if (timesheets.length === 0) {
             return res.status(404).json({
@@ -930,7 +936,7 @@ console.log(userId);
                 message: 'No timesheets found for the given ID',
             });
         }
-    
+
         // Map the timesheets to the desired response structure
         const result = timesheets.map((timesheet) => ({
             timesheetId: timesheet.id, // Assuming the timesheet has an id field
@@ -939,7 +945,7 @@ console.log(userId);
             employerName: timesheet.employer?.fullname || 'N/A', // Using optional chaining
             date: timesheet.date, // Assuming there's a date field
         }));
-    
+
         // Respond with the fetched timesheet details
         res.status(200).json({
             success: true,
@@ -954,7 +960,7 @@ console.log(userId);
             error: error.message,
         });
     }
-    
+
 
 };
 

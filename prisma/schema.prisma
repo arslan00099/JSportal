@@ -404,6 +404,9 @@ model RecruiterHiring {
 model TimeSheet {
   id                    Int             @id @default(autoincrement())
   weeklyTimesheet       Json?
+  totalHourWorked       Int
+  totalAmountDue        Int
+  totalPayableAmount    Int
   approvalStatusEmp     TimesheetStatus @default(PENDING)
   recruitingId          Int
   recruiterHiring       RecruiterHiring @relation(fields: [recruitingId], references: [id])
