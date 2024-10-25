@@ -1,10 +1,11 @@
 // src/viewmodels/profile.viewmodel.js
-const { PrismaClient } = require('@prisma/client');
-const { deleteDocument } = require('../../controllers/jscontrollers/user.controller');
+const { PrismaClient } = require("@prisma/client");
+const {
+  deleteDocument,
+} = require("../../controllers/jscontrollers/user.controller");
 const prisma = new PrismaClient();
 
 class UserProfileViewModel {
-
   async basicprofile(userId, fullname, phnumber, avatarId) {
     const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
 
@@ -47,8 +48,6 @@ class UserProfileViewModel {
     return userProfile;
   }
 
-
-
   async getProfile(userId) {
     try {
       const userDetails = await prisma.user.findUnique({
@@ -56,39 +55,39 @@ class UserProfileViewModel {
         include: {
           Profile: {
             include: {
-              JobSeekerProfile: true,  // Fetch Job Seeker Profile details
+              JobSeekerProfile: true, // Fetch Job Seeker Profile details
               //     MentorProfile: true,     // Fetch Mentor Profile details
               //   RecruiterProfile: true,  // Fetch Recruiter Profile details
               //   EmployerProfile: true,   // Fetch Employer Profile details
               //   AdminProfile: true       // Fetch Admin Profile details
             },
           },
-          Education: true,            // Fetch all Education details
-          Certificate: true,          // Fetch all Certificate details
-          Location: true,             // Fetch all Location details
-          EmpolymentHistory: true,    // Fetch all Employment History
-          Documents: true             // Fetch all Documents details
-        }
+          Education: true, // Fetch all Education details
+          Certificate: true, // Fetch all Certificate details
+          Location: true, // Fetch all Location details
+          EmpolymentHistory: true, // Fetch all Employment History
+          Documents: true, // Fetch all Documents details
+        },
       });
 
       // If no user found, return null or handle as needed
       if (!userDetails) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Base URLs for avatar and documents
       const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
-      const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume";         // Replace with your actual URL
+      const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume"; // Replace with your actual URL
 
       // Add full URL for avatar
-      userDetails.Profile.forEach(profile => {
+      userDetails.Profile.forEach((profile) => {
         if (profile.avatarId) {
           profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
         }
       });
 
       // Add full URL for resume and portfolio documents
-      userDetails.Documents.forEach(document => {
+      userDetails.Documents.forEach((document) => {
         if (document.resumeLink) {
           document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
         }
@@ -102,25 +101,22 @@ class UserProfileViewModel {
 
       return userDetails;
     } catch (error) {
-      throw new Error('Error fetching user details: ' + error.message);
+      throw new Error("Error fetching user details: " + error.message);
     }
   }
 
-
-
-
   async deleteProfile(userId) {
     const userProfile = await prisma.profile.findUnique({
-      where: { userId }
+      where: { userId },
     });
 
     if (!userProfile) {
-      throw new Error('Profile not found');
+      throw new Error("Profile not found");
     }
 
     // Perform the deletion
     const deletedProfile = await prisma.profile.delete({
-      where: { userId }
+      where: { userId },
     });
 
     return deletedProfile;
@@ -149,7 +145,14 @@ class UserProfileViewModel {
     return newEducation;
   }
 
-  async updateEducation(educationId, degree, institution, description, from, to) {
+  async updateEducation(
+    educationId,
+    degree,
+    institution,
+    description,
+    from,
+    to
+  ) {
     const fromDate = new Date(from).toISOString();
     const toDate = new Date(to).toISOString();
 
@@ -167,10 +170,6 @@ class UserProfileViewModel {
     return updatedEducation;
   }
 
-
-
-
-
   async deleteEducation(userId, educationId) {
     const userProfile = await prisma.education.findFirst({
       where: {
@@ -180,17 +179,15 @@ class UserProfileViewModel {
     });
 
     if (!userProfile) {
-      throw new Error('Education for this user does not exist');
+      throw new Error("Education for this user does not exist");
     }
 
-
     const deletedProfile = await prisma.education.delete({
-      where: { id: educationId }
+      where: { id: educationId },
     });
 
     return deletedProfile;
   }
-
 
   async insertCertificate(certName, orgName, description, from, to, userId) {
     const fromDate = new Date(from).toISOString();
@@ -211,7 +208,14 @@ class UserProfileViewModel {
     return newCertificate;
   }
 
-  async updateCertificate(certificateId, certName, orgName, description, from, to) {
+  async updateCertificate(
+    certificateId,
+    certName,
+    orgName,
+    description,
+    from,
+    to
+  ) {
     const fromDate = new Date(from).toISOString();
     const toDate = new Date(to).toISOString();
 
@@ -230,23 +234,22 @@ class UserProfileViewModel {
     return updatedCertificate;
   }
 
-
   async deleteCertificate(userId, certificateId) {
     // Check if a certificate exists for the user
     const certificate = await prisma.certificate.findFirst({
       where: {
         userId,
-        id: certificateId
-      }
+        id: certificateId,
+      },
     });
 
     if (!certificate) {
-      throw new Error('Certificate for this user does not exist');
+      throw new Error("Certificate for this user does not exist");
     }
 
     // Perform the deletion
     const deletedCertificate = await prisma.certificate.delete({
-      where: { id: certificateId }
+      where: { id: certificateId },
     });
 
     return deletedCertificate;
@@ -256,7 +259,7 @@ class UserProfileViewModel {
     try {
       // Check if a location already exists for this user
       const existingLocation = await prisma.location.findFirst({
-        where: { userId }
+        where: { userId },
       });
 
       if (existingLocation) {
@@ -285,22 +288,20 @@ class UserProfileViewModel {
         return newLocation;
       }
     } catch (error) {
-      throw new Error('Error adding or updating location: ' + error.message);
+      throw new Error("Error adding or updating location: " + error.message);
     }
   }
-
-
 
   // ViewModel for deleting a location by ID
   async deleteLocation(userId) {
     try {
       // Check if the location exists for the given userId
       const location = await prisma.location.findFirst({
-        where: { userId }
+        where: { userId },
       });
 
       if (!location) {
-        throw new Error('Location for this user does not exist');
+        throw new Error("Location for this user does not exist");
       }
 
       // Proceed to delete the found location
@@ -310,10 +311,9 @@ class UserProfileViewModel {
 
       return deletedLocation;
     } catch (error) {
-      throw new Error('Error deleting location: ' + error.message);
+      throw new Error("Error deleting location: " + error.message);
     }
   }
-
 
   // ViewModel for getting locations by userId
   async getLocations(userId) {
@@ -323,16 +323,21 @@ class UserProfileViewModel {
       });
       return locations;
     } catch (error) {
-      throw new Error('Error retrieving locations: ' + error.message);
+      throw new Error("Error retrieving locations: " + error.message);
     }
-  };
+  }
 
-
-  async InsertDocuments(userId, resumePath, portfolioPath, websiteLink, additionalLink) {
+  async InsertDocuments(
+    userId,
+    resumePath,
+    portfolioPath,
+    websiteLink,
+    additionalLink
+  ) {
     try {
       // Check if a document record already exists for this user
       const existingDocument = await prisma.documents.findFirst({
-        where: { userId }
+        where: { userId },
       });
 
       if (existingDocument) {
@@ -363,13 +368,20 @@ class UserProfileViewModel {
         return newDocument;
       }
     } catch (error) {
-      throw new Error('Error inserting or updating documents: ' + error.message);
+      throw new Error(
+        "Error inserting or updating documents: " + error.message
+      );
     }
   }
 
-
-
-  async insertEmploymentHistory(company, jobTitle, description, startedOn, endOn, userId) {
+  async insertEmploymentHistory(
+    company,
+    jobTitle,
+    description,
+    startedOn,
+    endOn,
+    userId
+  ) {
     const result = await prisma.empolymentHistory.create({
       data: {
         company,
@@ -377,16 +389,23 @@ class UserProfileViewModel {
         description,
         startedOn: new Date(startedOn).toISOString(),
         endOn: new Date(endOn).toISOString(),
-        userId,  // Foreign key linking to the user
+        userId, // Foreign key linking to the user
       },
     });
 
     return result;
   }
 
-  async updateEmploymentHistory(employmentId, company, jobTitle, description, startedOn, endOn) {
+  async updateEmploymentHistory(
+    employmentId,
+    company,
+    jobTitle,
+    description,
+    startedOn,
+    endOn
+  ) {
     const result = await prisma.empolymentHistory.update({
-      where: { id: employmentId },  // Identify the record by its unique id
+      where: { id: employmentId }, // Identify the record by its unique id
       data: {
         company,
         jobTitle,
@@ -398,7 +417,6 @@ class UserProfileViewModel {
 
     return result;
   }
-
 
   async deleteEmploymentHistory(userId, employmentId) {
     // Check if the employment history exists for the given userId
@@ -410,7 +428,7 @@ class UserProfileViewModel {
     });
 
     if (!employmentHistory) {
-      throw new Error('Employment history for this user does not exist');
+      throw new Error("Employment history for this user does not exist");
     }
 
     // Now delete the found record
@@ -421,9 +439,6 @@ class UserProfileViewModel {
     return deletedEmploymentHistory;
   }
 
-
-
-
   async getEmploymentHistory(userId) {
     const result = await prisma.employmentHistory.findUnique({
       where: { userId },
@@ -431,52 +446,53 @@ class UserProfileViewModel {
     return result;
   }
 
-
   async deleteDocument(userId) {
     // Check if the document exists for the given userId
     const document = await prisma.documents.findFirst({
-      where: { userId }
+      where: { userId },
     });
 
     if (!document) {
-      throw new Error('Document for this user does not exist');
+      throw new Error("Document for this user does not exist");
     }
 
     // Now delete the found document using its unique ID
     const deletedDocument = await prisma.documents.delete({
-      where: { id: document.id } // Use the unique ID of the document
+      where: { id: document.id }, // Use the unique ID of the document
     });
 
     return deletedDocument;
   }
 
-
-  async createMentorSession({ selectedService, selectedDateTime, userId, mentorId }) {
+  async createMentorSession({
+    selectedService,
+    selectedDateTime,
+    userId,
+    mentorId,
+  }) {
     console.log(selectedService, selectedDateTime, userId, mentorId);
     try {
       const mentorSession = await prisma.mentorSessionManagement.create({
         data: {
           selectedService, // This is the service ID
-          selectedDateTime: new Date(selectedDateTime),  // Ensure the date format is correct
+          selectedDateTime: new Date(selectedDateTime), // Ensure the date format is correct
           userId,
           mentorProfileId: mentorId, // Linking mentorId with mentorProfileId
-          status: "ACCEPTED",        // Default session status
-          paymentStatus: "COMPLETED",  // Set initial payment status
+          status: "ACCEPTED", // Default session status
+          paymentStatus: "COMPLETED", // Set initial payment status
         },
         include: {
-          Service: true,  // Include the Service details in the response
-          user: true,     // Include the user (JobSeeker) details
-          mentor: true,   // Include the mentor details (use mentor, not MentorProfile)
+          Service: true, // Include the Service details in the response
+          user: true, // Include the user (JobSeeker) details
+          mentor: true, // Include the mentor details (use mentor, not MentorProfile)
         },
       });
-  
+
       return mentorSession;
     } catch (error) {
       throw new Error(error.message);
     }
   }
-  
-
 
   async getBookedMentorSessions(userId) {
     try {
@@ -490,31 +506,38 @@ class UserProfileViewModel {
               name: true, // Only select service name
             },
           },
-          MentorProfile: {
+          // Profile: {
+          //   select: {
+          //     name: true, // Only select mentor name
+          //   },
+          // },
+          user: {
             select: {
-              name: true, // Only select mentor name
+              Profile: {
+                select: {
+                  fullname: true,
+                },
+              },
             },
           },
         },
       });
 
       // Return only the required fields in list format
-      const filteredSessions = sessions.map(session => ({
-        mentorName: session.MentorProfile?.name || "N/A",
-        serviceName: session.Service?.name || "N/A",
-        selectedDateTime: session.selectedDateTime,
-      }));
+      const filteredSessions = sessions.map((session) => {
+        return {
+          mentorName: session.user.Profile[0]?.fullname || "N/A",
+          serviceName: session.Service?.name || "N/A",
+          selectedDateTime: session.selectedDateTime,
+          status: session.status,
+        };
+      });
 
       return filteredSessions;
     } catch (error) {
       console.error("Error fetching mentor sessions:", error);
       throw error;
     }
-  };
-
-
-
-
-
+  }
 }
 module.exports = new UserProfileViewModel();
