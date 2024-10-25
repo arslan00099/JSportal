@@ -124,6 +124,7 @@ router.get('/getRecruiterAndEmployerDetails',timesheet.getRecruiterAndEmployerDe
 router.get('/timesheet',timesheet.getTimeSheetsByRecruiterId);
 router.get('/progress-roles',middleware,timesheet.getProgressRole);
 router.get('/roles',middleware,timesheet.getRole);
-//router.get('/view-timesheet-list',middleware,viewTimesheet);
+router.get('/add-timesheet-list',middleware,timesheet.addTimeSheet);
+router.get('/view-timesheet-list',middleware,timesheet.viewTimeSheet);
 
 module.exports = router;
