@@ -1,9 +1,20 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class JobViewModel {
   // Method to create a new job post
-  async postJob(jobTitle, companyName, location, description, applicationLink, companyIcon, status = 'OPEN',time,salary,jobType) {
+  async postJob(
+    jobTitle,
+    companyName,
+    location,
+    description,
+    applicationLink,
+    companyIcon,
+    status = "OPEN",
+    time,
+    salary,
+    jobType
+  ) {
     // Create the job post
     const newJobPost = await prisma.jobPost.create({
       data: {
@@ -16,62 +27,80 @@ class JobViewModel {
         status,
         time,
         salary,
-        jobType
+        jobType,
       },
     });
 
- return newJobPost;
+    return newJobPost;
   }
 
   // Method to search for job posts based on dynamic filters
-  async searchJobPosts({ jobTitle, companyName, location, jobType, pay, startDate, endDate, userId }) {
+  async searchJobPosts({
+    jobTitle,
+    companyName,
+    location,
+    jobType,
+    pay,
+    startDate,
+    endDate,
+    userId,
+  }) {
     const jobPosts = await prisma.jobPost.findMany({
       where: {
-        jobTitle: {
-          contains: jobTitle || '',
-        },
-        companyName: {
-          contains: companyName || '',
-        },
-        location: {
-          contains: location || '',
-        },
-        jobType: {
-          contains: jobType || '',
-        },
-        salary: {
-          contains: pay || '',
-        },
-        createdAt: {
-          gte: startDate || undefined,
-          lte: endDate || undefined,
-        },
+        ...(jobTitle && {
+          jobTitle: {
+            contains: jobTitle,
+          },
+        }),
+        ...(companyName && {
+          companyName: {
+            contains: companyName,
+          },
+        }),
+        ...(location && {
+          location: {
+            contains: location,
+          },
+        }),
+        ...(jobType && {
+          jobType: {
+            contains: jobType,
+          },
+        }),
+        ...(pay && {
+          salary: {
+            contains: pay,
+          },
+        }),
+        ...(startDate &&
+          endDate && {
+            createdAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+          }),
       },
       include: {
         saveJobpost: {
           where: {
-            userId: userId, // Include saved jobs for this userId
+            userId: userId,
           },
         },
         JobApplied: {
           where: {
-            userId: userId, // Include applied jobs for this userId
+            userId: userId,
           },
         },
       },
     });
-  
+
     // Map through job posts and add applied and saved status
     return jobPosts.map((job) => ({
       ...job,
-      applied: job.JobApplied.length > 0, // Set applied to true if the user applied for this job
-      saved: job.saveJobpost.length > 0,   // Set saved to true if the user saved this job
+      applied: job.JobApplied.length > 0,
+      saved: job.saveJobpost.length > 0,
     }));
   }
-  
-  
-  
-
 
   async saveJobpost(jobId, userId) {
     try {
@@ -79,29 +108,28 @@ class JobViewModel {
       const existingSaveJobpost = await prisma.saveJobpost.findFirst({
         where: {
           jobId: jobId,
-          userId
-        }
+          userId,
+        },
       });
-  
+
       // If the job post is already saved, return a message
       if (existingSaveJobpost) {
-        return { message: 'already saved' };
+        return { message: "already saved" };
       }
-  
+
       // If not, create a new saveJobpost entry
       const newSaveJobpost = await prisma.saveJobpost.create({
         data: {
           jobId: jobId,
-          userId
-        }
+          userId,
+        },
       });
-  
+
       return newSaveJobpost;
     } catch (error) {
       throw new Error(`Error saving job post: ${error.message}`);
     }
   }
-  
 
   async applyJobpost(jobId, userId) {
     try {
@@ -109,29 +137,28 @@ class JobViewModel {
       const existingSaveJobpost = await prisma.JobApplied.findFirst({
         where: {
           jobId: jobId,
-          userId
-        }
+          userId,
+        },
       });
-  
+
       // If the job post is already saved, return a message
       if (existingSaveJobpost) {
-        return ('already Applied');
+        return "already Applied";
       }
-  
+
       // If not, create a new saveJobpost entry
       const newSaveJobpost = await prisma.JobApplied.create({
         data: {
           jobId: jobId,
-          userId
-        }
+          userId,
+        },
       });
-  
+
       return newSaveJobpost;
     } catch (error) {
       throw new Error(`Error saving job post: ${error.message}`);
     }
   }
-  
 }
 
 module.exports = new JobViewModel();

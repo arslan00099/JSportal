@@ -18,6 +18,7 @@ enum UserRole {
   MENTOR
   RECRUITER
   EMPLOYER
+  STAFF_MEMBER
   ADMIN
 }
 
@@ -96,6 +97,14 @@ enum Days {
   Sunday
 }
 
+enum JobAppliedStatus {
+  IN_PROGRESS
+  RESUMED_REVIEWED
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  REJECTED
+}
+
 model User {
   id             Int      @id @default(autoincrement())
   email          String   @unique
@@ -108,7 +117,9 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   isActive       Boolean  @default(true)
+  isAdmin        Boolean  @default(false)
   firstLogin     Boolean  @default(true)
+  activeCardId   Int?
 
   // Relations
   Profile                 Profile[]
@@ -133,9 +144,13 @@ model User {
   employerRecruiterHirings  RecruiterHiring[] @relation("EmployerRecruiterHirings")
   recruiterRecruiterHirings RecruiterHiring[] @relation("RecruiterRecruiterHirings")
 
-  mentorSessions     MentorSessionManagement[] @relation("MentorSessions")
-  mentorNotification Notification[]            @relation("MentorNotification")
-  services           Service[]
+  mentorSessions         MentorSessionManagement[] @relation("MentorSessions")
+  mentorNotification     Notification[]            @relation("MentorNotification")
+  services               Service[]
+  JobPost                JobPost[]
+  EmployerPointOfContact EmployerPointOfContact[]
+  Activity               Activity[]
+  Card                   Card[]
 
   @@index([email])
   @@index([role])
@@ -151,6 +166,8 @@ model Profile {
   avatarId         String?
   location         String?
   companyName      String?
+  companySize      String?
+  companyLink      String?
   about            String?           @db.Text
   language         String?
   tagline          String?
@@ -208,13 +225,14 @@ model EmpolymentHistory {
 }
 
 model Location {
-  id         Int    @id @default(autoincrement())
-  city       String
-  state      String
-  country    String
-  postalCode Int
-  userId     Int    @unique
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         Int     @id @default(autoincrement())
+  city       String?
+  state      String?
+  country    String?
+  address    String?
+  postalCode Int?
+  userId     Int     @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Documents {
@@ -229,15 +247,20 @@ model Documents {
 
 model JobPost {
   id              Int           @id @default(autoincrement())
+  randomId        String?
   jobTitle        String
   companyName     String
   location        String
-  description     String
+  description     String        @db.LongText
   applicationLink String
-  companyIcon     String
+  companyIcon     String?
   time            String?
   jobType         String
   salary          String?
+  minPrice        String?
+  maxPrice        String?
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   status          JobStatus     @default(OPEN)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -254,11 +277,13 @@ model SaveJobpost {
 }
 
 model JobApplied {
-  id      Int     @id @default(autoincrement())
-  jobId   Int
-  jobpost JobPost @relation(fields: [jobId], references: [id])
-  userId  Int
-  User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          Int              @id @default(autoincrement())
+  jobId       Int
+  jobpost     JobPost          @relation(fields: [jobId], references: [id])
+  userId      Int
+  User        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appliedDate DateTime         @default(now())
+  status      JobAppliedStatus @default(IN_PROGRESS)
 }
 
 model Notification {
@@ -311,9 +336,9 @@ model Service {
   pricing                 Int
   mentorId                Int?
   user                    User?                     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-  RecruiterHiring         RecruiterHiring[]
   MentorSessionManagement MentorSessionManagement[]
   Booking                 Booking[]
+  HiredService            HiredService[]
 }
 
 model MentorSessionManagement {
@@ -358,6 +383,17 @@ model EmployerProfile {
   JobApplication JobApplication[]
 }
 
+model EmployerPointOfContact {
+  id            Int     @id @default(autoincrement())
+  name          String
+  jobRole       String?
+  phnumber      String?
+  email         String?
+  userId        Int?
+  user          User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactNumber String?
+}
+
 model JobApplication {
   id               Int              @id @default(autoincrement())
   jobTitle         String
@@ -380,25 +416,31 @@ model JobApplication {
 
 model RecruiterHiring {
   id                      Int               @id @default(autoincrement())
-  startDate               DateTime
-  endDate                 DateTime
   jobDetail               String
-  serviceName             String
   adminApprovalStatus     HiringStatusAdmin
   recruiterApprovalStatus HiringStatusRec
   jobStatus               JobStatus
   paymentStatus           PaymentStatus?
   employerId              Int
   employer                User              @relation("EmployerRecruiterHirings", fields: [employerId], references: [id], map: "FK_EmployerId")
-  serviceId               Int
-  service                 Service           @relation(fields: [serviceId], references: [id])
   recruiterId             Int?
   recruiter               User?             @relation("RecruiterRecruiterHirings", fields: [recruiterId], references: [id], map: "FK_RecId")
   timeSheets              TimeSheet[] // One-to-Many relationship with TimeSheet
+  hiredServices           HiredService[] // One-to-Many relationship with HiredService
   createdAt               DateTime?         @default(now())
   updatedAt               DateTime?         @updatedAt
 
   @@map("RecruiterHiring")
+}
+
+model HiredService {
+  id               Int             @id @default(autoincrement())
+  hiredRecruiterId Int
+  serviceId        Int
+  startDate        DateTime
+  endDate          DateTime
+  hiredRecruiter   RecruiterHiring @relation(fields: [hiredRecruiterId], references: [id])
+  service          Service         @relation(fields: [serviceId], references: [id])
 }
 
 model TimeSheet {
@@ -465,4 +507,24 @@ model Earning {
 
 model TimeSheetTest {
   id Int @id @default(autoincrement())
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  title     String
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Card {
+  id             Int    @id @default(autoincrement())
+  email          String
+  cardNumber     String
+  cardHolderName String
+  expiryDate     String
+  cvv            String
+  userId         Int // Foreign key reference to User
+  user           User   @relation(fields: [userId], references: [id])
 }

@@ -16,12 +16,12 @@ async function main() {
   }
 
   // Seed job posts
-  for (const jobPost of jobPosts) {
-    const createdJobPost = await prisma.jobPost.create({
-      data: jobPost,
-    });
-    console.log(`Created job post: ${createdJobPost.jobTitle}`);
-  }
+  // for (const jobPost of jobPosts) {
+  //   const createdJobPost = await prisma.jobPost.create({
+  //     data: jobPost,
+  //   });
+  //   console.log(`Created job post: ${createdJobPost.jobTitle}`);
+  // }
 
   // Seed notifications
   for (const notification of notifications) {

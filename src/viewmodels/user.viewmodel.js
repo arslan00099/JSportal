@@ -27,7 +27,9 @@ class UserViewModel {
   }
 
   async login(email, password) {
+    console.log(email, password);
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log(user);
     if (!user) {
       throw new Error("User not found");
     }

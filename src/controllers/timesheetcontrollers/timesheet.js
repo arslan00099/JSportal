@@ -99,7 +99,6 @@ exports.updateAdminApprovalStatus = async (req, res) => {
 exports.getRecNotification = async (req, res) => {
   try {
     const { userId } = req.user;
-    console.log("User ID:", userId);
 
     // Fetching all hiring records where recruiterId matches the userId
     const hiringRecords = await prismaClient.recruiterHiring.findMany({
@@ -118,10 +117,7 @@ exports.getRecNotification = async (req, res) => {
     });
 
     if (hiringRecords.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No hiring records found for this recruiter",
-      });
+      return res.status(200).json({ sucess: true, data: [] });
     }
 
     // Extract employerIds from hiringRecords
@@ -168,42 +164,39 @@ exports.getRecNotification = async (req, res) => {
 };
 
 exports.getDetails = async (req, res) => {
-
-    //const { userId } = req.user;
-    const { hiringId } = req.query;
-    const hiringIdInt = parseInt(hiringId, 10);
-    console.log(hiringId);
-    try {
-        const hiringRecords = await prismaClient.recruiterHiring.findMany({
-            where: {
-                // recruiterId: userId,
-                id: hiringIdInt,
-            },
-            select: {
-                id: true,        // Selecting the 'id' from recruiterHiring
-                employerId: true, // Selecting the 'employerId'
-                startDate: true,
-                endDate: true,
-                serviceName: true,
-                jobDetail: true,
-            },
-        });
-        res.status(200).json({
-            success: true,
-            message: 'Detailed record',
-            data: hiringRecords, // Returning the custom response
-        });
-
-    } catch (error) {
-        console.error('Error fetching notifications:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Server error',
-            error: error.message,
-        });
-    }
-
-}
+  //const { userId } = req.user;
+  const { hiringId } = req.query;
+  const hiringIdInt = parseInt(hiringId, 10);
+  console.log(hiringId);
+  try {
+    const hiringRecords = await prismaClient.recruiterHiring.findMany({
+      where: {
+        // recruiterId: userId,
+        id: hiringIdInt,
+      },
+      select: {
+        id: true, // Selecting the 'id' from recruiterHiring
+        employerId: true, // Selecting the 'employerId'
+        startDate: true,
+        endDate: true,
+        serviceName: true,
+        jobDetail: true,
+      },
+    });
+    res.status(200).json({
+      success: true,
+      message: "Detailed record",
+      data: hiringRecords, // Returning the custom response
+    });
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
 
 //   //const { userId } = req.user;
 //   const { hiringId } = req.query;
@@ -238,7 +231,6 @@ exports.getDetails = async (req, res) => {
 //     });
 //   }
 // };
-
 
 exports.updateRecApprovalStatus = async (req, res) => {
   try {
@@ -627,8 +619,6 @@ exports.approveTimesheet = async (req, res) => {
     });
   }
 };
-
-
 
 exports.getRecruiterAndEmployerDetailsByHiringId = async (req, res) => {
   try {
