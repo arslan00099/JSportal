@@ -203,41 +203,7 @@ exports.getDetails = async (req, res) => {
         });
     }
 
-}
-
-//   //const { userId } = req.user;
-//   const { hiringId } = req.query;
-//   const hiringIdInt = parseInt(hiringId, 10);
-//   console.log(hiringId);
-//   try {
-//     const hiringRecords = await prismaClient.recruiterHiring.findMany({
-//       where: {
-//         // recruiterId: userId,
-//         id: hiringIdInt,
-//       },
-//       select: {
-//         id: true, // Selecting the 'id' from recruiterHiring
-//         employerId: true, // Selecting the 'employerId'
-//         startDate: true,
-//         endDate: true,
-//         serviceName: true,
-//         jobDetail: true,
-//         recruiterApprovalStatus: true,
-//       },
-//     });
-//     res.status(200).json({
-//       success: true,
-//       data: hiringRecords,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching notifications:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Server error",
-//       error: error.message,
-//     });
-//   }
-// };
+} 
 
 
 exports.updateRecApprovalStatus = async (req, res) => {

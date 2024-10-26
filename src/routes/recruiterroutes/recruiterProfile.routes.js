@@ -14,6 +14,9 @@ const bookingController = require("../../controllers/recruitercontrollers/bookin
 const timesheet = require("../../controllers/timesheetcontrollers/timesheet");
 const main = require("../../controllers/recruitercontrollers/main.controller");
 const allJobSeeker = require('../../controllers/recruitercontrollers/getalljobseeker');
+const earnings = require('../../controllers/recruitercontrollers/earnings.contorller');
+
+
 // Set up multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -53,7 +56,7 @@ const cvupload = multer({ storage: cvstorage });
 const uploadVideo = multer({ storage: videostorage });
 
 // router.post('/testprofile', middleware,controller.insert);
- //router.get('/testprofile', controller.getMentorProfile);
+//router.get('/testprofile', controller.getMentorProfile);
 // router.get('/session',middleware,booking.getMentorSession);
 // router.get('/earnings',middleware,booking.getMentorEarnings);
 
@@ -151,20 +154,22 @@ router.get("/progress-roles", middleware, timesheet.getProgressRole);
 router.get("/roles", middleware, timesheet.getRole);
 router.get("/add-timesheet-list", middleware, timesheet.addTimeSheet);
 router.get("/view-timesheet-list", middleware, timesheet.viewTimeSheet);
-router.post('/upload-video', uploadVideo.single('mentorVideo'),middleware, profileController.uploadVideo);
-router.get('/notification',middleware,timesheet.getRecNotification);
+router.post('/upload-video', uploadVideo.single('mentorVideo'), middleware, profileController.uploadVideo);
+router.get('/notification', middleware, timesheet.getRecNotification);
 router.get('/recruting/details', timesheet.getDetails);
-router.post('/job/approve',timesheet.updateRecApprovalStatus);
-router.get('/upcommingbookings',middleware,timesheet.getUpcomingBookings);
-router.post('/job/status',timesheet.markedasCompleted);
-router.post('/timesheet',timesheet.createTimesheets);
-router.get('/getRecruiterAndEmployerDetails',timesheet.getRecruiterAndEmployerDetailsByHiringId)
-router.get('/timesheet',timesheet.getTimeSheetsByRecruiterId);
-router.get('/progress-roles',middleware,timesheet.getProgressRole);
-router.get('/roles',middleware,timesheet.getRole);
-router.get('/add-timesheet-list',middleware,timesheet.addTimeSheet);
-router.get('/view-timesheet-list',middleware,timesheet.viewTimeSheet);
-router.get('/getAllJobseeker',allJobSeeker.getallJobseekerProfile);
+router.post('/job/approve', timesheet.updateRecApprovalStatus);
+router.get('/upcommingbookings', middleware, timesheet.getUpcomingBookings);
+router.post('/job/status', timesheet.markedasCompleted);
+router.post('/timesheet', timesheet.createTimesheets);
+router.get('/getRecruiterAndEmployerDetails', timesheet.getRecruiterAndEmployerDetailsByHiringId)
+router.get('/timesheet', timesheet.getTimeSheetsByRecruiterId);
+router.get('/progress-roles', middleware, timesheet.getProgressRole);
+router.get('/roles', middleware, timesheet.getRole);
+router.get('/add-timesheet-list', middleware, timesheet.addTimeSheet);
+router.get('/view-timesheet-list', middleware, timesheet.viewTimeSheet);
+router.get('/getAllJobseeker', allJobSeeker.getallJobseekerProfile);
 
+router.get('/earnings', earnings.getEarnings);
+router.get('/bookings', earnings.getBookings)
 
 module.exports = router;

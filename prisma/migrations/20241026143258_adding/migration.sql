@@ -29,7 +29,7 @@ CREATE TABLE `Profile` (
     `avatarId` VARCHAR(191) NULL,
     `location` VARCHAR(191) NULL,
     `companyName` VARCHAR(191) NULL,
-    `about` VARCHAR(191) NULL,
+    `about` TEXT NULL,
     `language` VARCHAR(191) NULL,
     `tagline` VARCHAR(191) NULL,
     `industry` VARCHAR(191) NULL,
@@ -129,7 +129,7 @@ CREATE TABLE `JobPost` (
     `time` VARCHAR(191) NULL,
     `jobType` VARCHAR(191) NOT NULL,
     `salary` VARCHAR(191) NULL,
-    `status` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD') NOT NULL DEFAULT 'OPEN',
+    `status` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD', 'IN_PROGRESS', 'COMPLETED') NOT NULL DEFAULT 'OPEN',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -202,7 +202,7 @@ CREATE TABLE `MentorProfile` (
 CREATE TABLE `Service` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
+    `description` TEXT NOT NULL,
     `pricing` INTEGER NOT NULL,
     `mentorId` INTEGER NULL,
 
@@ -214,10 +214,10 @@ CREATE TABLE `MentorSessionManagement` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `selectedService` INTEGER NULL,
     `selectedDateTime` DATETIME(3) NULL,
-    `status` ENUM('ACCEPTED', 'DECLINED', 'CANCELLED', 'WAITING') NULL DEFAULT 'ACCEPTED',
+    `status` ENUM('ACCEPTED', 'DECLINED', 'CANCELLED', 'WAITING', 'DECLINE') NULL DEFAULT 'ACCEPTED',
     `userId` INTEGER NOT NULL,
     `mentorProfileId` INTEGER NULL,
-    `paymentStatus` ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED') NULL DEFAULT 'COMPLETED',
+    `paymentStatus` ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED', 'PAID', 'DECLINE') NULL DEFAULT 'COMPLETED',
     `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NULL,
 
@@ -263,7 +263,7 @@ CREATE TABLE `JobApplication` (
     `tags` VARCHAR(191) NOT NULL,
     `jsId` INTEGER NOT NULL,
     `postedBy` INTEGER NOT NULL,
-    `jobStatus` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD') NOT NULL,
+    `jobStatus` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD', 'IN_PROGRESS', 'COMPLETED') NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `jobPostId` INTEGER NULL,
@@ -282,12 +282,15 @@ CREATE TABLE `RecruiterHiring` (
     `endDate` DATETIME(3) NOT NULL,
     `jobDetail` VARCHAR(191) NOT NULL,
     `serviceName` VARCHAR(191) NOT NULL,
-    `adminApprovalStatus` ENUM('ACCEPTED', 'DECLINED', 'CANCELLED', 'PENDING') NOT NULL,
-    `recruiterApprovalStatus` ENUM('ACCEPTED', 'DECLINED', 'CANCELLED') NOT NULL,
-    `jobStatus` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD') NOT NULL,
+    `adminApprovalStatus` ENUM('ACCEPTED', 'APPROVED', 'DECLINED', 'DECLINE', 'CANCELLED', 'PENDING') NOT NULL,
+    `recruiterApprovalStatus` ENUM('ACCEPTED', 'APPROVED', 'DECLINED', 'CANCELLED', 'PENDING', 'DECLINE') NOT NULL,
+    `jobStatus` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD', 'IN_PROGRESS', 'COMPLETED') NOT NULL,
+    `paymentStatus` ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED', 'PAID', 'DECLINE') NULL,
     `employerId` INTEGER NOT NULL,
     `serviceId` INTEGER NOT NULL,
     `recruiterId` INTEGER NULL,
+    `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -295,10 +298,19 @@ CREATE TABLE `RecruiterHiring` (
 -- CreateTable
 CREATE TABLE `TimeSheet` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `employerId` INTEGER NOT NULL,
-    `recruiterId` INTEGER NOT NULL,
-    `fuseAdminId` INTEGER NULL,
-    `status` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `weeklyTimesheet` JSON NULL,
+    `totalHourWorked` INTEGER NOT NULL,
+    `totalAmountDue` INTEGER NOT NULL,
+    `totalPayableAmount` INTEGER NOT NULL,
+    `approvalStatusEmp` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `recruitingId` INTEGER NOT NULL,
+    `independentContracter` BOOLEAN NULL,
+    `sendingtoclient` BOOLEAN NULL,
+    `sendChargestoFuse` BOOLEAN NULL,
+    `managingSupervion` VARCHAR(191) NULL,
+    `recruiterName` VARCHAR(191) NULL,
+    `HiredBy` VARCHAR(191) NULL,
+    `phoneNumber` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -324,10 +336,10 @@ CREATE TABLE `Booking` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `selectedService` INTEGER NULL,
     `selectedDateTime` DATETIME(3) NULL,
-    `status` ENUM('ACCEPTED', 'DECLINED', 'CANCELLED', 'WAITING') NULL DEFAULT 'ACCEPTED',
+    `status` ENUM('ACCEPTED', 'DECLINED', 'CANCELLED', 'WAITING', 'DECLINE') NULL DEFAULT 'ACCEPTED',
     `employerId` INTEGER NOT NULL,
     `recId` INTEGER NOT NULL,
-    `paymentStatus` ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED') NULL DEFAULT 'COMPLETED',
+    `paymentStatus` ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED', 'PAID', 'DECLINE') NULL DEFAULT 'COMPLETED',
     `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NULL,
 
@@ -347,41 +359,48 @@ CREATE TABLE `Earning` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- AddForeignKey
-ALTER TABLE `Profile` ADD CONSTRAINT `Profile_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateTable
+CREATE TABLE `TimeSheetTest` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `JobSeekerProfile` ADD CONSTRAINT `JobSeekerProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Profile` ADD CONSTRAINT `Profile_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Education` ADD CONSTRAINT `Education_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `JobSeekerProfile` ADD CONSTRAINT `JobSeekerProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Certificate` ADD CONSTRAINT `Certificate_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Education` ADD CONSTRAINT `Education_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `EmpolymentHistory` ADD CONSTRAINT `EmpolymentHistory_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Certificate` ADD CONSTRAINT `Certificate_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Location` ADD CONSTRAINT `Location_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `EmpolymentHistory` ADD CONSTRAINT `EmpolymentHistory_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Documents` ADD CONSTRAINT `Documents_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Location` ADD CONSTRAINT `Location_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Documents` ADD CONSTRAINT `Documents_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `SaveJobpost` ADD CONSTRAINT `SaveJobpost_jobId_fkey` FOREIGN KEY (`jobId`) REFERENCES `JobPost`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `SaveJobpost` ADD CONSTRAINT `SaveJobpost_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `SaveJobpost` ADD CONSTRAINT `SaveJobpost_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `JobApplied` ADD CONSTRAINT `JobApplied_jobId_fkey` FOREIGN KEY (`jobId`) REFERENCES `JobPost`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `JobApplied` ADD CONSTRAINT `JobApplied_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `JobApplied` ADD CONSTRAINT `JobApplied_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Notification` ADD CONSTRAINT `FK_User_Notification` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Notification` ADD CONSTRAINT `FK_User_Notification` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Notification` ADD CONSTRAINT `FK_Mentor_Notification` FOREIGN KEY (`mentorId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -390,28 +409,28 @@ ALTER TABLE `Notification` ADD CONSTRAINT `FK_Mentor_Notification` FOREIGN KEY (
 ALTER TABLE `Review` ADD CONSTRAINT `Review_notificationId_fkey` FOREIGN KEY (`notificationId`) REFERENCES `Notification`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MentorProfile` ADD CONSTRAINT `MentorProfile_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `MentorProfile` ADD CONSTRAINT `MentorProfile_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Service` ADD CONSTRAINT `Service_mentorId_fkey` FOREIGN KEY (`mentorId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `Service` ADD CONSTRAINT `Service_mentorId_fkey` FOREIGN KEY (`mentorId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `MentorSessionManagement` ADD CONSTRAINT `MentorSessionManagement_selectedService_fkey` FOREIGN KEY (`selectedService`) REFERENCES `Service`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `MentorSessionManagement` ADD CONSTRAINT `FK_User_Session` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `MentorSessionManagement` ADD CONSTRAINT `FK_User_Session` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `MentorSessionManagement` ADD CONSTRAINT `FK_Mentor_Session` FOREIGN KEY (`mentorProfileId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `RecruiterProfile` ADD CONSTRAINT `RecruiterProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `RecruiterProfile` ADD CONSTRAINT `RecruiterProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `AdminProfile` ADD CONSTRAINT `AdminProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `AdminProfile` ADD CONSTRAINT `AdminProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `EmployerProfile` ADD CONSTRAINT `EmployerProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `EmployerProfile` ADD CONSTRAINT `EmployerProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `JobApplication` ADD CONSTRAINT `JobApplication_jsId_fkey` FOREIGN KEY (`jsId`) REFERENCES `JobSeekerProfile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -429,13 +448,7 @@ ALTER TABLE `RecruiterHiring` ADD CONSTRAINT `RecruiterHiring_serviceId_fkey` FO
 ALTER TABLE `RecruiterHiring` ADD CONSTRAINT `FK_RecId` FOREIGN KEY (`recruiterId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `TimeSheet` ADD CONSTRAINT `TimeSheet_employerId_fkey` FOREIGN KEY (`employerId`) REFERENCES `EmployerProfile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `TimeSheet` ADD CONSTRAINT `TimeSheet_recruiterId_fkey` FOREIGN KEY (`recruiterId`) REFERENCES `RecruiterProfile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `TimeSheet` ADD CONSTRAINT `TimeSheet_fuseAdminId_fkey` FOREIGN KEY (`fuseAdminId`) REFERENCES `AdminProfile`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `TimeSheet` ADD CONSTRAINT `TimeSheet_recruitingId_fkey` FOREIGN KEY (`recruitingId`) REFERENCES `RecruiterHiring`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Blog` ADD CONSTRAINT `Blog_mentorId_fkey` FOREIGN KEY (`mentorId`) REFERENCES `MentorProfile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

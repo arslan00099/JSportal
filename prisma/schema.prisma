@@ -275,8 +275,8 @@ model Notification {
 
 model Review {
   id             Int          @id @default(autoincrement())
-  content        String // Actual review content
-  notificationId Int // Relation to Notification
+  content        String       // Actual review content
+  notificationId Int          // Relation to Notification
   rating         Int
   notification   Notification @relation(fields: [notificationId], references: [id])
   createdAt      DateTime     @default(now())
@@ -463,6 +463,3 @@ model Earning {
   updatedAt   DateTime          @updatedAt
 }
 
-model TimeSheetTest {
-  id Int @id @default(autoincrement())
-}
