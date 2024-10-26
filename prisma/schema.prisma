@@ -144,7 +144,7 @@ model User {
 model Profile {
   id               Int               @id @default(autoincrement())
   userId           Int               @unique
-  user             User              @relation(fields: [userId], references: [id])
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullname         String?
   phnumber         Int?
   mentorvideolink  String?
@@ -168,7 +168,7 @@ model JobSeekerProfile {
   id             Int              @id @default(autoincrement())
   resume         String?
   profileId      Int              @unique
-  profile        Profile          @relation(fields: [profileId], references: [id])
+  profile        Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
   JobApplication JobApplication[]
 }
 
@@ -180,7 +180,7 @@ model Education {
   startFrom      String
   endIn          String
   userId         Int
-  user           User   @relation(fields: [userId], references: [id])
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId]) // Index userId to allow multiple records
 }
@@ -193,7 +193,7 @@ model Certificate {
   completedOn String
   startedOn   String
   userId      Int
-  user        User   @relation(fields: [userId], references: [id])
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model EmpolymentHistory {
@@ -204,7 +204,7 @@ model EmpolymentHistory {
   startedOn   String
   endOn       String
   userId      Int
-  user        User   @relation(fields: [userId], references: [id])
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Location {
@@ -214,7 +214,7 @@ model Location {
   country    String
   postalCode Int
   userId     Int    @unique
-  user       User   @relation(fields: [userId], references: [id])
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Documents {
@@ -224,7 +224,7 @@ model Documents {
   websiteLink    String?
   additionalLink String?
   userId         Int     @unique
-  user           User    @relation(fields: [userId], references: [id])
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model JobPost {
@@ -250,7 +250,7 @@ model SaveJobpost {
   jobId   Int
   jobpost JobPost @relation(fields: [jobId], references: [id])
   userId  Int
-  User    User    @relation(fields: [userId], references: [id])
+  User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model JobApplied {
@@ -258,7 +258,7 @@ model JobApplied {
   jobId   Int
   jobpost JobPost @relation(fields: [jobId], references: [id])
   userId  Int
-  User    User    @relation(fields: [userId], references: [id])
+  User    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -266,7 +266,7 @@ model Notification {
   title     String
   message   String
   userId    Int
-  user      User     @relation("UserNotification", fields: [userId], references: [id], map: "FK_User_Notification")
+  user      User     @relation("UserNotification", fields: [userId], references: [id], map: "FK_User_Notification", onDelete: Cascade)
   mentorId  Int?
   mentor    User?    @relation("MentorNotification", fields: [mentorId], references: [id], map: "FK_Mentor_Notification")
   createdAt DateTime @default(now())
@@ -297,7 +297,7 @@ model MentorProfile {
   rating           Int
   totalReview      Int?
   userId           Int
-  user             User    @relation(fields: [userId], references: [id])
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedinProfile  String?
 
   Blog    Blog[]
@@ -310,7 +310,7 @@ model Service {
   description             String                    @db.Text
   pricing                 Int
   mentorId                Int?
-  user                    User?                     @relation(fields: [mentorId], references: [id])
+  user                    User?                     @relation(fields: [mentorId], references: [id], onDelete: Cascade)
   RecruiterHiring         RecruiterHiring[]
   MentorSessionManagement MentorSessionManagement[]
   Booking                 Booking[]
@@ -323,7 +323,7 @@ model MentorSessionManagement {
   selectedDateTime DateTime? // Optional field
   status           SessionStatus? @default(ACCEPTED) // Optional field
   userId           Int
-  user             User           @relation("UserSessions", fields: [userId], references: [id], map: "FK_User_Session")
+  user             User           @relation("UserSessions", fields: [userId], references: [id], map: "FK_User_Session", onDelete: Cascade)
   mentorProfileId  Int?
   mentor           User?          @relation("MentorSessions", fields: [mentorProfileId], references: [id], map: "FK_Mentor_Session")
   paymentStatus    PaymentStatus? @default(COMPLETED) // Optional field with default value
@@ -337,7 +337,7 @@ model RecruiterProfile {
   resume          String?
   linkedinProfile String
   profileId       Int     @unique
-  profile         Profile @relation(fields: [profileId], references: [id])
+  profile         Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   Earning Earning[]
 }
@@ -345,7 +345,7 @@ model RecruiterProfile {
 model AdminProfile {
   id        Int     @id @default(autoincrement())
   profileId Int     @unique
-  profile   Profile @relation(fields: [profileId], references: [id])
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   Blog Blog[]
 }
@@ -354,7 +354,7 @@ model EmployerProfile {
   id             Int              @id @default(autoincrement())
   profileId      Int              @unique
   resume         String?
-  profile        Profile          @relation(fields: [profileId], references: [id])
+  profile        Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
   JobApplication JobApplication[]
 }
 

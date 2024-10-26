@@ -1,17 +1,17 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class UserViewModel {
-  async signup(username, password, email,role) {
+  async signup(username, password, email, role) {
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) {
-      throw new Error('User already exists');
+      throw new Error("User already exists");
     }
-console.log(role);
+    console.log(role);
     const hashedPassword = await bcrypt.hash(password, 10);
-console.log(hashedPassword);
+    console.log(hashedPassword);
     const newUser = await prisma.user.create({
       data: {
         username,
@@ -29,28 +29,28 @@ console.log(hashedPassword);
   async login(email, password) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
-  
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     }
-  
+
     // Generate token
-    const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '30d',
-    });
-  
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
+
     // Destructure password out of the user object before returning
     const { password: _, ...userWithoutPassword } = user;
-  
+
     return { user: userWithoutPassword, token };
   }
-
-
-
-
 }
 
 module.exports = new UserViewModel();
