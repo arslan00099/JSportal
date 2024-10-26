@@ -12,7 +12,7 @@ const settingController = require('../../controllers/recruitercontrollers/settin
 const serviceController = require('../../controllers/recruitercontrollers/service.controller');
 const bookingController = require ('../../controllers/recruitercontrollers/booking.controller');
 const timesheet=require('../../controllers/timesheetcontrollers/timesheet');
-
+const allJobSeeker = require('../../controllers/recruitercontrollers/getalljobseeker');
 // Set up multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -54,7 +54,7 @@ const cvupload = multer({ storage: cvstorage });
 const uploadVideo = multer({ storage: videostorage });
 
 // router.post('/testprofile', middleware,controller.insert);
-// router.get('/testprofile', controller.getMentorProfile);
+ //router.get('/testprofile', controller.getMentorProfile);
 // router.get('/session',middleware,booking.getMentorSession);
 // router.get('/earnings',middleware,booking.getMentorEarnings);
 
@@ -126,5 +126,7 @@ router.get('/progress-roles',middleware,timesheet.getProgressRole);
 router.get('/roles',middleware,timesheet.getRole);
 router.get('/add-timesheet-list',middleware,timesheet.addTimeSheet);
 router.get('/view-timesheet-list',middleware,timesheet.viewTimeSheet);
+router.get('/getAllJobseeker',allJobSeeker.getallJobseekerProfile);
+
 
 module.exports = router;

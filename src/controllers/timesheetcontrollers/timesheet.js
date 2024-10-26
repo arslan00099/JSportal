@@ -177,7 +177,7 @@ exports.getDetails = async (req, res) => {
         });
         res.status(200).json({
             success: true,
-            message: 'Here is the response',
+            message: 'Detailed record',
             data: hiringRecords, // Returning the custom response
         });
 
