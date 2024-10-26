@@ -4,14 +4,16 @@ CREATE TABLE `User` (
     `email` VARCHAR(191) NOT NULL,
     `secondaryEmail` VARCHAR(191) NULL,
     `password` VARCHAR(191) NOT NULL,
-    `role` ENUM('JOB_SEEKER', 'MENTOR', 'RECRUITER', 'EMPLOYER', 'ADMIN') NOT NULL,
+    `role` ENUM('JOB_SEEKER', 'MENTOR', 'RECRUITER', 'EMPLOYER', 'STAFF_MEMBER', 'ADMIN') NOT NULL,
     `resume` VARCHAR(191) NULL,
     `email_confirm` BOOLEAN NOT NULL DEFAULT false,
     `profileId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `isAdmin` BOOLEAN NOT NULL DEFAULT false,
     `firstLogin` BOOLEAN NOT NULL DEFAULT true,
+    `activeCardId` INTEGER NULL,
 
     UNIQUE INDEX `User_email_key`(`email`),
     INDEX `User_email_idx`(`email`),
@@ -29,6 +31,8 @@ CREATE TABLE `Profile` (
     `avatarId` VARCHAR(191) NULL,
     `location` VARCHAR(191) NULL,
     `companyName` VARCHAR(191) NULL,
+    `companySize` VARCHAR(191) NULL,
+    `companyLink` VARCHAR(191) NULL,
     `about` TEXT NULL,
     `language` VARCHAR(191) NULL,
     `tagline` VARCHAR(191) NULL,
@@ -94,10 +98,11 @@ CREATE TABLE `EmpolymentHistory` (
 -- CreateTable
 CREATE TABLE `Location` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `city` VARCHAR(191) NOT NULL,
-    `state` VARCHAR(191) NOT NULL,
-    `country` VARCHAR(191) NOT NULL,
-    `postalCode` INTEGER NOT NULL,
+    `city` VARCHAR(191) NULL,
+    `state` VARCHAR(191) NULL,
+    `country` VARCHAR(191) NULL,
+    `address` VARCHAR(191) NULL,
+    `postalCode` INTEGER NULL,
     `userId` INTEGER NOT NULL,
 
     UNIQUE INDEX `Location_userId_key`(`userId`),
@@ -120,15 +125,19 @@ CREATE TABLE `Documents` (
 -- CreateTable
 CREATE TABLE `JobPost` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `randomId` VARCHAR(191) NULL,
     `jobTitle` VARCHAR(191) NOT NULL,
     `companyName` VARCHAR(191) NOT NULL,
     `location` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
+    `description` LONGTEXT NOT NULL,
     `applicationLink` VARCHAR(191) NOT NULL,
-    `companyIcon` VARCHAR(191) NOT NULL,
+    `companyIcon` VARCHAR(191) NULL,
     `time` VARCHAR(191) NULL,
     `jobType` VARCHAR(191) NOT NULL,
     `salary` VARCHAR(191) NULL,
+    `minPrice` VARCHAR(191) NULL,
+    `maxPrice` VARCHAR(191) NULL,
+    `userId` INTEGER NOT NULL,
     `status` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD', 'IN_PROGRESS', 'COMPLETED') NOT NULL DEFAULT 'OPEN',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -150,6 +159,8 @@ CREATE TABLE `JobApplied` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `jobId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
+    `appliedDate` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `status` ENUM('IN_PROGRESS', 'RESUMED_REVIEWED', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'REJECTED') NOT NULL DEFAULT 'IN_PROGRESS',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -256,6 +267,19 @@ CREATE TABLE `EmployerProfile` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `EmployerPointOfContact` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `jobRole` VARCHAR(191) NULL,
+    `phnumber` VARCHAR(191) NULL,
+    `email` VARCHAR(191) NULL,
+    `userId` INTEGER NULL,
+    `contactNumber` VARCHAR(191) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `JobApplication` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `jobTitle` VARCHAR(191) NOT NULL,
@@ -278,19 +302,26 @@ CREATE TABLE `JobApplication` (
 -- CreateTable
 CREATE TABLE `RecruiterHiring` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `startDate` DATETIME(3) NOT NULL,
-    `endDate` DATETIME(3) NOT NULL,
     `jobDetail` VARCHAR(191) NOT NULL,
-    `serviceName` VARCHAR(191) NOT NULL,
     `adminApprovalStatus` ENUM('ACCEPTED', 'APPROVED', 'DECLINED', 'DECLINE', 'CANCELLED', 'PENDING') NOT NULL,
     `recruiterApprovalStatus` ENUM('ACCEPTED', 'APPROVED', 'DECLINED', 'CANCELLED', 'PENDING', 'DECLINE') NOT NULL,
     `jobStatus` ENUM('OPEN', 'HIRED', 'CLOSED', 'CANCELLED', 'ONHOLD', 'IN_PROGRESS', 'COMPLETED') NOT NULL,
     `paymentStatus` ENUM('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED', 'CANCELLED', 'PAID', 'DECLINE') NULL,
     `employerId` INTEGER NOT NULL,
-    `serviceId` INTEGER NOT NULL,
     `recruiterId` INTEGER NULL,
     `createdAt` DATETIME(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `HiredService` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `hiredRecruiterId` INTEGER NOT NULL,
+    `serviceId` INTEGER NOT NULL,
+    `startDate` DATETIME(3) NOT NULL,
+    `endDate` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -360,8 +391,25 @@ CREATE TABLE `Earning` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `TimeSheetTest` (
+CREATE TABLE `Activity` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(191) NOT NULL,
+    `userId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Card` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(191) NOT NULL,
+    `cardNumber` VARCHAR(191) NOT NULL,
+    `cardHolderName` VARCHAR(191) NOT NULL,
+    `expiryDate` VARCHAR(191) NOT NULL,
+    `cvv` VARCHAR(191) NOT NULL,
+    `userId` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -386,6 +434,9 @@ ALTER TABLE `Location` ADD CONSTRAINT `Location_userId_fkey` FOREIGN KEY (`userI
 
 -- AddForeignKey
 ALTER TABLE `Documents` ADD CONSTRAINT `Documents_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `JobPost` ADD CONSTRAINT `JobPost_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `SaveJobpost` ADD CONSTRAINT `SaveJobpost_jobId_fkey` FOREIGN KEY (`jobId`) REFERENCES `JobPost`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -433,6 +484,9 @@ ALTER TABLE `AdminProfile` ADD CONSTRAINT `AdminProfile_profileId_fkey` FOREIGN 
 ALTER TABLE `EmployerProfile` ADD CONSTRAINT `EmployerProfile_profileId_fkey` FOREIGN KEY (`profileId`) REFERENCES `Profile`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `EmployerPointOfContact` ADD CONSTRAINT `EmployerPointOfContact_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `JobApplication` ADD CONSTRAINT `JobApplication_jsId_fkey` FOREIGN KEY (`jsId`) REFERENCES `JobSeekerProfile`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -442,10 +496,13 @@ ALTER TABLE `JobApplication` ADD CONSTRAINT `JobApplication_postedBy_fkey` FOREI
 ALTER TABLE `RecruiterHiring` ADD CONSTRAINT `FK_EmployerId` FOREIGN KEY (`employerId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `RecruiterHiring` ADD CONSTRAINT `RecruiterHiring_serviceId_fkey` FOREIGN KEY (`serviceId`) REFERENCES `Service`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `RecruiterHiring` ADD CONSTRAINT `FK_RecId` FOREIGN KEY (`recruiterId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `RecruiterHiring` ADD CONSTRAINT `FK_RecId` FOREIGN KEY (`recruiterId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `HiredService` ADD CONSTRAINT `HiredService_hiredRecruiterId_fkey` FOREIGN KEY (`hiredRecruiterId`) REFERENCES `RecruiterHiring`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `HiredService` ADD CONSTRAINT `HiredService_serviceId_fkey` FOREIGN KEY (`serviceId`) REFERENCES `Service`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `TimeSheet` ADD CONSTRAINT `TimeSheet_recruitingId_fkey` FOREIGN KEY (`recruitingId`) REFERENCES `RecruiterHiring`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -470,3 +527,9 @@ ALTER TABLE `Earning` ADD CONSTRAINT `Earning_mentorId_fkey` FOREIGN KEY (`mento
 
 -- AddForeignKey
 ALTER TABLE `Earning` ADD CONSTRAINT `Earning_recruiterId_fkey` FOREIGN KEY (`recruiterId`) REFERENCES `RecruiterProfile`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Activity` ADD CONSTRAINT `Activity_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Card` ADD CONSTRAINT `Card_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
