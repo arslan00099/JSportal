@@ -270,10 +270,4 @@ module.exports = [
       ],
     },
   },
-  {
-    email: "recruiter@example.com",
-    password: bcrypt.hashSync("password123", 10),
-    role: "RECRUITER",
-    Profile: {},
-  },
 ];

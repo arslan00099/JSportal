@@ -12,6 +12,7 @@ const settingController = require("../../controllers/recruitercontrollers/settin
 const serviceController = require("../../controllers/recruitercontrollers/service.controller");
 const bookingController = require("../../controllers/recruitercontrollers/booking.controller");
 const timesheet = require("../../controllers/timesheetcontrollers/timesheet");
+const main = require("../../controllers/recruitercontrollers/main.controller");
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -133,6 +134,8 @@ router.post(
   middleware,
   profileController.uploadVideo
 );
+router.get("/getAllJobseeker", middleware, main.getAllJobSeeker);
+router.get("/jobseeker/detail/:id", middleware, main.getJobSeekerDetail);
 router.get("/notification", middleware, timesheet.getRecNotification);
 router.get("/recruting/details", timesheet.getDetails);
 router.post("/job/approve", timesheet.updateRecApprovalStatus);
