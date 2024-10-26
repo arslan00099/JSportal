@@ -505,10 +505,6 @@ model Earning {
   updatedAt   DateTime          @updatedAt
 }
 
-model TimeSheetTest {
-  id Int @id @default(autoincrement())
-}
-
 model Activity {
   id        Int      @id @default(autoincrement())
   title     String
