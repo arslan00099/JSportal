@@ -13,13 +13,6 @@ const serviceController = require("../../controllers/recruitercontrollers/servic
 const bookingController = require("../../controllers/recruitercontrollers/booking.controller");
 const timesheet = require("../../controllers/timesheetcontrollers/timesheet");
 const main = require("../../controllers/recruitercontrollers/main.controller");
-
-const profileController=require ('../../controllers/recruitercontrollers/profile.controller');
-const middleware = require('../../middleware/middleware');
-const settingController = require('../../controllers/recruitercontrollers/setting.controller');
-const serviceController = require('../../controllers/recruitercontrollers/service.controller');
-const bookingController = require ('../../controllers/recruitercontrollers/booking.controller');
-const timesheet=require('../../controllers/timesheetcontrollers/timesheet');
 const allJobSeeker = require('../../controllers/recruitercontrollers/getalljobseeker');
 // Set up multer storage configuration
 const storage = multer.diskStorage({
