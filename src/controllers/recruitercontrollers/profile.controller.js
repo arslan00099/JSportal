@@ -1,13 +1,13 @@
 // src/controllers/user.controller.js
 //const userViewModel = require('../../viewmodels/mentorviewmodels/profile.viewmodel');
-const userViewModel = require('../../viewmodels/mentorviewmodels/profile.viewmodel');
-const { PrismaClient } = require('@prisma/client');
+const userViewModel = require("../../viewmodels/mentorviewmodels/profile.viewmodel");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-
 
 exports.postProfile = async (req, res) => {
   try {
-    const { fullname, phnumber, services, industry, about, language } = req.body;
+    const { fullname, phnumber, services, industry, about, language } =
+      req.body;
     const { userId } = req.user;
     const phoneNumber = parseInt(phnumber, 10);
 
@@ -76,9 +76,8 @@ exports.postProfile = async (req, res) => {
   }
 };
 
-
 exports.getProfile = async (req, res) => {
-  const { userId }=req.user;
+  const { userId } = req.user;
   try {
     const userDetails = await prisma.user.findUnique({
       where: { id: userId },
@@ -92,15 +91,15 @@ exports.getProfile = async (req, res) => {
         Documents: true, // Include Documents relation
         Notification: {
           include: {
-            Review: true // Fetch related Review data for each Notification
-          }
-        }
-      }
+            Review: true, // Fetch related Review data for each Notification
+          },
+        },
+      },
     });
 
     // If no user found, return null or handle as needed
     if (!userDetails) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     // Base URLs for avatar and documents
@@ -110,7 +109,7 @@ exports.getProfile = async (req, res) => {
 
     // Add full URL for avatar in Profile (check if Profile exists first)
     if (userDetails.Profile && userDetails.Profile.length > 0) {
-      userDetails.Profile.forEach(profile => {
+      userDetails.Profile.forEach((profile) => {
         if (profile.avatarId) {
           profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
         }
@@ -122,22 +121,21 @@ exports.getProfile = async (req, res) => {
 
     // Add full URL for resume and portfolio documents (check if Documents exist first)
     if (userDetails.Documents && userDetails.Documents.length > 0) {
-      userDetails.Documents.forEach(document => {
+      userDetails.Documents.forEach((document) => {
         if (document.resumeLink) {
           document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
         }
         if (document.portfolioLink) {
           document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
         }
-        
       });
     }
 
     // Format reviews under notifications
     if (userDetails.Notification && userDetails.Notification.length > 0) {
-      userDetails.Notification.forEach(notification => {
+      userDetails.Notification.forEach((notification) => {
         if (notification.Review && notification.Review.length > 0) {
-          notification.Reviews = notification.Review.map(review => ({
+          notification.Reviews = notification.Review.map((review) => ({
             id: review.id,
             content: review.content,
             rating: review.rating,
@@ -152,16 +150,20 @@ exports.getProfile = async (req, res) => {
     // Remove sensitive data
     delete userDetails.password;
 
-    res.status(200).json({ success: true, data: userDetails });
+    res.status(200).json({
+      success: true,
+      data: {
+        ...userDetails,
+        Profile: userDetails.Profile.map((item) => ({
+          ...item,
+          avatarId: `/utils/profilephotos/${item.avatarId}`,
+        })),
+      },
+    });
   } catch (error) {
-    throw new Error('Error fetching user details: ' + error.message);
+    throw new Error("Error fetching user details: " + error.message);
   }
-
 };
-
-
-
-
 
 exports.deleteProfile = async (req, res) => {
   try {
@@ -173,7 +175,9 @@ exports.deleteProfile = async (req, res) => {
     });
 
     if (!userProfile) {
-      return res.status(404).json({ success: false, message: 'Profile not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Profile not found" });
     }
 
     // Delete the user profile
@@ -181,12 +185,13 @@ exports.deleteProfile = async (req, res) => {
       where: { userId },
     });
 
-    res.status(200).json({ success: true, message: 'Profile deleted successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: "Profile deleted successfully" });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 exports.postEducation = async (req, res) => {
   try {
@@ -223,17 +228,16 @@ exports.postEducation = async (req, res) => {
 
     // Send a success response with the new education data
     res.status(200).json({ success: true, data: newEducation });
-
   } catch (error) {
     console.log("Error adding education details");
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
-
 exports.updateEducation = async (req, res) => {
   try {
-    const { educationId, degree, institution, description, from, to } = req.body;
+    const { educationId, degree, institution, description, from, to } =
+      req.body;
 
     // Parse the dates into ISO strings if they are provided
     const fromDate = from ? new Date(from).toISOString() : undefined;
@@ -245,7 +249,9 @@ exports.updateEducation = async (req, res) => {
     });
 
     if (!educationExists) {
-      return res.status(404).json({ success: false, message: 'Education record not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Education record not found" });
     }
 
     // Update the education record
@@ -276,7 +282,9 @@ exports.deleteEducation = async (req, res) => {
     });
 
     if (!educationExists) {
-      return res.status(404).json({ success: false, message: 'Education record not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Education record not found" });
     }
 
     // Delete the education record
@@ -284,13 +292,14 @@ exports.deleteEducation = async (req, res) => {
       where: { id: educationId },
     });
 
-    res.status(200).json({ success: true, message: 'Education record deleted successfully' });
+    res.status(200).json({
+      success: true,
+      message: "Education record deleted successfully",
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
-
 
 exports.insertCertificate = async (req, res) => {
   try {
@@ -313,7 +322,6 @@ exports.insertCertificate = async (req, res) => {
         completedOn: toDate,
         userId: userId, // Foreign key to user
       },
-
     });
 
     res.status(201).json({
@@ -329,10 +337,10 @@ exports.insertCertificate = async (req, res) => {
   }
 };
 
-
 exports.updateCertificate = async (req, res) => {
   try {
-    const { certificateId, certName, orgName, description, from, to } = req.body;
+    const { certificateId, certName, orgName, description, from, to } =
+      req.body;
     const { userId } = req.user;
 
     // Check if the certificate exists and belongs to the user
@@ -341,7 +349,10 @@ exports.updateCertificate = async (req, res) => {
     });
 
     if (!certificateExists) {
-      return res.status(404).json({ success: false, message: 'Certificate not found or access denied' });
+      return res.status(404).json({
+        success: false,
+        message: "Certificate not found or access denied",
+      });
     }
 
     // Convert dates to ISO format if provided
@@ -354,7 +365,9 @@ exports.updateCertificate = async (req, res) => {
     };
 
     // Remove undefined fields (i.e., fields that were not provided in the update)
-    Object.keys(updatedData).forEach(key => updatedData[key] === undefined && delete updatedData[key]);
+    Object.keys(updatedData).forEach(
+      (key) => updatedData[key] === undefined && delete updatedData[key]
+    );
 
     // Update the certificate
     const updatedCertificate = await prisma.certificate.update({
@@ -368,7 +381,6 @@ exports.updateCertificate = async (req, res) => {
   }
 };
 
-
 exports.deleteCertificate = async (req, res) => {
   try {
     const { certificateId } = req.body;
@@ -380,7 +392,10 @@ exports.deleteCertificate = async (req, res) => {
     });
 
     if (!certificateExists) {
-      return res.status(404).json({ success: false, message: 'Certificate not found or access denied' });
+      return res.status(404).json({
+        success: false,
+        message: "Certificate not found or access denied",
+      });
     }
 
     // Delete the certificate
@@ -388,17 +403,15 @@ exports.deleteCertificate = async (req, res) => {
       where: { id: certificateId },
     });
 
-    res.status(200).json({ success: true, message: 'Certificate deleted successfully' });
+    res
+      .status(200)
+      .json({ success: true, message: "Certificate deleted successfully" });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
-
-
-
 exports.insertEmploymentHistory = async (req, res) => {
-
   try {
     const { company, jobTitle, description, startedOn, endOn } = req.body;
     const { userId } = req.user; // Assuming userId comes from authentication middleware
@@ -411,7 +424,7 @@ exports.insertEmploymentHistory = async (req, res) => {
         description,
         startedOn: new Date(startedOn).toISOString(),
         endOn: new Date(endOn).toISOString(),
-        userId,  // Foreign key linking to the user
+        userId, // Foreign key linking to the user
       },
     });
 
@@ -431,7 +444,6 @@ exports.insertEmploymentHistory = async (req, res) => {
   }
 };
 
-
 exports.updateEmploymentHistory = async (req, res) => {
   try {
     const { employmentId } = req.body; // Assuming employmentId is passed in the body
@@ -444,7 +456,9 @@ exports.updateEmploymentHistory = async (req, res) => {
     });
 
     if (!employmentRecord) {
-      return res.status(404).json({ success: false, message: 'Employment history not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employment history not found" });
     }
 
     // Update the employment history record
@@ -454,7 +468,9 @@ exports.updateEmploymentHistory = async (req, res) => {
         company: company || employmentRecord.company, // Update only if new value is provided
         jobTitle: jobTitle || employmentRecord.jobTitle,
         description: description || employmentRecord.description,
-        startedOn: startedOn ? new Date(startedOn).toISOString() : employmentRecord.startedOn,
+        startedOn: startedOn
+          ? new Date(startedOn).toISOString()
+          : employmentRecord.startedOn,
         endOn: endOn ? new Date(endOn).toISOString() : employmentRecord.endOn,
       },
     });
@@ -469,7 +485,6 @@ exports.updateEmploymentHistory = async (req, res) => {
   }
 };
 
-
 exports.deleteEmploymentHistory = async (req, res) => {
   try {
     const { employmentId } = req.body; // Assuming employmentId is passed in the request body
@@ -481,12 +496,16 @@ exports.deleteEmploymentHistory = async (req, res) => {
     });
 
     if (!employmentRecord) {
-      return res.status(404).json({ success: false, message: 'Employment history not found' });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employment history not found" });
     }
 
     // Check if the user making the request is the owner of the employment history
     if (employmentRecord.userId !== userId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized action' });
+      return res
+        .status(403)
+        .json({ success: false, message: "Unauthorized action" });
     }
 
     // Delete the employment history record
@@ -495,7 +514,10 @@ exports.deleteEmploymentHistory = async (req, res) => {
     });
 
     // Send a success response after deletion
-    res.status(200).json({ success: true, message: 'Employment history deleted successfully' });
+    res.status(200).json({
+      success: true,
+      message: "Employment history deleted successfully",
+    });
   } catch (error) {
     console.error("Error deleting employment history:", error.message);
 
@@ -503,8 +525,6 @@ exports.deleteEmploymentHistory = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
-
 
 // Controller for adding a new location
 exports.addLocation = async (req, res) => {
@@ -514,7 +534,7 @@ exports.addLocation = async (req, res) => {
   try {
     // Check if a location already exists for this user
     const existingLocation = await prisma.location.findFirst({
-      where: { userId }
+      where: { userId },
     });
 
     let location;
@@ -549,7 +569,6 @@ exports.addLocation = async (req, res) => {
   }
 };
 
-
 // Controller for deleting a location by ID
 exports.deleteLocation = async (req, res) => {
   const { userId } = req.user; // Extract userId from the authenticated user
@@ -557,11 +576,14 @@ exports.deleteLocation = async (req, res) => {
   try {
     // Check if the location exists for the given userId
     const location = await prisma.location.findFirst({
-      where: { userId }
+      where: { userId },
     });
 
     if (!location) {
-      return res.status(404).json({ success: false, message: 'Location for this user does not exist' });
+      return res.status(404).json({
+        success: false,
+        message: "Location for this user does not exist",
+      });
     }
 
     // Proceed to delete the found location
@@ -569,13 +591,16 @@ exports.deleteLocation = async (req, res) => {
       where: { id: location.id }, // Use the unique identifier of the found location
     });
 
-    res.status(200).json({ success: true, message: 'Location deleted successfully', data: deletedLocation });
+    res.status(200).json({
+      success: true,
+      message: "Location deleted successfully",
+      data: deletedLocation,
+    });
   } catch (error) {
     console.error("Error during location deletion:", error.message); // Improved logging
     res.status(400).json({ success: false, error: error.message });
   }
 };
-
 
 // Controller for getting locations by userId
 exports.getLocations = async (req, res) => {
@@ -588,12 +613,13 @@ exports.getLocations = async (req, res) => {
   }
 };
 
-
 exports.uploadDocuments = async (req, res) => {
   try {
     // Check if both resume and portfolio files are uploaded
     if (!req.files || !req.files.resume || !req.files.portfolio) {
-      return res.status(400).json({ error: 'Please upload both resume and portfolio files.' });
+      return res
+        .status(400)
+        .json({ error: "Please upload both resume and portfolio files." });
     }
 
     const { websiteLink, additionalLink } = req.body;
@@ -605,7 +631,7 @@ exports.uploadDocuments = async (req, res) => {
 
     // Check if a document record already exists for this user
     const existingDocument = await prisma.documents.findFirst({
-      where: { userId }
+      where: { userId },
     });
 
     let result;
@@ -650,16 +676,19 @@ exports.deleteDocuments = async (req, res) => {
 
     // Check if the document exists for the given userId
     const document = await prisma.documents.findFirst({
-      where: { userId }
+      where: { userId },
     });
 
     if (!document) {
-      return res.status(404).json({ success: false, message: 'Document for this user does not exist' });
+      return res.status(404).json({
+        success: false,
+        message: "Document for this user does not exist",
+      });
     }
 
     // Now delete the found document using its unique ID
     const deletedDocument = await prisma.documents.delete({
-      where: { id: document.id } // Use the unique ID of the document
+      where: { id: document.id }, // Use the unique ID of the document
     });
 
     // Respond with the deletion success
@@ -682,7 +711,7 @@ exports.uploadVideo = async (req, res) => {
 
     // Check if the file is available
     if (!req.file) {
-      return res.status(400).json({ error: 'No video file uploaded' });
+      return res.status(400).json({ error: "No video file uploaded" });
     }
 
     // Get the video filename
@@ -702,40 +731,18 @@ exports.uploadVideo = async (req, res) => {
     );
 
     return res.status(200).json({
-      message: 'Video uploaded and profile updated successfully',
+      message: "Video uploaded and profile updated successfully",
       profile: filteredProfile,
     });
   } catch (error) {
-    console.error('Error uploading video:', error);
-    return res.status(500).json({ error: 'An error occurred while uploading the video' });
+    console.error("Error uploading video:", error);
+    return res
+      .status(500)
+      .json({ error: "An error occurred while uploading the video" });
   }
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //////////////////////////////////////////////////////   NOT USED
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -754,45 +761,34 @@ exports.post_about = async (req, res) => {
 };
 
 exports.get_about = async (req, res) => {
-
   let { userId } = req.user;
   console.log(userId);
   try {
-    const newSession = await userViewModel.get_about(
-      userId
-    );
+    const newSession = await userViewModel.get_about(userId);
     res.status(201).json({ success: true, data: newSession });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
-
 exports.getNotification = async (req, res) => {
   let { userId } = req.user;
   console.log(userId);
   try {
-    const result = await userViewModel.getNotification(
-      userId
-    );
+    const result = await userViewModel.getNotification(userId);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 exports.getReview = async (req, res) => {
   let { userId } = req.user;
   console.log(userId);
   try {
-    const result = await userViewModel.getReview(
-      userId
-    );
+    const result = await userViewModel.getReview(userId);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
-

@@ -27,6 +27,16 @@ router.delete("/job/:jobId", middleware, main.deleteJob);
 router.get("/job-applied/:jobId", middleware, main.getAppliedJobsByJobId);
 router.get("/recruiters", middleware, main.getRecruiterList);
 router.get("/recruiter/:recruiterId", middleware, main.getRecruiterDetails);
+router.get(
+  "/recruiter/timesheet/:recruiterId",
+  middleware,
+  main.getTimesheetListByRecruiterId
+);
+router.get(
+  "/recruiter/timesheet/detail/:id",
+  middleware,
+  main.getTimesheetDetails
+);
 router.post("/hire", middleware, main.hireRecruiter);
 router.get("/hired-recruiters", middleware, main.getHiredRecruiters);
 router.get("/staff", middleware, main.getStaffMemberList);

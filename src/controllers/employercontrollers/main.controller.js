@@ -361,7 +361,7 @@ exports.getRecruiterList = async (req, res) => {
       id: item.id,
       fullname: item.Profile[0]?.fullname,
       location: item.Profile[0]?.location,
-      avatarId: item.Profile[0]?.avatarId,
+      avatarId: "/utils/profilephotos/" + item.Profile[0]?.avatarId,
       services: item.services,
       rating: 0,
       reviews: 0,
@@ -391,11 +391,6 @@ exports.getRecruiterDetails = async (req, res) => {
         EmpolymentHistory: true,
         Education: true,
         services: true,
-        recruiterRecruiterHirings: {
-          include: {
-            timeSheets: true,
-          },
-        },
         Notification: {
           include: {
             Review: true,
@@ -415,7 +410,85 @@ exports.getRecruiterDetails = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: otherDetail,
+      data: {
+        ...otherDetail,
+        Profile: otherDetail?.Profile?.map((item) => ({
+          ...item,
+          avatarId: item?.avatarId
+            ? "/utils/profilePhotos/" + item?.avatarId
+            : null,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Error retrieving recruiter details:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve recruiter details",
+      error: error.message,
+    });
+  }
+};
+exports.getTimesheetListByRecruiterId = async (req, res) => {
+  const { recruiterId } = req.params;
+
+  try {
+    const timesheets = await prisma.timeSheet.findMany({
+      where: {
+        recruiterHiring: {
+          recruiterId: Number(recruiterId),
+        },
+      },
+      include: {
+        recruiterHiring: {
+          include: {
+            hiredServices: {
+              include: {
+                service: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: timesheets,
+    });
+  } catch (error) {
+    console.error("Error retrieving recruiter details:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve recruiter details",
+      error: error.message,
+    });
+  }
+};
+exports.getTimesheetDetails = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const timesheets = await prisma.timeSheet.findFirst({
+      where: {
+        id: Number(id),
+      },
+      include: {
+        recruiterHiring: {
+          include: {
+            hiredServices: {
+              include: {
+                service: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: timesheets,
     });
   } catch (error) {
     console.error("Error retrieving recruiter details:", error);
@@ -461,7 +534,9 @@ exports.getTalentList = async (req, res) => {
       id: item.id,
       fullname: item.Profile[0]?.fullname,
       location: item.Profile[0]?.location,
-      avatarId: item.Profile[0]?.avatarId,
+      avatarId: item.Profile[0]?.avatarId
+        ? "/utils/profilePhotos/" + item.Profile[0]?.avatarId
+        : null,
       services: item.services,
       rating: 0,
       reviews: 0,
@@ -502,7 +577,15 @@ exports.getTalentDetail = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: talent,
+      data: {
+        ...talent,
+        Profile: talent?.Profile?.map((item) => ({
+          ...item,
+          avatarId: item?.avatarId
+            ? "/utils/profilePhotos/" + item?.avatarId
+            : null,
+        })),
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -673,7 +756,7 @@ exports.getHiredRecruiters = async (req, res) => {
     const filteredData = await hiredRecruiters.map((hire) => ({
       id: hire.id,
       recruiterId: hire.recruiterId,
-      avatarId: hire.recruiter.Profile[0]?.avatarId,
+      avatarId: "/utils/profilephotos/" + hire.recruiter.Profile[0]?.avatarId,
       fullname: hire.recruiter.Profile[0]?.fullname,
       location: hire.recruiter.Profile[0]?.location,
       services: hire.hiredServices,

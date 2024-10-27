@@ -82,6 +82,7 @@ class UserProfileViewModel {
       // Add full URL for avatar
       userDetails.Profile.forEach((profile) => {
         if (profile.avatarId) {
+          profile.avatarId = `/utils/profilephotos/${profile.avatarId}`;
           profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
         }
       });
@@ -519,7 +520,7 @@ class UserProfileViewModel {
       });
 
       // Return only the required fields in list format
-      const filteredSessions = sessions.map(session => ({
+      const filteredSessions = sessions.map((session) => ({
         mentorName: session.MentorProfile?.name || "N/A",
         serviceName: session.Service?.name || "N/A",
         selectedDateTime: session.selectedDateTime,

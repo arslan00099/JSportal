@@ -3,80 +3,93 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
+  // Define custom data for the recruiter user
+  const email = "alinasmith@example.com";
+  const password = await bcrypt.hash("alinasmith", 10);
+  const profileData = {
+    fullname: "Alina Smith",
+    phnumber: 987654321,
+    location: "Los Angeles, USA",
+    about: "Connecting industry leaders with top talent.",
+    companyName: "Global Recruitment Solutions",
+    tagline: "Your partner in talent acquisition.",
+    industry: "Human Resources",
+    language: "English, Spanish",
+  };
+  const educationData = [
+    {
+      degreName: "Master of Business Administration",
+      universityName: "University of California, Los Angeles",
+      description: "Specialized in Global Talent Management.",
+      startFrom: new Date("2015-09-01").toLocaleDateString(),
+      endIn: new Date("2017-06-01").toLocaleDateString(),
+    },
+  ];
+  const certificateData = [
+    {
+      certName: "Advanced Talent Acquisition Certification",
+      orgName: "International HR Organization",
+      description: "Expertise in modern recruiting strategies.",
+      startedOn: new Date("2020-01-01").toLocaleDateString(),
+      completedOn: new Date("2020-06-01").toLocaleDateString(),
+    },
+  ];
+  const employmentHistoryData = [
+    {
+      company: "WorldWide Recruiters",
+      jobTitle: "Lead Recruiter",
+      description: "Led a team of recruiters to fulfill global talent needs.",
+      startedOn: new Date("2018-07-01").toLocaleDateString(),
+      endOn: new Date("2023-08-01").toLocaleDateString(),
+    },
+  ];
+  const locationData = {
+    city: "Los Angeles",
+    state: "CA",
+    country: "USA",
+    postalCode: 90001,
+  };
+  const servicesData = [
+    {
+      name: "Global Talent Sourcing",
+      description: "Connecting businesses with international professionals.",
+      pricing: 20000, // price in cents
+    },
+    {
+      name: "HR Process Improvement",
+      description: "Optimizing HR and recruitment processes.",
+      pricing: 18000, // price in cents
+    },
+  ];
+
+  // Create the recruiter user with the specified data
   await prisma.user.create({
     data: {
-      email: "recruiter@example.com",
-      password: await bcrypt.hash("password123", 10),
+      email,
+      password,
       role: "RECRUITER",
       Profile: {
-        create: {
-          fullname: "Recruiter Example",
-          phnumber: 123456789,
-          location: "New York, USA",
-          about: "Connecting talented professionals with top companies.",
-          companyName: "Recruitment Hub",
-          tagline: "Finding the right talent.",
-          industry: "Recruitment",
-          language: "English",
-        },
+        create: profileData,
       },
       Education: {
-        create: [
-          {
-            degreName: "Bachelor of Business Administration",
-            universityName: "New York University",
-            description: "Focused on Human Resources and Talent Acquisition.",
-            startFrom: "2010-09-01T00:00:00.000Z",
-            endIn: "2014-06-01T00:00:00.000Z",
-          },
-        ],
+        create: educationData,
       },
       Certificate: {
-        create: [
-          {
-            certName: "Certified Professional Recruiter",
-            orgName: "Recruitment Association",
-            description: "Certification for professional recruiting practices.",
-            startedOn: "2019-01-01T00:00:00.000Z",
-            completedOn: "2019-06-01T00:00:00.000Z",
-          },
-        ],
+        create: certificateData,
       },
       EmpolymentHistory: {
-        create: [
-          {
-            company: "Talent Connect",
-            jobTitle: "Senior Recruiter",
-            description: "Managed end-to-end recruitment processes.",
-            startedOn: "2015-07-01T00:00:00.000Z",
-            endOn: "2020-08-01T00:00:00.000Z",
-          },
-        ],
+        create: employmentHistoryData,
       },
       Location: {
-        create: {
-          city: "New York",
-          state: "NY",
-          country: "USA",
-          postalCode: 10001,
-        },
+        create: locationData,
       },
       services: {
-        create: [
-          {
-            name: "Talent Acquisition Consulting",
-            description: "Providing insights on effective talent acquisition.",
-            pricing: 15000, // price in cents
-          },
-          {
-            name: "Recruitment Process Optimization",
-            description: "Streamlining recruitment processes.",
-            pricing: 10000, // price in cents
-          },
-        ],
+        create: servicesData,
       },
     },
   });
+
+  console.log("Custom recruiter created successfully");
 }
 
 main()

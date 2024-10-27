@@ -423,7 +423,7 @@ exports.createTimesheets = async (req, res) => {
 
     // Create a single timesheet entry and store the entire weeklyTimesheet as JSON in weeklyDatasheet
     const timesheetEntry = {
-      recruitingId, // Attach recruitingId from request body
+      recruitingId: Number(recruitingId), // Attach recruitingId from request body
       weeklyTimesheet, // Corrected here
       totalHourWorked,
       totalAmountDue,
@@ -851,7 +851,7 @@ exports.getRole = async (req, res) => {
 
 exports.addTimeSheet = async (req, res) => {
   try {
-    const { userId } = req.user; // Assuming userId is provided in req.user
+    const { userId } = req.user;
 
     // Fetching recruiter hiring records
     const recruiterHirings = await prismaClient.recruiterHiring.findMany({
@@ -896,7 +896,7 @@ exports.addTimeSheet = async (req, res) => {
 
         return {
           bookingId: hiring.id, // Booking ID
-          employerName: employerProfile?.fullname || "N/A", // Employer's fullname
+          companyName: employerProfile?.companyName || "N/A", // Employer's fullname
           date: formattedDate, // Formatted date (YYYY-MM-DD)
         };
       })
