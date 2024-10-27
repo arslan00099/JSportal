@@ -416,7 +416,6 @@ model JobApplication {
 
 model RecruiterHiring {
   id                      Int               @id @default(autoincrement())
-  jobDetail               String
   adminApprovalStatus     HiringStatusAdmin
   recruiterApprovalStatus HiringStatusRec
   jobStatus               JobStatus
@@ -437,6 +436,7 @@ model HiredService {
   id               Int             @id @default(autoincrement())
   hiredRecruiterId Int
   serviceId        Int
+  jobDetail        String
   startDate        DateTime
   endDate          DateTime
   hiredRecruiter   RecruiterHiring @relation(fields: [hiredRecruiterId], references: [id])

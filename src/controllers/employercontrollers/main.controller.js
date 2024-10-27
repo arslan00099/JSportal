@@ -3,7 +3,8 @@ const prisma = new PrismaClient();
 const crypto = require("crypto");
 
 exports.updateProfile = async (req, res) => {
-  const { fullname, companyName, companyLink, email, phnumber } = req.body;
+  const { fullname, companyName, companyLink, email, phnumber, companySize } =
+    req.body;
   const avatarPath = req.file
     ? `/utils/profilephotos/${req.file.filename}`
     : null;
@@ -26,8 +27,9 @@ exports.updateProfile = async (req, res) => {
     const profileData = {};
     if (fullname) profileData.fullname = fullname;
     if (companyName) profileData.companyName = companyName;
+    if (companySize) profileData.companySize = companySize;
     if (companyLink) profileData.companyLink = companyLink;
-    if (phnumber) profileData.phnumber = phnumber;
+    if (phnumber) profileData.phnumber = Number(phnumber);
     if (avatarPath) profileData.avatarId = avatarPath;
 
     // Check if there is an existing profile
@@ -96,8 +98,7 @@ exports.updateLocation = async (req, res) => {
     if (address) locationData.address = address;
 
     // Check if there is an existing location
-    const locationId = user.Location ? user.Location[0].id : null; // Get existing location ID
-
+    const locationId = user.Location ? user.Location[0]?.id : null; // Get existing location ID
     // Update Location
     const updatedLocation = locationId
       ? await prisma.location.update({
@@ -107,7 +108,7 @@ exports.updateLocation = async (req, res) => {
       : await prisma.location.create({
           data: {
             ...locationData,
-            userId, // Ensure userId is set when creating a new location
+            userId,
           },
         });
 
@@ -154,9 +155,20 @@ exports.getJobs = async (req, res) => {
       where: {
         userId,
       },
+      include: {
+        JobApplied: true,
+      },
     });
 
-    res.status(201).json({ success: true, data: jobs });
+    const filteredJobs = jobs.map((job) => ({
+      id: job.id,
+      randomId: job.randomId,
+      jobTitle: job.jobTitle,
+      status: job.status,
+      createdAt: job.createdAt,
+      applicationReceived: job.JobApplied.length,
+    }));
+    res.status(201).json({ success: true, data: filteredJobs });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -169,9 +181,9 @@ exports.getJobs = async (req, res) => {
 exports.getJobDetail = async (req, res) => {
   try {
     const { jobId } = req.params;
-    const job = await prisma.jobPost.findUnique({
+    const job = await prisma.jobPost.findFirst({
       where: {
-        id: Number(jobId), // Match the job ID
+        randomId: jobId,
       },
     });
 
@@ -373,7 +385,7 @@ exports.getRecruiterDetails = async (req, res) => {
         id: parseInt(recruiterId),
       },
       include: {
-        Profile: true,
+        Profile: {},
         Certificate: true,
         Documents: true,
         EmpolymentHistory: true,
@@ -382,6 +394,11 @@ exports.getRecruiterDetails = async (req, res) => {
         recruiterRecruiterHirings: {
           include: {
             timeSheets: true,
+          },
+        },
+        Notification: {
+          include: {
+            Review: true,
           },
         },
       },
@@ -500,10 +517,22 @@ exports.getAppliedJobsByJobId = async (req, res) => {
   try {
     const { jobId } = req.params;
 
+    const job = await prisma.jobPost.findFirst({
+      where: {
+        randomId: jobId,
+      },
+    });
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
     // Fetch applied jobs based on the jobId
     const appliedJobs = await prisma.jobApplied.findMany({
       where: {
-        jobId: parseInt(jobId),
+        jobId: parseInt(job?.id),
       },
       include: {
         jobpost: true,
@@ -530,7 +559,7 @@ exports.getAppliedJobsByJobId = async (req, res) => {
       id: job.id,
       fullname: job.User.Profile[0]?.fullname,
       workExperience: "N/A",
-      qualification: job.User.Education.flatMap((item) => item.universityName),
+      qualification: job.User.Education.flatMap((item) => item.degreName),
       location:
         job.User.Location[0]?.city + " " + job.User.Location[0]?.country,
       zipCode: job.User.Location[0]?.postalCode,
@@ -553,14 +582,14 @@ exports.getAppliedJobsByJobId = async (req, res) => {
 };
 
 exports.hireRecruiter = async (req, res) => {
-  const { recruiterId, services, jobDetail } = req.body;
+  const { recruiterId, services } = req.body;
   const userId = req.user.userId;
 
   // Check if the recruiter exists
   const user = await prisma.user.findFirst({
     where: {
       role: "RECRUITER",
-      id: recruiterId,
+      id: Number(recruiterId),
     },
   });
 
@@ -583,9 +612,8 @@ exports.hireRecruiter = async (req, res) => {
     // Create a new RecruiterHiring entry with associated services
     const hiredRecruiter = await prisma.recruiterHiring.create({
       data: {
-        recruiterId,
-        employerId: userId,
-        jobDetail,
+        recruiterId: Number(recruiterId),
+        employerId: Number(userId),
         adminApprovalStatus: "PENDING",
         recruiterApprovalStatus: "PENDING",
         jobStatus: "OPEN",
@@ -595,6 +623,7 @@ exports.hireRecruiter = async (req, res) => {
             serviceId: service.serviceId,
             startDate: service.startDate,
             endDate: service.endDate,
+            jobDetail: service.jobDetail,
           })),
         },
       },
@@ -647,7 +676,7 @@ exports.getHiredRecruiters = async (req, res) => {
       avatarId: hire.recruiter.Profile[0]?.avatarId,
       fullname: hire.recruiter.Profile[0]?.fullname,
       location: hire.recruiter.Profile[0]?.location,
-      services: hire.recruiter.services.flatMap((item) => item.name),
+      services: hire.hiredServices,
       rating: 0,
       reviews: 0,
     }));

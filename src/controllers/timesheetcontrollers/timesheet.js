@@ -174,13 +174,15 @@ exports.getDetails = async (req, res) => {
         // recruiterId: userId,
         id: hiringIdInt,
       },
+
       select: {
         id: true, // Selecting the 'id' from recruiterHiring
         employerId: true, // Selecting the 'employerId'
-        startDate: true,
-        endDate: true,
-        serviceName: true,
-        jobDetail: true,
+        hiredServices: {
+          include: {
+            service: true,
+          },
+        },
       },
     });
     res.status(200).json({

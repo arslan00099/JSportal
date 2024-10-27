@@ -14,7 +14,7 @@ const seedJobs = async () => {
       jobType: "Remote",
       minPrice: "70000",
       maxPrice: "100000",
-      userId: 1,
+      userId: 12,
     },
     {
       jobTitle: "Data Scientist",
@@ -26,7 +26,7 @@ const seedJobs = async () => {
       jobType: "On-site",
       minPrice: "80000",
       maxPrice: "120000",
-      userId: 1,
+      userId: 12,
     },
     {
       jobTitle: "Product Manager",
@@ -37,7 +37,7 @@ const seedJobs = async () => {
       jobType: "Hybrid",
       minPrice: "90000",
       maxPrice: "130000",
-      userId: 1,
+      userId: 12,
     },
     {
       jobTitle: "UX/UI Designer",
@@ -49,7 +49,7 @@ const seedJobs = async () => {
       jobType: "Remote",
       minPrice: "60000",
       maxPrice: "90000",
-      userId: 1,
+      userId: 12,
     },
     {
       jobTitle: "Marketing Specialist",
@@ -61,7 +61,7 @@ const seedJobs = async () => {
       jobType: "On-site",
       minPrice: "30000",
       maxPrice: "50000",
-      userId: 1,
+      userId: 12,
     },
   ];
 
