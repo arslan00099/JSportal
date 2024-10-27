@@ -8,13 +8,13 @@ const middleware = require("../../middleware/middleware");
 const upload = require("../../middleware/multerConfig");
 
 // PROFILE ROUTES
-router.patch(
+router.post(
   "/profile",
   upload.single("profilePic"),
   middleware,
   main.updateProfile
 );
-router.patch("/location", middleware, main.updateLocation);
+router.post("/location", middleware, main.updateLocation);
 router.get("/profile", middleware, main.getProfile);
 
 // DASHBOARD ROUTES
