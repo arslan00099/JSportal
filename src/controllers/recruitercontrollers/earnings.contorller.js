@@ -1,65 +1,148 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// exports.getEarnings = async (req, res) => {
+//     try {
+//         const { recruiterId, filter, startDate, endDate } = req.query; // Accept additional query params
+
+//         // Parse recruiterId and filter dates if provided
+//         const parsedRecruiterId = Number(recruiterId);
+//         const start = startDate ? new Date(startDate) : null;
+//         const end = endDate ? new Date(endDate) : null;
+
+//         // Date range filter
+//         let dateFilter = {};
+//         const today = new Date();
+
+//         switch (filter) {
+//             case 'weekly':
+//                 dateFilter = {
+//                     createdAt: {
+//                         gte: new Date(today.setDate(today.getDate() - 7)), // Last 7 days
+//                     },
+//                 };
+//                 break;
+
+//             case 'monthly':
+//                 dateFilter = {
+//                     createdAt: {
+//                         gte: new Date(today.setMonth(today.getMonth() - 1)), // Last 30 days
+//                     },
+//                 };
+//                 break;
+
+//             case 'lifetime':
+//                 // No date filter for lifetime, retrieve all records
+//                 break;
+
+//             case 'custom':
+//                 if (start && end) {
+//                     dateFilter = {
+//                         createdAt: {
+//                             gte: start,
+//                             lte: end,
+//                         },
+//                     };
+//                 }
+//                 break;
+
+//             default:
+//                 // Handle unknown filter, e.g., by returning an error or setting default behavior
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: "Invalid filter option provided",
+//                 });
+//         }
+
+//         // Fetch recruiter hiring records based on filters
+//         const recruiterHirings = await prisma.recruiterHiring.findMany({
+//             where: {
+//                 recruiterId: parsedRecruiterId,
+//                 ...dateFilter, // Apply date filter conditionally
+//             },
+//             include: {
+//                 employer: {
+//                     include: {
+//                         Profile: {
+//                             select: {
+//                                 fullname: true, // Select the full name of the employer from Profile
+//                             },
+//                         },
+//                     },
+//                 },
+//                 timeSheets: {
+//                     select: {
+//                         totalPayableAmount: true,
+//                         totalAmountDue: true,
+//                     },
+//                 },
+//             },
+//         });
+
+//         // Map the results to include the necessary fields and format date and time
+//         const result = recruiterHirings.map((record) => {
+//             const createdAtDate = new Date(record.createdAt);
+//             const date = createdAtDate.toISOString().split('T')[0];
+//             const time = createdAtDate.toTimeString().split(' ')[0];
+
+//             return {
+//                 id: record.id,
+//                 employerName: record.employer?.Profile[0]?.fullname || "N/A",
+//                 serviceName: record.serviceName,
+//                 date: date,
+//                 time: time,
+//                 paymentStatus: record.paymentStatus,
+//                 totalPayableAmount: record.timeSheets.reduce((sum, sheet) => sum + sheet.totalPayableAmount, 0),
+//                 totalAmountDue: record.timeSheets.reduce((sum, sheet) => sum + sheet.totalAmountDue, 0),
+//             };
+//         });
+
+//         // Respond with the filtered hiring details
+//         res.status(200).json({
+//             success: true,
+//             message: "Hiring records fetched successfully",
+//             data: result,
+//         });
+//     } catch (error) {
+//         console.error("Error fetching hiring records:", error);
+//         res.status(500).json({
+//             success: false,
+//             message: "Server error",
+//             error: error.message,
+//         });
+//     }
+// };
+
 exports.getEarnings = async (req, res) => {
-  const recruiterId = req.user.userId;
   try {
-    const { filter, startDate, endDate } = req.query; // Accept additional query params
+    const { recruiterId, startDate, endDate } = req.query; // Accept only required query params
 
     // Parse recruiterId and filter dates if provided
     const parsedRecruiterId = Number(recruiterId);
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
 
-    // Date range filter
-    let dateFilter = {};
-    const today = new Date();
-
-    switch (filter) {
-      case "weekly":
-        dateFilter = {
-          createdAt: {
-            gte: new Date(today.setDate(today.getDate() - 7)), // Last 7 days
-          },
-        };
-        break;
-
-      case "monthly":
-        dateFilter = {
-          createdAt: {
-            gte: new Date(today.setMonth(today.getMonth() - 1)), // Last 30 days
-          },
-        };
-        break;
-
-      case "lifetime":
-        // No date filter for lifetime, retrieve all records
-        break;
-
-      case "custom":
-        if (start && end) {
-          dateFilter = {
-            createdAt: {
-              gte: start,
-              lte: end,
-            },
-          };
-        }
-        break;
-
-      default:
-        // Handle unknown filter, e.g., by returning an error or setting default behavior
-        return res.status(400).json({
-          success: false,
-          message: "Invalid filter option provided",
-        });
+    // Check if both start and end dates are provided
+    if (!start || !end) {
+      return res.status(400).json({
+        success: false,
+        message: "Both startDate and endDate are required.",
+      });
     }
 
-    // Fetch recruiter hiring records based on filters
+    // Date range filter
+    const dateFilter = {
+      createdAt: {
+        gte: start,
+        lte: end,
+      },
+    };
+
+    // Fetch recruiter hiring records based on date range filter
     const recruiterHirings = await prisma.recruiterHiring.findMany({
       where: {
         recruiterId: parsedRecruiterId,
-        ...dateFilter, // Apply date filter conditionally
+        ...dateFilter, // Apply date filter
       },
       include: {
         employer: {
