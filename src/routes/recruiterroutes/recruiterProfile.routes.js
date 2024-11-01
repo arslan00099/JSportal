@@ -152,7 +152,7 @@ router.get("/timesheet", timesheet.getTimeSheetsByRecruiterId);
 router.get("/progress-roles", middleware, timesheet.getProgressRole);
 router.get("/roles", middleware, timesheet.getRole);
 router.get("/add-timesheet-list", middleware, timesheet.addTimeSheet);
-router.get("/view-timesheet-list", middleware, timesheet.viewTimeSheet);
+// router.get("/view-timesheet-list", middleware, timesheet.viewTimeSheet);
 router.post(
   "/upload-video",
   uploadVideo.single("mentorVideo"),

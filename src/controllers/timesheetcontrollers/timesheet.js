@@ -920,52 +920,51 @@ exports.addTimeSheet = async (req, res) => {
 
 exports.viewTimeSheet = async (req, res) => {
   try {
-    const { userId } = req.user; // Assuming userId is provided in req.user
-    console.log(userId);
-    // Fetching recruiter hiring records
-    const recruiterHirings = await prismaClient.recruiterHiring.findMany({
-      where: {
-        recruiterId: Number(userId), // Assuming recruiterId is the field linking to the recruiter
-      },
-      include: {
-        recruiter: {
-          select: {
-            fullname: true, // Select the full name of the recruiter
-          },
-        },
-        employer: {
-          select: {
-            fullname: true, // Select the full name of the employer
-          },
-        },
-      },
-    });
+    const { userId } = req.user;
 
-    // Check if any timesheets were found
-    if (timesheets.length === 0) {
-      return res.status(404).json({
+    const parsedRecruitingId = parseInt(userId, 10);
+
+    // Check if parsedRecruitingId is a valid number
+    if (isNaN(parsedRecruitingId)) {
+      return res.status(400).json({
         success: false,
-        message: "No timesheets found for the given ID",
+        message: "Invalid recruitingId. It must be a number.",
       });
     }
 
-    // Map the timesheets to the desired response structure
-    const result = timesheets.map((timesheet) => ({
-      timesheetId: timesheet.id, // Assuming the timesheet has an id field
-      bookingId: timesheet.bookingId, // Assuming there is a bookingId field
-      recruiterName: timesheet.recruiter?.fullname || "N/A", // Using optional chaining
-      employerName: timesheet.employer?.fullname || "N/A", // Using optional chaining
-      date: timesheet.date, // Assuming there's a date field
+    // Fetch timesheets based on recruitingId
+    const hiringRecords = await prismaClient.recruiterHiring.findMany({
+      where: {
+        recruiterId: parsedRecruitingId, // Use the parsed integer
+      },
+      include: {
+        timeSheets: true,
+      },
+    });
+
+    // If no timesheets found
+    if (hiringRecords.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: [],
+      });
+    }
+
+    const result = hiringRecords[0]?.timeSheets?.map((item) => ({
+      bookingId: hiringRecords[0]?.id,
+      id: item.id,
+      recruiterName: item.recruiterName || "N/A",
+      employerName: item.HiredBy,
+      startDate: item.createdAt,
     }));
 
-    // Respond with the fetched timesheet details
+    // Return the fetched timesheets
     res.status(200).json({
       success: true,
-      message: "Timesheet list fetched successfully",
       data: result,
     });
   } catch (error) {
-    console.error("Error fetching timesheet details:", error);
+    console.error("Error fetching timesheets:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
