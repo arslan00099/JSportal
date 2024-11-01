@@ -523,7 +523,7 @@ exports.getTalentList = async (req, res) => {
   try {
     const mentors = await prisma.user.findMany({
       where: {
-        role: "MENTOR",
+        role: "JOB_SEEKER",
       },
       include: {
         Profile: true,
@@ -545,7 +545,7 @@ exports.getTalentList = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Failed to fetch staff member list",
+      message: "Failed to fetch talent list",
       error: error.message,
     });
   }
@@ -565,6 +565,7 @@ exports.getTalentDetail = async (req, res) => {
         Certificate: true,
         EmpolymentHistory: true,
         Documents: true,
+        Location: true,
       },
     });
 

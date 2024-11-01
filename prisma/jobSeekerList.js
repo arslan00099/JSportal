@@ -56,20 +56,6 @@ async function main() {
           postalCode: 94103,
         },
       },
-      services: {
-        create: [
-          {
-            name: "One-on-One Mentoring",
-            description: "Personalized mentoring sessions for developers.",
-            pricing: 100,
-          },
-          {
-            name: "Code Review",
-            description: "In-depth review of your code with feedback.",
-            pricing: 50,
-          },
-        ],
-      },
     },
     {
       email: "jobseeker2@example.com",
@@ -122,20 +108,6 @@ async function main() {
           country: "USA",
           postalCode: 78701,
         },
-      },
-      services: {
-        create: [
-          {
-            name: "Mock Interview Preparation",
-            description: "Help with technical interview preparations.",
-            pricing: 120,
-          },
-          {
-            name: "Resume Feedback",
-            description: "Detailed review and feedback on resumes.",
-            pricing: 60,
-          },
-        ],
       },
     },
     {
@@ -190,20 +162,6 @@ async function main() {
           postalCode: 60616,
         },
       },
-      services: {
-        create: [
-          {
-            name: "Data Science Consultation",
-            description: "Guidance on data science project workflows.",
-            pricing: 200,
-          },
-          {
-            name: "Project Review",
-            description: "Feedback and insights on data science projects.",
-            pricing: 80,
-          },
-        ],
-      },
     },
     {
       email: "jobseeker4@example.com",
@@ -257,20 +215,6 @@ async function main() {
           postalCode: 98101,
         },
       },
-      services: {
-        create: [
-          {
-            name: "SEO Consultation",
-            description: "Comprehensive SEO analysis and guidance.",
-            pricing: 150,
-          },
-          {
-            name: "Marketing Strategy Planning",
-            description: "Developing effective digital marketing strategies.",
-            pricing: 200,
-          },
-        ],
-      },
     },
     {
       email: "jobseeker5@example.com",
@@ -323,20 +267,6 @@ async function main() {
           country: "USA",
           postalCode: 90001,
         },
-      },
-      services: {
-        create: [
-          {
-            name: "Financial Planning Consultation",
-            description: "Guidance on financial planning and analysis.",
-            pricing: 250,
-          },
-          {
-            name: "Investment Strategy Session",
-            description: "Developing tailored investment strategies.",
-            pricing: 180,
-          },
-        ],
       },
     },
   ];

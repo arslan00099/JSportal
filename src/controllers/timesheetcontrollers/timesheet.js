@@ -870,9 +870,9 @@ exports.addTimeSheet = async (req, res) => {
 
     // Check if any recruiter hiring details were found
     if (recruiterHirings.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No recruiter hiring details found for the given recruiter ID",
+      return res.status(200).json({
+        success: true,
+        data: [],
       });
     }
 

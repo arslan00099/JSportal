@@ -115,41 +115,33 @@ const prisma = new PrismaClient();
 
 exports.getEarnings = async (req, res) => {
   try {
-    const { recruiterId, startDate, endDate } = req.query; // Accept only required query params
+    const { recruiterId, startDate, endDate } = req.query;
 
-    // Parse recruiterId and filter dates if provided
     const parsedRecruiterId = Number(recruiterId);
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
 
-    // Check if both start and end dates are provided
-    if (!start || !end) {
-      return res.status(400).json({
-        success: false,
-        message: "Both startDate and endDate are required.",
-      });
-    }
+    // Initialize date filter only if both start and end dates are provided
+    const dateFilter =
+      startDate && endDate
+        ? {
+            createdAt: {
+              gte: new Date(startDate),
+              lte: new Date(endDate),
+            },
+          }
+        : {}; // Empty object means no date filter
 
-    // Date range filter
-    const dateFilter = {
-      createdAt: {
-        gte: start,
-        lte: end,
-      },
-    };
-
-    // Fetch recruiter hiring records based on date range filter
+    // Fetch recruiter hiring records based on date range filter (if applied)
     const recruiterHirings = await prisma.recruiterHiring.findMany({
       where: {
         recruiterId: parsedRecruiterId,
-        ...dateFilter, // Apply date filter
+        ...dateFilter,
       },
       include: {
         employer: {
           include: {
             Profile: {
               select: {
-                fullname: true, // Select the full name of the employer from Profile
+                fullname: true,
               },
             },
           },
