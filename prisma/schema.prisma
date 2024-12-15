@@ -144,8 +144,9 @@ model User {
   employerRecruiterHirings  RecruiterHiring[] @relation("EmployerRecruiterHirings")
   recruiterRecruiterHirings RecruiterHiring[] @relation("RecruiterRecruiterHirings")
 
-  mentorSessions         MentorSessionManagement[] @relation("MentorSessions")
-  mentorNotification     Notification[]            @relation("MentorNotification")
+  mentorSessions     MentorSessionManagement[] @relation("MentorSessions")
+  mentorNotification Notification[]            @relation("MentorNotification")
+
   services               Service[]
   JobPost                JobPost[]
   EmployerPointOfContact EmployerPointOfContact[]
@@ -161,7 +162,7 @@ model Profile {
   userId           Int               @unique
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullname         String?
-  phnumber         Int?
+  phnumber         String?
   mentorvideolink  String?
   avatarId         String?
   location         String?
@@ -173,6 +174,8 @@ model Profile {
   tagline          String?
   industry         String?
   services         String?
+  resumeLink       String?
+  rating           Int?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   JobSeekerProfile JobSeekerProfile?
@@ -299,18 +302,21 @@ model Notification {
 }
 
 model Review {
-  id             Int          @id @default(autoincrement())
-  content        String // Actual review content
-  notificationId Int // Relation to Notification
-  rating         Int
-  notification   Notification @relation(fields: [notificationId], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                        Int                     @id @default(autoincrement())
+  content                   String // Actual review content
+  notificationId            Int? // Relation to Notification
+  rating                    Int // Review rating (e.g., 1-5)
+  notification              Notification?           @relation(fields: [notificationId], references: [id])
+  mentorSessionManagementId Int // Relation to MentorSessionManagement
+  mentorSessionManagement   MentorSessionManagement @relation(fields: [mentorSessionManagementId], references: [id])
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
 }
 
 model MentorProfile {
   id               Int     @id @default(autoincrement())
   name             String?
+  phonenumber      String?
   tagline          String
   about            String
   languages        String
@@ -349,9 +355,10 @@ model MentorSessionManagement {
   status           SessionStatus? @default(ACCEPTED) // Optional field
   userId           Int
   user             User           @relation("UserSessions", fields: [userId], references: [id], map: "FK_User_Session", onDelete: Cascade)
-  mentorProfileId  Int?
-  mentor           User?          @relation("MentorSessions", fields: [mentorProfileId], references: [id], map: "FK_Mentor_Session")
+  mentorProfileId  Int
+  mentor           User           @relation("MentorSessions", fields: [mentorProfileId], references: [id], map: "FK_Mentor_Session")
   paymentStatus    PaymentStatus? @default(COMPLETED) // Optional field with default value
+  reviews          Review[] // Relation to Review
   createdAt        DateTime?      @default(now()) // Optional field
   updatedAt        DateTime?      @updatedAt // Optional field
 }
