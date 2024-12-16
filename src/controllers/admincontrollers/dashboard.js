@@ -150,9 +150,11 @@ exports.getAllJS = async (req, res) => {
         // Fetch data from Profile and related User table with pagination, sorting, and search
         const jobSeekers = await prisma.profile.findMany({
             where: whereCondition,
-            include: {
+            select: {
+                id: true,
+                fullname:true,
+                resumeLink: true,
                 user: {
-                    resumeLink: true,
                     include: {
                         Location: true,
                     },
@@ -178,7 +180,7 @@ exports.getAllJS = async (req, res) => {
             phoneNo: seeker.phnumber,
             city: seeker.user.Location.length > 0 ? seeker.user.Location[0]?.city : "N/A",
             state: seeker.user.Location.length > 0 ? seeker.user.Location[0]?.state : "N/A",
-            resumeLink: seeker.resumeLink || 0,
+            resumeLink: seeker.resumeLink,
 
         }));
 
