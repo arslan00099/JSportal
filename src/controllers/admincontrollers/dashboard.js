@@ -46,7 +46,7 @@ exports.getAllMentors = async (req, res) => {
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
-        
+
         // Get sorting and search parameters
         const sortOrder = req.query.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
         const searchQuery = req.query.search ? req.query.search.trim() : '';
@@ -122,10 +122,11 @@ exports.getAllMentors = async (req, res) => {
 
 exports.getAllJS = async (req, res) => {
     try {
+        console.log("getting all the JS list");
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
-        
+
         // Get sorting and search parameters
         const sortOrder = req.query.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
         const searchQuery = req.query.search ? req.query.search.trim() : '';
@@ -140,7 +141,6 @@ exports.getAllJS = async (req, res) => {
                 role: "JOB_SEEKER",
             },
             ...(searchQuery && {
-                resumeLink: true,
                 fullname: {
                     contains: searchQuery,
                 }
@@ -152,6 +152,7 @@ exports.getAllJS = async (req, res) => {
             where: whereCondition,
             include: {
                 user: {
+                    resumeLink: true,
                     include: {
                         Location: true,
                     },
@@ -175,9 +176,10 @@ exports.getAllJS = async (req, res) => {
             name: seeker.fullname,
             email: seeker.user.email,
             phoneNo: seeker.phnumber,
-            address: seeker.user.Location.length > 0 ? seeker.user.Location[0]?.city : "N/A",
-            ratings: seeker.rating || 0,
-            resumeLink:seeker.resumeLink,
+            city: seeker.user.Location.length > 0 ? seeker.user.Location[0]?.city : "N/A",
+            state: seeker.user.Location.length > 0 ? seeker.user.Location[0]?.state : "N/A",
+            resumeLink: seeker.resumeLink || 0,
+
         }));
 
         // Prepare response with pagination metadata
@@ -200,13 +202,15 @@ exports.getAllJS = async (req, res) => {
     }
 };
 
+
+
 exports.getAllMentorBookings = async (req, res) => {
     const { userId } = req.params; // Get the userId from params
-    
+
     // Get pagination parameters from query
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
-    
+
     // Get sorting parameter
     const sortOrder = req.query.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
 
@@ -272,7 +276,7 @@ exports.getAllMentorBookings = async (req, res) => {
                 phNumber: profile.phnumber || null,
                 state: location.state || null,
                 city: location.city || null,
-                bookingStatus: session.status,  
+                bookingStatus: session.status,
             };
         });
 
@@ -364,66 +368,66 @@ exports.getAllJSBookings = async (req, res) => {
 exports.getMentorReviewsOLD = async (req, res) => {
     const { userId } = req.params;
     try {
-      // Fetch all reviews related to the mentorProfileId
-      const reviews = await prisma.review.findMany({
-        where: {
-          mentorSessionManagement: {
-            mentorProfileId: parseInt(userId), // Make sure mentorProfileId is an integer
-          },
-        },
-  
-        include: {
-          mentorSessionManagement: {
-            include: {
-              user: {
-                select: {
-                  email: true, // Fetch mentor's email
-                  Profile: {
-                    select: {
-                      id: true, // Fetch Profile id
-                      fullname: true, // Fetch Profile full name
-                      avatarId: true, // Fetch Profile avatarId
-                    },
-                  },
+        // Fetch all reviews related to the mentorProfileId
+        const reviews = await prisma.review.findMany({
+            where: {
+                mentorSessionManagement: {
+                    mentorProfileId: parseInt(userId), // Make sure mentorProfileId is an integer
                 },
-              },
             },
-          },
-        },
-      });
-  
-      if (reviews.length === 0) {
-        return res.status(404).json({ message: 'No reviews found for this mentor.' });
-      }
-  
-      // Map the reviews to the required structure
-      const simplifiedReviews = reviews.map(review => ({
-        content: review.content,
-        rating: review.rating,
-        fullname: review.mentorSessionManagement.user.Profile[0]?.fullname, // Access the first element if Profile is an array
-        avatarId: review.mentorSessionManagement.user.Profile[0]?.avatarId, // Same here
-      }));
-  
-      // Return the reviews as a response
-      return res.status(200).json(simplifiedReviews);
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      return res.status(500).json({ message: 'Server error while fetching reviews.' });
-    }
-  };
 
-  
+            include: {
+                mentorSessionManagement: {
+                    include: {
+                        user: {
+                            select: {
+                                email: true, // Fetch mentor's email
+                                Profile: {
+                                    select: {
+                                        id: true, // Fetch Profile id
+                                        fullname: true, // Fetch Profile full name
+                                        avatarId: true, // Fetch Profile avatarId
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (reviews.length === 0) {
+            return res.status(404).json({ message: 'No reviews found for this mentor.' });
+        }
+
+        // Map the reviews to the required structure
+        const simplifiedReviews = reviews.map(review => ({
+            content: review.content,
+            rating: review.rating,
+            fullname: review.mentorSessionManagement.user.Profile[0]?.fullname, // Access the first element if Profile is an array
+            avatarId: review.mentorSessionManagement.user.Profile[0]?.avatarId, // Same here
+        }));
+
+        // Return the reviews as a response
+        return res.status(200).json(simplifiedReviews);
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        return res.status(500).json({ message: 'Server error while fetching reviews.' });
+    }
+};
+
+
 
 exports.getMentorReviews = async (req, res) => {
     const { userId } = req.params;
-    
+
     // Get pagination parameters
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
-    
+
     // Get filter and sorting parameters
     const filter = req.query.filter?.toLowerCase();
-    
+
     try {
         // Calculate skip and take for pagination
         const skip = (page - 1) * pageSize;
@@ -516,7 +520,7 @@ exports.getAllEmployers = async (req, res) => {
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
-        
+
         // Get sorting and search parameters
         const sortOrder = req.query.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
         const searchQuery = req.query.search ? req.query.search.trim() : '';
@@ -534,7 +538,7 @@ exports.getAllEmployers = async (req, res) => {
                 fullname: {
                     contains: searchQuery, // Remove 'mode' parameter
                 },
-                companyName:true,
+                companyName: true,
             })
         };
 
@@ -563,12 +567,12 @@ exports.getAllEmployers = async (req, res) => {
         // Transform data into required format
         const formattedMentors = mentors.map((mentor, index) => ({
             userId: mentor.id,
-            companyName:mentor.companyName,
+            companyName: mentor.companyName,
             name: mentor.fullname,
             email: mentor.user.email,
             phoneNo: mentor.phnumber,
             address: mentor.user.Location.length > 0 ? mentor.user.Location[0]?.city : "N/A",
-            purchasedPlan:1
+            purchasedPlan: 1
         }));
 
         // Prepare response with pagination metadata
@@ -591,7 +595,7 @@ exports.getAllEmployers = async (req, res) => {
     }
 };
 
-exports.getEmployerBookings= async (req, res) => {
+exports.getEmployerBookings = async (req, res) => {
     const { userId } = req.params;
 
     try {
@@ -660,7 +664,7 @@ exports.getAllRec = async (req, res) => {
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
-        
+
         // Get sorting and search parameters
         const sortOrder = req.query.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
         const searchQuery = req.query.search ? req.query.search.trim() : '';
@@ -737,54 +741,54 @@ exports.getRecByid = async (req, res) => {
     const { userId } = req.params;
     console.log("userId will be here ");
     console.log(userId);
-  
+
     try {
-      // Fetch mentors with their services from related user
-      const mentorsWithServices = await prisma.profile.findMany({
-        where:  { userId: parseInt(userId) },
-        include: {
-          user: {
+        // Fetch mentors with their services from related user
+        const mentorsWithServices = await prisma.profile.findMany({
+            where: { userId: parseInt(userId) },
             include: {
-              services: true, // Fetch services for the user linked to the mentor profile
+                user: {
+                    include: {
+                        services: true, // Fetch services for the user linked to the mentor profile
+                    },
+                },
             },
-          },
-        },
-      });
-  
-      // Transform the data for better readability
-      const formattedResponse = mentorsWithServices.map((mentor) => ({
-        id: mentor.id,
-        name: mentor.fullname,
-        tagline: mentor.tagline,
-        about: mentor.about,
-        languages: mentor.language || [], // Default to empty array if no languages
-        rating: mentor.rating || 0, // Default rating if missing
-        totalReview: mentor.totalReview || 0, // Default total reviews if missing
-        location: mentor.location || "Not provided", // Default location if missing
-        yearOfExperience: mentor.yearOfExperience || 0, // Default experience if missing
-        linkedinProfile: mentor.companyLink || "Not provided", // Default LinkedIn profile if missing
-        services: mentor.user?.services || [], // Services linked to the mentor (from user)
-      }));
-  
-      // Respond with the formatted data
-      res.status(200).json({
-        success: true,
-        data: formattedResponse,
-      });
+        });
+
+        // Transform the data for better readability
+        const formattedResponse = mentorsWithServices.map((mentor) => ({
+            id: mentor.id,
+            name: mentor.fullname,
+            tagline: mentor.tagline,
+            about: mentor.about,
+            languages: mentor.language || [], // Default to empty array if no languages
+            rating: mentor.rating || 0, // Default rating if missing
+            totalReview: mentor.totalReview || 0, // Default total reviews if missing
+            location: mentor.location || "Not provided", // Default location if missing
+            yearOfExperience: mentor.yearOfExperience || 0, // Default experience if missing
+            linkedinProfile: mentor.companyLink || "Not provided", // Default LinkedIn profile if missing
+            services: mentor.user?.services || [], // Services linked to the mentor (from user)
+        }));
+
+        // Respond with the formatted data
+        res.status(200).json({
+            success: true,
+            data: formattedResponse,
+        });
     } catch (error) {
-      console.error("Error fetching mentors with services:", error.message);
-  
-      // Send error response with more specific error information
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch mentors with services.",
-        error: error.message,
-      });
+        console.error("Error fetching mentors with services:", error.message);
+
+        // Send error response with more specific error information
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch mentors with services.",
+            error: error.message,
+        });
     }
-  };
+};
 
 
-  exports.getRecBookings = async (req, res) => {
+exports.getRecBookings = async (req, res) => {
     const { userId } = req.params;
 
     try {
@@ -831,7 +835,7 @@ exports.getRecByid = async (req, res) => {
                 state: locationParts[0]?.trim() || null,
                 city: locationParts[1]?.trim() || null,
                 timesheetCreatedAt: "june,14,2024",   //i have to adjust it
-               
+
             };
         });
 
@@ -851,8 +855,8 @@ exports.getRecByid = async (req, res) => {
 
 
 
-  
-  
+
+
 
 
 
