@@ -3,6 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { subDays } = require('date-fns');
 
+
 exports.getDashboard = async (req, res) => {
     try {
         // Fetch counts for different user roles
@@ -847,6 +848,106 @@ exports.getRecBookings = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+exports.deleteUserAndProfile = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Validate input
+        if (!userId) {
+            return res.status(400).json({ error: "userId is required" });
+        }
+
+        // Convert userId to an integer
+        const parsedUserId = parseInt(userId, 10);
+        if (isNaN(parsedUserId)) {
+            return res.status(400).json({ error: "Invalid userId format" });
+        }
+
+        // Check if the user exists
+        const existingUser = await prisma.user.findUnique({
+            where: { id: parsedUserId },
+        });
+
+        if (!existingUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Delete the user (this will also delete the associated profile due to cascade)
+        await prisma.user.delete({
+            where: { id: parsedUserId },
+        });
+
+        res.status(200).json({ message: "User and associated profile deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting user and profile:", error);
+        res.status(500).json({ error: "An error occurred while deleting the user and profile" });
+    }
+};
+
+
+//           ADD SERVICES AND OTHER THINGS  /////////
+
+
+// Create a new entry
+exports.createEntry = async (req, res) => {
+  const { model, name } = { ...req.params, ...req.body };
+  try {
+    const entry = await prisma[model].create({
+      data: { name },
+    });
+    res.status(201).json(entry);
+  } catch (error) {
+    console.error(`Error creating ${model}:`, error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Update an entry
+exports.updateEntry = async (req, res) => {
+  const { model, id } = req.params;
+  const { name } = req.body;
+  try {
+    const updatedEntry = await prisma[model].update({
+      where: { id: parseInt(id) },
+      data: { name },
+    });
+    res.status(200).json(updatedEntry);
+  } catch (error) {
+    console.error(`Error updating ${model}:`, error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Delete an entry
+exports.deleteEntry = async (req, res) => {
+  const { model, id } = req.params;
+  try {
+    await prisma[model].delete({
+      where: { id: parseInt(id) },
+    });
+    res.status(200).json({ message: `${model} deleted successfully` });
+  } catch (error) {
+    console.error(`Error deleting ${model}:`, error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Get all entries
+exports.getEntries = async (req, res) => {
+  const { model } = req.params;
+  try {
+    const entries = await prisma[model].findMany();
+    res.status(200).json(entries);
+  } catch (error) {
+    console.error(`Error fetching ${model}:`, error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+
+
 
 
 

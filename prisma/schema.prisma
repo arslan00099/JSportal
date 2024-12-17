@@ -105,21 +105,27 @@ enum JobAppliedStatus {
   REJECTED
 }
 
+enum ProfileStatus {
+  VERIFIED
+  UNVARIFIED
+}
+
 model User {
-  id             Int      @id @default(autoincrement())
-  email          String   @unique
+  id             Int            @id @default(autoincrement())
+  email          String         @unique
   secondaryEmail String?
   password       String
   role           UserRole
   resume         String?
-  email_confirm  Boolean  @default(false)
+  email_confirm  Boolean        @default(false)
   profileId      Int?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  isActive       Boolean  @default(true)
-  isAdmin        Boolean  @default(false)
-  firstLogin     Boolean  @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  isActive       Boolean        @default(true)
+  isAdmin        Boolean        @default(false)
+  firstLogin     Boolean        @default(true)
   activeCardId   Int?
+  profileStatus  ProfileStatus? @default(UNVARIFIED)
 
   // Relations
   Profile                 Profile[]
@@ -175,6 +181,7 @@ model Profile {
   industry         String?
   services         String?
   resumeLink       String?
+  linkedinLink     String?
   rating           Int?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -531,3 +538,39 @@ model Card {
   userId         Int // Foreign key reference to User
   user           User   @relation(fields: [userId], references: [id])
 }
+
+model Industry {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MentorService {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RecService {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Language {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

@@ -19,8 +19,8 @@ async function main() {
     // Create the Profile
     await prisma.profile.create({
         data: {
-            userId: 4, // Same userId as the Location
-            fullname: "John Doe2 JS",
+            userId: 11, // Same userId as the Location
+            fullname: "John Doe Mentor",
             phnumber: "+1234567890",
             mentorvideolink: "https://example.com/video",
             avatarId: "avatar_12345",
@@ -29,7 +29,7 @@ async function main() {
             companySize: "100-500",
             companyLink: "https://techcorp.com",
             about: "Experienced software developer with expertise in IoT and backend systems.",
-            language: "English",
+            language: "English,Urdu",
             tagline: "Building the future, one line of code at a time.",
             industry: "Technology",
             services: "Software Development, IoT Solutions",

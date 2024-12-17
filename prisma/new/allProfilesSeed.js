@@ -86,20 +86,20 @@ async function seedUsers() {
                        },
                    },
                });
-       
+       */
                // Create Session Booking for Job Seeker
-               const sessionBooking = await prisma.mentorSessionManagement.create({
+           const booking=     await prisma.mentorSessionManagement.create({
                    data: {
                        selectedService: 1, // Assume this is the ID of "Resume Review"
                        selectedDateTime: new Date(), // Current time for example
                        status: "ACCEPTED",
                        userId: 4,
-                       mentorProfileId: 3,
+                       mentorProfileId: 11,
                        paymentStatus: "COMPLETED",
                    },
                });
                
-
+/*
         //console.log("Session Booking created:", sessionBooking);
 
         // First, create a notification
@@ -145,7 +145,7 @@ async function seedUsers() {
                        },
                     },
                 });
-                */
+                
         
                 // Seed Recruiter
             await prisma.user.create({
