@@ -569,7 +569,7 @@ exports.getAllEmployers = async (req, res) => {
 
         // Transform data into required format
         const formattedMentors = mentors.map((mentor, index) => ({
-            userId: mentor.id,
+            userId: mentor.user.id,
             companyName: mentor.companyName,
             name: mentor.fullname,
             email: mentor.user.email,
@@ -600,6 +600,7 @@ exports.getAllEmployers = async (req, res) => {
 
 exports.getEmployerBookings = async (req, res) => {
     const { userId } = req.params;
+    console.log("GETTING EMPLOYER BOOKINGS");
 
     try {
         // Query the database to fetch the required details
@@ -615,10 +616,16 @@ exports.getEmployerBookings = async (req, res) => {
                             select: {
                                 companyName: true,
                                 phnumber: true,
-                                location: true, // Assuming "state" and "city" are part of location
+                                fullname: true,
                             },
                         },
                         email: true,
+                        Location: {
+                            select: {
+                                state: true,
+                                city: true,
+                            },
+                        },
                     },
                 },
                 recruiter: {
@@ -640,27 +647,28 @@ exports.getEmployerBookings = async (req, res) => {
 
         // Map and format the data to match the required structure
         const formattedBookings = bookings.map((booking) => {
-            const locationParts = booking.employer.Profile.location?.split(',') || [];
+            const employerProfile = booking.employer.Profile?.[0] || booking.employer.Profile; // Handle array or object
+            const location = booking.employer.Location;
+
             return {
                 bookingId: booking.id,
-                companyName: booking.employer.Profile[0].companyName || null,
+                companyName: employerProfile?.companyName || null,
                 email: booking.employer.email,
-                phnumber: booking.employer.Profile.phnumber,
-                state: locationParts[0] || null,
-                city: locationParts[1] || null,
-                recruiterName: booking.recruiter?.Profile?.fullname,
+                phnumber: employerProfile?.phnumber || null,
+                employerName: employerProfile?.fullname || null,
+                state: booking.employer.Location[0].state,
+                city: booking.employer.Location[0].city,
+                recruiterName: booking.recruiter?.Profile?.[0]?.fullname || booking.recruiter?.Profile?.fullname || null,
                 recruiterService: booking.Service?.name || null,
             };
         });
 
         res.status(200).json(formattedBookings);
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching employer bookings:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
-
-
 
 exports.getAllRec = async (req, res) => {
     try {
@@ -887,63 +895,112 @@ exports.deleteUserAndProfile = async (req, res) => {
 
 
 //           ADD SERVICES AND OTHER THINGS  /////////
-
-
-// Create a new entry
+// Create an entry with duplicate name check
 exports.createEntry = async (req, res) => {
-  const { model, name } = { ...req.params, ...req.body };
-  try {
-    const entry = await prisma[model].create({
-      data: { name },
-    });
-    res.status(201).json(entry);
-  } catch (error) {
-    console.error(`Error creating ${model}:`, error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-// Update an entry
-exports.updateEntry = async (req, res) => {
-  const { model, id } = req.params;
-  const { name } = req.body;
-  try {
-    const updatedEntry = await prisma[model].update({
-      where: { id: parseInt(id) },
-      data: { name },
-    });
-    res.status(200).json(updatedEntry);
-  } catch (error) {
-    console.error(`Error updating ${model}:`, error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-// Delete an entry
-exports.deleteEntry = async (req, res) => {
-  const { model, id } = req.params;
-  try {
-    await prisma[model].delete({
-      where: { id: parseInt(id) },
-    });
-    res.status(200).json({ message: `${model} deleted successfully` });
-  } catch (error) {
-    console.error(`Error deleting ${model}:`, error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
-
-// Get all entries
-exports.getEntries = async (req, res) => {
-  const { model } = req.params;
-  try {
-    const entries = await prisma[model].findMany();
-    res.status(200).json(entries);
-  } catch (error) {
-    console.error(`Error fetching ${model}:`, error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
+    const { model, name } = { ...req.params, ...req.body };
+    try {
+      // Check if an entry with the same name already exists
+      const existingEntry = await prisma[model].findFirst({
+        where: { name },
+      });
+  
+      if (existingEntry) {
+        return res.status(400).json({ error: `${model} with name '${name}' already exists` });
+      }
+  
+      const entry = await prisma[model].create({
+        data: { name },
+      });
+  
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error(`Error creating ${model}:`, error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
+  
+  // Update an entry with existence check
+  exports.updateEntry = async (req, res) => {
+    const { model, id } = { ...req.params, ...req.body };
+    const { name } = req.body;
+    try {
+      // Check if the entry exists
+      const existingEntry = await prisma[model].findUnique({
+        where: { id: parseInt(id) },
+      });
+  
+      if (!existingEntry) {
+        return res.status(404).json({ error: `${model} with ID ${id} not found` });
+      }
+  
+      const updatedEntry = await prisma[model].update({
+        where: { id: parseInt(id) },
+        data: { name },
+      });
+  
+      res.status(200).json(updatedEntry);
+    } catch (error) {
+      console.error(`Error updating ${model}:`, error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
+  
+  // Delete an entry with existence check
+  exports.deleteEntry = async (req, res) => {
+    const { model, id } = { ...req.params, ...req.body };
+    try {
+      // Check if the entry exists
+      const existingEntry = await prisma[model].findUnique({
+        where: { id: parseInt(id) },
+      });
+  
+      if (!existingEntry) {
+        return res.status(404).json({ error: `${model} with ID ${id} not found` });
+      }
+  
+      await prisma[model].delete({
+        where: { id: parseInt(id) },
+      });
+  
+      res.status(200).json({ message: `${model} deleted successfully` });
+    } catch (error) {
+      console.error(`Error deleting ${model}:`, error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
+  
+  // Get all entries with pagination
+  exports.getEntries = async (req, res) => {
+    const { model } = req.params;
+    const { page = 1, limit = 10 } = req.query; // Default page 1, limit 10
+  
+    try {
+      const skip = (page - 1) * limit;
+  
+      // Fetch total count
+      const totalCount = await prisma[model].count();
+  
+      // Fetch paginated data
+      const entries = await prisma[model].findMany({
+        skip: parseInt(skip),
+        take: parseInt(limit),
+      });
+  
+      res.status(200).json({
+        data: entries,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalCount / limit),
+          totalItems: totalCount,
+          itemsPerPage: parseInt(limit),
+        },
+      });
+    } catch (error) {
+      console.error(`Error fetching ${model}:`, error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  };
+  
 
 
 
