@@ -30,6 +30,7 @@ enum JobStatus {
   ONHOLD
   IN_PROGRESS
   COMPLETED
+  DECLINE
 }
 
 enum SessionStatus {
@@ -110,6 +111,12 @@ enum ProfileStatus {
   UNVARIFIED
 }
 
+enum UserStatus {
+  APPROVED
+  DISAPPROVED
+  PENDING
+}
+
 model User {
   id             Int            @id @default(autoincrement())
   email          String         @unique
@@ -126,6 +133,7 @@ model User {
   firstLogin     Boolean        @default(true)
   activeCardId   Int?
   profileStatus  ProfileStatus? @default(UNVARIFIED)
+  userStatus     UserStatus?    @default(PENDING)
 
   // Relations
   Profile                 Profile[]
@@ -344,6 +352,7 @@ model MentorProfile {
 
 model Service {
   id                      Int                       @id @default(autoincrement())
+  IndustryName            String?
   name                    String
   description             String                    @db.Text
   pricing                 Int
@@ -352,6 +361,7 @@ model Service {
   MentorSessionManagement MentorSessionManagement[]
   Booking                 Booking[]
   HiredService            HiredService[]
+  RecruiterHiring         RecruiterHiring[]
 }
 
 model MentorSessionManagement {
@@ -433,6 +443,7 @@ model RecruiterHiring {
   adminApprovalStatus     HiringStatusAdmin
   recruiterApprovalStatus HiringStatusRec
   jobStatus               JobStatus
+  invoice                 String?
   paymentStatus           PaymentStatus?
   employerId              Int
   employer                User              @relation("EmployerRecruiterHirings", fields: [employerId], references: [id], map: "FK_EmployerId")
@@ -440,10 +451,25 @@ model RecruiterHiring {
   recruiter               User?             @relation("RecruiterRecruiterHirings", fields: [recruiterId], references: [id], map: "FK_RecId")
   timeSheets              TimeSheet[] // One-to-Many relationship with TimeSheet
   hiredServices           HiredService[] // One-to-Many relationship with HiredService
+  selectedService         Int? // use this one
+  Service                 Service?          @relation(fields: [selectedService], references: [id])
   createdAt               DateTime?         @default(now())
   updatedAt               DateTime?         @updatedAt
+  recruiterHiringId       Int?
+  TimesheetReview         TimesheetReview[]
 
   @@map("RecruiterHiring")
+}
+
+model TimesheetReview {
+  id                Int             @id @default(autoincrement())
+  content           String // Actual review content
+  notificationId    Int? // Optional Relation to Notification
+  rating            Int // Review rating (e.g., 1-5)
+  recruiterHiringId Int // Relation to RecruiterHiring
+  RecruiterHiring   RecruiterHiring @relation(fields: [recruiterHiringId], references: [id])
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model HiredService {

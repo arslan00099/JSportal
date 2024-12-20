@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 const { subDays } = require('date-fns');
+const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
 
 exports.getDashboard = async (req, res) => {
@@ -44,6 +45,8 @@ exports.getDashboard = async (req, res) => {
 
 exports.getAllMentors = async (req, res) => {
     try {
+        console.log("Getting all Mentor list");
+
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
@@ -56,57 +59,64 @@ exports.getAllMentors = async (req, res) => {
         const skip = (page - 1) * pageSize;
         const take = pageSize;
 
-        // Prepare where condition with optional search
-        const whereCondition = {
-            user: {
-                role: "MENTOR",
-            },
+        // Prepare where condition for search
+        const userWhereCondition = {
+            role: "MENTOR",
             ...(searchQuery && {
-                fullname: {
-                    contains: searchQuery, // Remove 'mode' parameter
-                }
+                OR: [
+                    { email: { contains: searchQuery } },
+                    { Profile: { some: { fullname: { contains: searchQuery } } } }
+                ]
             })
         };
 
-        // Fetch data from MentorProfile and related User table with pagination, sorting, and search
-        const mentors = await prisma.profile.findMany({
-            where: whereCondition,
+        // Fetch data from User with optional related Profile
+        const mentor = await prisma.user.findMany({
+            where: userWhereCondition,
             include: {
-                user: {
+                Profile: true,
+                Location: true,
+                mentorSessions: {
                     include: {
-                        Location: true,
-                    },
-                },
+                        reviews: {
+                            select: {
+                                rating: true,
+                            }
+                        }
+                    }
+                }
             },
             orderBy: {
-                id: sortOrder
+                id: sortOrder,
             },
             skip: skip,
             take: take,
         });
 
-        // Fetch total count of mentors for pagination (with search filter)
-        const totalMentors = await prisma.profile.count({
-            where: whereCondition,
+        // Fetch total count of job seekers for pagination
+        const totalMentor = await prisma.user.count({
+            where: userWhereCondition,
         });
 
-        // Transform data into required format
-        const formattedMentors = mentors.map((mentor, index) => ({
-            userId: mentor.id,
-            name: mentor.fullname,
-            email: mentor.user.email,
-            phoneNo: mentor.phnumber,
-            address: mentor.user.Location.length > 0 ? mentor.user.Location[0]?.city : "N/A",
-            ratings: mentor.rating || 0,
+        // Transform data into the required format
+        const formattedMentor = mentor.map((user) => ({
+            userId: user.id,
+            name: user.Profile?.[0]?.fullname || null,
+            email: user.email,
+            phoneNo: user.Profile?.[0]?.phnumber || null,
+            address: user.Location.length > 0 ? user.Location[0]?.city : "N/A",
+            reviewsList: user.mentorSessions.flatMap(session =>
+                session.reviews.map(review => review.rating)
+            ) || null, // Flatten ratings from reviews
         }));
 
         // Prepare response with pagination metadata
-        const totalPages = Math.ceil(totalMentors / pageSize);
+        const totalPages = Math.ceil(totalMentor / pageSize);
 
         res.status(200).json({
-            mentors: formattedMentors,
+            mentors: formattedMentor,
             pagination: {
-                totalItems: totalMentors,
+                totalItems: totalMentor,
                 totalPages: totalPages,
                 currentPage: page,
                 pageSize: pageSize,
@@ -115,15 +125,17 @@ exports.getAllMentors = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error('Error fetching mentor data:', error);
-        res.status(500).json({ error: 'An error occurred while fetching mentor data.' });
+        console.error('Error fetching job seeker data:', error);
+        res.status(500).json({ error: 'An error occurred while fetching job seeker data.' });
     }
 };
 
 
+
 exports.getAllJS = async (req, res) => {
     try {
-        console.log("getting all the JS list");
+        console.log("Getting all the Job Seeker list");
+
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
@@ -136,53 +148,45 @@ exports.getAllJS = async (req, res) => {
         const skip = (page - 1) * pageSize;
         const take = pageSize;
 
-        // Prepare where condition with optional search
-        const whereCondition = {
-            user: {
-                role: "JOB_SEEKER",
-            },
+        // Prepare where condition for search
+        const userWhereCondition = {
+            role: "JOB_SEEKER",
             ...(searchQuery && {
-                fullname: {
-                    contains: searchQuery,
-                }
+                OR: [
+                    { email: { contains: searchQuery } },
+                    { Profile: { some: { fullname: { contains: searchQuery } } } }
+                ]
             })
         };
 
-        // Fetch data from Profile and related User table with pagination, sorting, and search
-        const jobSeekers = await prisma.profile.findMany({
-            where: whereCondition,
-            select: {
-                id: true,
-                fullname:true,
-                resumeLink: true,
-                user: {
-                    include: {
-                        Location: true,
-                    },
-                },
+        // Fetch data from User with optional related Profile
+        const jobSeekers = await prisma.user.findMany({
+            where: userWhereCondition,
+            include: {
+                Profile: true,
+                Location: true,
             },
             orderBy: {
-                id: sortOrder
+                id: sortOrder,
             },
             skip: skip,
             take: take,
         });
 
-        // Fetch total count of job seekers for pagination (with search filter)
-        const totalJobSeekers = await prisma.profile.count({
-            where: whereCondition,
+        // Fetch total count of job seekers for pagination
+        const totalJobSeekers = await prisma.user.count({
+            where: userWhereCondition,
         });
 
-        // Transform data into required format
-        const formattedJobSeekers = jobSeekers.map((seeker, index) => ({
-            userId: seeker.id,
-            name: seeker.fullname,
-            email: seeker.user.email,
-            phoneNo: seeker.phnumber,
-            city: seeker.user.Location.length > 0 ? seeker.user.Location[0]?.city : "N/A",
-            state: seeker.user.Location.length > 0 ? seeker.user.Location[0]?.state : "N/A",
-            resumeLink: seeker.resumeLink,
-
+        // Transform data into the required format
+        const formattedJobSeekers = jobSeekers.map((user) => ({
+            userId: user.id,
+            name: user.Profile?.[0]?.fullname || null,
+            email: user.email,
+            phoneNo: user.Profile?.[0]?.phnumber || null,
+            city: user.Location.length > 0 ? user.Location[0]?.city : "N/A",
+            state: user.Location.length > 0 ? user.Location[0]?.state : "N/A",
+            resumeLink: generateResumeUrl(user.Profile?.[0]?.resumeLink) || null,
         }));
 
         // Prepare response with pagination metadata
@@ -204,6 +208,8 @@ exports.getAllJS = async (req, res) => {
         res.status(500).json({ error: 'An error occurred while fetching job seeker data.' });
     }
 };
+
+
 
 
 
@@ -273,13 +279,13 @@ exports.getAllMentorBookings = async (req, res) => {
             const location = session.mentor.Location[0] || {}; // Access the first Location
 
             return {
-                bookingId: session.id,
+                bookingId: session.id || null,
                 fullName: profile.fullname || null,
-                email: session.mentor.email,
+                email: session.mentor.email || null,
                 phNumber: profile.phnumber || null,
                 state: location.state || null,
                 city: location.city || null,
-                bookingStatus: session.status,
+                bookingStatus: session.status || null,
             };
         });
 
@@ -302,6 +308,46 @@ exports.getAllMentorBookings = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch sessions' });
     }
 };
+
+exports.updateMentorBookingStatus = async (req, res) => {
+    const { bookingId } = req.params;  // Get bookingId from the URL parameter
+    const { status } = req.body;  // Get the new status from the request body
+
+    // Validate the new status to ensure it's one of the allowed values (e.g., 'Pending', 'Confirmed', 'Completed')
+    const allowedStatuses = ['Pending', 'Confirmed', 'Completed', 'Cancelled', 'DECLINE'];
+    if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    try {
+        // Update the status of the booking in the database
+        const updatedBooking = await prisma.mentorSessionManagement.update({
+            where: {
+                id: parseInt(bookingId),  // Ensure the bookingId is parsed as an integer
+            },
+            data: {
+                status: status,  // Update the job status to the new value
+            },
+        });
+
+        if (!updatedBooking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Return the updated booking information
+        res.status(200).json({
+            message: 'Booking status updated successfully',
+            booking: {
+                bookingId: updatedBooking.id,
+                status: updatedBooking.jobStatus,
+            },
+        });
+    } catch (error) {
+        console.error('Error updating booking status:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 /*
 exports.getAllJSBookings = async (req, res) => {
     const { userId } = req.params; // Get the userId from params
@@ -495,7 +541,7 @@ exports.getMentorReviews = async (req, res) => {
             rating: review.rating,
             createdAt: review.createdAt,
             fullname: review.mentorSessionManagement.user.Profile[0]?.fullname,
-            avatarId: review.mentorSessionManagement.user.Profile[0]?.avatarId,
+            avatarId: generateAvatarUrl(review.mentorSessionManagement.user.Profile[0]?.avatarId),
         }));
 
         // Calculate total pages
@@ -520,6 +566,8 @@ exports.getMentorReviews = async (req, res) => {
 
 exports.getAllEmployers = async (req, res) => {
     try {
+        console.log("Getting all the EMPLOYER list");
+
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
@@ -532,59 +580,54 @@ exports.getAllEmployers = async (req, res) => {
         const skip = (page - 1) * pageSize;
         const take = pageSize;
 
-        // Prepare where condition with optional search
-        const whereCondition = {
-            user: {
-                role: "EMPLOYER",
-            },
+        // Prepare where condition for search
+        const userWhereCondition = {
+            role: "EMPLOYER",
             ...(searchQuery && {
-                fullname: {
-                    contains: searchQuery, // Remove 'mode' parameter
-                },
-                companyName: true,
+                OR: [
+                    { email: { contains: searchQuery } },
+                    { Profile: { some: { fullname: { contains: searchQuery } } } }
+                ]
             })
         };
 
-        // Fetch data from MentorProfile and related User table with pagination, sorting, and search
-        const mentors = await prisma.profile.findMany({
-            where: whereCondition,
+        // Fetch data from User with optional related Profile
+        const jobSeekers = await prisma.user.findMany({
+            where: userWhereCondition,
             include: {
-                user: {
-                    include: {
-                        Location: true,
-                    },
-                },
+                Profile: true,
+                Location: true,
             },
             orderBy: {
-                id: sortOrder
+                id: sortOrder,
             },
             skip: skip,
             take: take,
         });
 
-        // Fetch total count of mentors for pagination (with search filter)
-        const totalMentors = await prisma.profile.count({
-            where: whereCondition,
+        // Fetch total count of job seekers for pagination
+        const totalJobSeekers = await prisma.user.count({
+            where: userWhereCondition,
         });
 
-        // Transform data into required format
-        const formattedMentors = mentors.map((mentor, index) => ({
-            userId: mentor.user.id,
-            companyName: mentor.companyName,
-            name: mentor.fullname,
-            email: mentor.user.email,
-            phoneNo: mentor.phnumber,
-            address: mentor.user.Location.length > 0 ? mentor.user.Location[0]?.city : "N/A",
-            purchasedPlan: 1
+        // Transform data into the required format
+        const formattedJobSeekers = jobSeekers.map((user) => ({
+            userId: user.id,
+            companyName: user.Profile?.[0]?.companyName || null,
+            name: user.Profile?.[0]?.fullname || null,
+            email: user.email,
+            phoneNo: user.Profile?.[0]?.phnumber || null,
+            address: user.Location.length > 0 ? user.Location[0]?.city : "N/A",
+            purchasedPlan: 1,
         }));
 
         // Prepare response with pagination metadata
-        const totalPages = Math.ceil(totalMentors / pageSize);
+        const totalPages = Math.ceil(totalJobSeekers / pageSize);
 
         res.status(200).json({
-            Employers: formattedMentors,
+            jobSeekers: formattedJobSeekers,
             pagination: {
-                totalItems: totalMentors,
+                totalItems: totalJobSeekers,
                 totalPages: totalPages,
                 currentPage: page,
                 pageSize: pageSize,
@@ -593,23 +636,40 @@ exports.getAllEmployers = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error('Error fetching mentor data:', error);
-        res.status(500).json({ error: 'An error occurred while fetching mentor data.' });
+        console.error('Error fetching job seeker data:', error);
+        res.status(500).json({ error: 'An error occurred while fetching job seeker data.' });
     }
 };
 
 exports.getEmployerBookings = async (req, res) => {
     const { userId } = req.params;
+    const { page = 1, limit = 10, sort = 'asc', search = '' } = req.query;
+
     console.log("GETTING EMPLOYER BOOKINGS");
 
+    const take = parseInt(limit);
+    const skip = (parseInt(page) - 1) * take;
+
     try {
-        // Query the database to fetch the required details
-        const bookings = await prisma.booking.findMany({
+        // Fetch the bookings
+        const bookings = await prisma.recruiterHiring.findMany({
             where: {
                 employerId: parseInt(userId),
+                employer: {
+                    Profile: {
+                        some: {
+                            companyName: {
+                                contains: search, // MySQL is case-insensitive by default
+                            },
+                        },
+                    },
+                },
             },
+            take,
+            skip,
             select: {
                 id: true, // bookingId
+                jobStatus: true,
                 employer: {
                     select: {
                         Profile: {
@@ -645,33 +705,96 @@ exports.getEmployerBookings = async (req, res) => {
             },
         });
 
-        // Map and format the data to match the required structure
-        const formattedBookings = bookings.map((booking) => {
-            const employerProfile = booking.employer.Profile?.[0] || booking.employer.Profile; // Handle array or object
-            const location = booking.employer.Location;
+        // Map and sort the data after fetching (since nested sorting is not supported directly)
+        const formattedBookings = bookings
+            .map((booking) => {
+                const employerProfile = Array.isArray(booking.employer.Profile)
+                    ? booking.employer.Profile[0]
+                    : booking.employer.Profile;
+                const location = Array.isArray(booking.employer.Location)
+                    ? booking.employer.Location[0]
+                    : booking.employer.Location;
 
-            return {
-                bookingId: booking.id,
-                companyName: employerProfile?.companyName || null,
-                email: booking.employer.email,
-                phnumber: employerProfile?.phnumber || null,
-                employerName: employerProfile?.fullname || null,
-                state: booking.employer.Location[0].state,
-                city: booking.employer.Location[0].city,
-                recruiterName: booking.recruiter?.Profile?.[0]?.fullname || booking.recruiter?.Profile?.fullname || null,
-                recruiterService: booking.Service?.name || null,
-            };
+                return {
+                    bookingId: booking.id,
+                    status: booking.jobStatus,
+                    companyName: employerProfile?.companyName || null,
+                    email: booking.employer.email,
+                    phnumber: employerProfile?.phnumber || null,
+                    employerName: employerProfile?.fullname || null,
+                    state: location?.state || null,
+                    city: location?.city || null,
+                    recruiterName: Array.isArray(booking.recruiter.Profile)
+                        ? booking.recruiter.Profile[0]?.fullname
+                        : booking.recruiter.Profile?.fullname || null,
+                    recruiterService: booking.Service?.name || null,
+                };
+            })
+            .sort((a, b) =>
+                sort === 'asc'
+                    ? a.companyName?.localeCompare(b.companyName)
+                    : b.companyName?.localeCompare(a.companyName)
+            );
+
+        res.status(200).json({
+            data: formattedBookings,
+            meta: {
+                currentPage: parseInt(page),
+                perPage: take,
+                total: formattedBookings.length,
+            },
         });
-
-        res.status(200).json(formattedBookings);
     } catch (error) {
         console.error('Error fetching employer bookings:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
 
+exports.updateEmployerBookingStatus = async (req, res) => {
+    const { bookingId } = req.params;  // Get bookingId from the URL parameter
+    const { status } = req.body;  // Get the new status from the request body
+
+    // Validate the new status to ensure it's one of the allowed values (e.g., 'Pending', 'Confirmed', 'Completed')
+    const allowedStatuses = ['Pending', 'Confirmed', 'COMPLETED', 'Cancelled', 'DECLINE'];
+    if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    try {
+        // Update the status of the booking in the database
+        const updatedBooking = await prisma.recruiterHiring.update({
+            where: {
+                id: parseInt(bookingId),  // Ensure the bookingId is parsed as an integer
+            },
+            data: {
+                jobStatus: status,  // Update the job status to the new value
+            },
+        });
+
+        if (!updatedBooking) {
+            return res.status(404).json({ error: 'Booking not found' });
+        }
+
+        // Return the updated booking information
+        res.status(200).json({
+            message: 'Booking status updated successfully',
+            booking: {
+                bookingId: updatedBooking.id,
+                status: updatedBooking.jobStatus,
+            },
+        });
+    } catch (error) {
+        console.error('Error updating booking status:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
+
 exports.getAllRec = async (req, res) => {
     try {
+        console.log("Getting all Recruiter list");
+
         // Get pagination parameters from query
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
@@ -684,57 +807,64 @@ exports.getAllRec = async (req, res) => {
         const skip = (page - 1) * pageSize;
         const take = pageSize;
 
-        // Prepare where condition with optional search
-        const whereCondition = {
-            user: {
-                role: "RECRUITER",
-            },
+        // Prepare where condition for search
+        const userWhereCondition = {
+            role: "RECRUITER",
             ...(searchQuery && {
-                fullname: {
-                    contains: searchQuery, // Remove 'mode' parameter
-                }
+                OR: [
+                    { email: { contains: searchQuery } },
+                    { Profile: { some: { fullname: { contains: searchQuery } } } }
+                ]
             })
         };
 
-        // Fetch data from MentorProfile and related User table with pagination, sorting, and search
-        const mentors = await prisma.profile.findMany({
-            where: whereCondition,
+        // Fetch data from User with optional related Profile and ratings
+        const rec = await prisma.user.findMany({
+            where: userWhereCondition,
             include: {
-                user: {
+                Profile: true,
+                Location: true,
+                recruiterRecruiterHirings: {
                     include: {
-                        Location: true,
+                        TimesheetReview: {
+                            select: {
+                                rating: true,
+                            },
+                        },
                     },
                 },
             },
             orderBy: {
-                id: sortOrder
+                id: sortOrder,
             },
             skip: skip,
             take: take,
         });
 
-        // Fetch total count of mentors for pagination (with search filter)
-        const totalMentors = await prisma.profile.count({
-            where: whereCondition,
+        // Fetch total count of recruiters for pagination
+        const totalRec = await prisma.user.count({
+            where: userWhereCondition,
         });
 
-        // Transform data into required format
-        const formattedMentors = mentors.map((mentor, index) => ({
-            userId: mentor.id,
-            name: mentor.fullname,
-            email: mentor.user.email,
-            phoneNo: mentor.phnumber,
-            address: mentor.user.Location.length > 0 ? mentor.user.Location[0]?.city : "N/A",
-            ratings: mentor.rating || 0,
+        // Transform data into the required format
+        const formattedRec = rec.map((user) => ({
+            userId: user.id,
+            name: user.Profile?.[0]?.fullname || null,
+            email: user.email,
+            phoneNo: user.Profile?.[0]?.phnumber || null,
+            address: user.Location.length > 0 ? user.Location[0]?.city : "N/A",
+            reviewsList: user.recruiterRecruiterHirings.flatMap(hiring =>
+                hiring.TimesheetReview.map(review => review.rating)
+            ) || [],
         }));
 
         // Prepare response with pagination metadata
-        const totalPages = Math.ceil(totalMentors / pageSize);
+        const totalPages = Math.ceil(totalRec / pageSize);
 
         res.status(200).json({
-            recruiter: formattedMentors,
+            recruiter: formattedRec,
             pagination: {
-                totalItems: totalMentors,
+                totalItems: totalRec,
                 totalPages: totalPages,
                 currentPage: page,
                 pageSize: pageSize,
@@ -743,10 +873,11 @@ exports.getAllRec = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error('Error fetching mentor data:', error);
-        res.status(500).json({ error: 'An error occurred while fetching mentor data.' });
+        console.error('Error fetching recruiter data:', error);
+        res.status(500).json({ error: 'An error occurred while fetching recruiter data.' });
     }
 };
+
 
 exports.getRecByid = async (req, res) => {
     const { userId } = req.params;
@@ -777,7 +908,7 @@ exports.getRecByid = async (req, res) => {
             totalReview: mentor.totalReview || 0, // Default total reviews if missing
             location: mentor.location || "Not provided", // Default location if missing
             yearOfExperience: mentor.yearOfExperience || 0, // Default experience if missing
-            linkedinProfile: mentor.companyLink || "Not provided", // Default LinkedIn profile if missing
+            linkedinProfile: gmentor.companyLink || "Not provided", // Default LinkedIn profile if missing
             services: mentor.user?.services || [], // Services linked to the mentor (from user)
         }));
 
@@ -801,16 +932,28 @@ exports.getRecByid = async (req, res) => {
 
 exports.getRecBookings = async (req, res) => {
     const { userId } = req.params;
+    const { page = 1, limit = 10, sort = 'asc', search = '' } = req.query;  // Extract query params
+
+    const take = parseInt(limit);
+    const skip = (parseInt(page) - 1) * take;
 
     try {
-        // Query the database to fetch the required details
-        const bookings = await prisma.booking.findMany({
+        // Query the database with filters, pagination, and sorting
+        const bookings = await prisma.recruiterHiring.findMany({
             where: {
-                recId: parseInt(userId),
+                recruiterId: parseInt(userId),
+                id: {
+                    equals: search ? parseInt(search) : undefined,  // You can change this to `equals` if you want exact match
+                },
             },
+            orderBy: {
+                id: sort === 'asc' ? 'asc' : 'desc',  // Sorting by bookingId
+            },
+            take,
+            skip,
             select: {
                 id: true, // bookingId
-                status: true,
+                jobStatus: true,
                 recruiter: {
                     select: {
                         Profile: {
@@ -822,6 +965,11 @@ exports.getRecBookings = async (req, res) => {
                             },
                         },
                         email: true,
+                    },
+                },
+                timeSheets: {
+                    select: {
+                        createdAt: true,
                     },
                 },
                 Service: {
@@ -839,23 +987,31 @@ exports.getRecBookings = async (req, res) => {
 
             return {
                 bookingId: booking.id,
-                status: booking.status,
-                fullName: recruiterProfile?.fullname || null,
+                recName: recruiterProfile?.fullname || null,
                 email: booking.recruiter?.email || null,
                 phnumber: recruiterProfile?.phnumber || null,
                 state: locationParts[0]?.trim() || null,
                 city: locationParts[1]?.trim() || null,
-                timesheetCreatedAt: "june,14,2024",   //i have to adjust it
-
+                timesheetCreatedAt: booking.timeSheets.createdAt || null,
+                status: booking.jobStatus,
             };
         });
 
-        res.status(200).json(formattedBookings);
+        // Return the formatted bookings with pagination meta
+        res.status(200).json({
+            data: formattedBookings,
+            meta: {
+                currentPage: parseInt(page),
+                perPage: take,
+                total: formattedBookings.length, // You can calculate the total number of bookings for better pagination
+            },
+        });
     } catch (error) {
         console.error("Error in getRecBookings:", error);
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 exports.deleteUserAndProfile = async (req, res) => {
     try {
@@ -899,121 +1055,511 @@ exports.deleteUserAndProfile = async (req, res) => {
 exports.createEntry = async (req, res) => {
     const { model, name } = { ...req.params, ...req.body };
     try {
-      // Check if an entry with the same name already exists
-      const existingEntry = await prisma[model].findFirst({
-        where: { name },
-      });
-  
-      if (existingEntry) {
-        return res.status(400).json({ error: `${model} with name '${name}' already exists` });
-      }
-  
-      const entry = await prisma[model].create({
-        data: { name },
-      });
-  
-      res.status(201).json(entry);
+        // Check if an entry with the same name already exists
+        const existingEntry = await prisma[model].findFirst({
+            where: { name },
+        });
+
+        if (existingEntry) {
+            return res.status(400).json({ error: `${model} with name '${name}' already exists` });
+        }
+
+        const entry = await prisma[model].create({
+            data: { name },
+        });
+
+        res.status(201).json(entry);
     } catch (error) {
-      console.error(`Error creating ${model}:`, error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error(`Error creating ${model}:`, error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  };
-  
-  // Update an entry with existence check
-  exports.updateEntry = async (req, res) => {
+};
+
+// Update an entry with existence check
+exports.updateEntry = async (req, res) => {
     const { model, id } = { ...req.params, ...req.body };
     const { name } = req.body;
     try {
-      // Check if the entry exists
-      const existingEntry = await prisma[model].findUnique({
-        where: { id: parseInt(id) },
-      });
-  
-      if (!existingEntry) {
-        return res.status(404).json({ error: `${model} with ID ${id} not found` });
-      }
-  
-      const updatedEntry = await prisma[model].update({
-        where: { id: parseInt(id) },
-        data: { name },
-      });
-  
-      res.status(200).json(updatedEntry);
+        // Check if the entry exists
+        const existingEntry = await prisma[model].findUnique({
+            where: { id: parseInt(id) },
+        });
+
+        if (!existingEntry) {
+            return res.status(404).json({ error: `${model} with ID ${id} not found` });
+        }
+
+        const updatedEntry = await prisma[model].update({
+            where: { id: parseInt(id) },
+            data: { name },
+        });
+
+        res.status(200).json(updatedEntry);
     } catch (error) {
-      console.error(`Error updating ${model}:`, error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error(`Error updating ${model}:`, error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  };
-  
-  // Delete an entry with existence check
-  exports.deleteEntry = async (req, res) => {
+};
+
+// Delete an entry with existence check
+exports.deleteEntry = async (req, res) => {
     const { model, id } = { ...req.params, ...req.body };
     try {
-      // Check if the entry exists
-      const existingEntry = await prisma[model].findUnique({
-        where: { id: parseInt(id) },
-      });
-  
-      if (!existingEntry) {
-        return res.status(404).json({ error: `${model} with ID ${id} not found` });
-      }
-  
-      await prisma[model].delete({
-        where: { id: parseInt(id) },
-      });
-  
-      res.status(200).json({ message: `${model} deleted successfully` });
+        // Check if the entry exists
+        const existingEntry = await prisma[model].findUnique({
+            where: { id: parseInt(id) },
+        });
+
+        if (!existingEntry) {
+            return res.status(404).json({ error: `${model} with ID ${id} not found` });
+        }
+
+        await prisma[model].delete({
+            where: { id: parseInt(id) },
+        });
+
+        res.status(200).json({ message: `${model} deleted successfully` });
     } catch (error) {
-      console.error(`Error deleting ${model}:`, error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error(`Error deleting ${model}:`, error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  };
-  
-  // Get all entries with pagination
-  exports.getEntries = async (req, res) => {
-    const { model } = req.params;
+};
+
+// Get all entries with pagination
+exports.getEntries = async (req, res) => {
+    const { model, search } = { ...req.params, ...req.body }; // Extract model and optional search from URL params
     const { page = 1, limit = 10 } = req.query; // Default page 1, limit 10
-  
+    console.log(model);
+    console.log(search);
     try {
-      const skip = (page - 1) * limit;
-  
-      // Fetch total count
-      const totalCount = await prisma[model].count();
-  
-      // Fetch paginated data
-      const entries = await prisma[model].findMany({
-        skip: parseInt(skip),
-        take: parseInt(limit),
-      });
-  
-      res.status(200).json({
-        data: entries,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(totalCount / limit),
-          totalItems: totalCount,
-          itemsPerPage: parseInt(limit),
-        },
-      });
+        const skip = (page - 1) * limit;
+
+        // Define search filter dynamically
+        const whereClause = search
+            ? {
+                name: {
+                    contains: search, // Partial match search
+                },
+            }
+            : {}; // No filter if search is not provided
+
+        // Fetch total count with or without search filter
+        const totalCount = await prisma[model].count({
+            where: whereClause,
+        });
+
+        // Fetch paginated and filtered data
+        const entries = await prisma[model].findMany({
+            where: whereClause,
+            skip: parseInt(skip),
+            take: parseInt(limit),
+        });
+
+        // Send response
+        res.status(200).json({
+            data: entries,
+            pagination: {
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalCount / limit),
+                totalItems: totalCount,
+                itemsPerPage: parseInt(limit),
+            },
+        });
     } catch (error) {
-      console.error(`Error fetching ${model}:`, error);
-      res.status(500).json({ error: 'Internal Server Error' });
+        console.error(`Error fetching ${model}:`, error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-  };
-  
+};
+
+
+
+//############################PROFILE APPROVALS
+
+exports.mentorApproval = async (req, res) => {
+    const { role } = req.params; // Extract role from params
+    const { page = 1, limit = 10, search = '' } = req.query; // Extract pagination and search from query parameters
+    console.log(role, page, limit, search);
+
+    try {
+        // Validate the role parameter
+        const validRoles = ['MENTOR', 'EMPLOYER', 'RECRUITER', 'ADMIN', 'JOB_SEEKER']; // Add all valid roles here
+        if (!validRoles.includes(role.toUpperCase())) {
+            return res.status(400).json({ error: 'Invalid role specified' });
+        }
+
+        // Define pagination logic
+        const skip = (page - 1) * limit;
+        
+        // Query users based on role and search filter on fullname
+        const users = await prisma.user.findMany({
+            where: {
+                role: role.toUpperCase(), // Use the role dynamically
+                Profile: {
+                    fullname: {
+                        contains: search, // Apply search filter on fullname (case-sensitive)
+                    },
+                },
+            },
+            skip: skip,
+            take: parseInt(limit), // Limit number of users returned
+            select: {
+                id: true,
+                userStatus: true,
+                createdAt: true,
+                Profile: {
+                    select: {
+                        fullname: true,
+                        id: true,
+                    },
+                },
+            },
+        });
+
+        // Get the total number of users matching the role and search filter
+        const totalUsers = await prisma.user.count({
+            where: {
+                role: role.toUpperCase(),
+                Profile: {
+                    fullname: {
+                        contains: search,
+                    },
+                },
+            },
+        });
+
+        // Format the createdAt field to only return the date
+        const formattedUsers = users.map((user) => ({
+            userId: user.id,
+            userStatus: user.userStatus,
+            createdAt: user.createdAt.toISOString().split('T')[0],
+            fullname: user.Profile.length > 0 ? user.Profile[0].fullname : 'No fullname found',
+        }));
+
+        // Return paginated response with total count
+        res.status(200).json({
+            users: formattedUsers,
+            pagination: {
+                totalUsers,
+                totalPages: Math.ceil(totalUsers / limit),
+                currentPage: parseInt(page),
+            },
+        });
+    } catch (error) {
+        console.error(`Error fetching users with role ${role}:`, error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
 
 
 
 
+exports.updateUserStatus = async (req, res) => {
+    const { userId, userStatus } = req.body;
+
+    try {
+        // Validate userStatus value
+        const validStatuses = ['APPROVED', 'DISAPPROVED', 'PENDING'];
+        if (!validStatuses.includes(userStatus)) {
+            return res.status(400).json({ error: 'Invalid userStatus value. Must be APPROVED, DISAPPROVED, or PENDING.' });
+        }
+
+        // Check if user exists
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: {
+                id: true,
+                email: true,
+                userStatus: true,
+                createdAt: true,
+                // Omit password field here
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Update the userStatus
+        const updatedUser = await prisma.user.update({
+            where: { id: parseInt(userId) },
+            data: { userStatus },
+            select: {
+                id: true,
+                email: true,
+                userStatus: true,
+                createdAt: true,
+                // Omit password field in update response as well
+            },
+        });
+
+        res.status(200).json({ message: 'User status updated successfully', updatedUser });
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+exports.getRecMenDetails = async (req, res) => {
+    const { userId } = req.params; // Extract userId from params
+
+    try {
+        // Fetch user details and related data
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: {
+                email: true, // Fetch only the email field from the User model
+                Profile: {
+                    select: {
+                        fullname: true,
+                        phnumber: true,
+                        avatarId: true,
+                        mentorvideolink: true,
+                        language: true,
+                        tagline: true,
+                        industry: true,
+                        resumeLink: true,
+                        linkedinLink: true,
+                        about: true,
+                    },
+                },
+                Location: {
+                    select: {
+                        city: true,
+                        state: true,
+                    },
+                },
+                services: true,
+            },
+        });
+
+        // Check if user exists
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Format the response
+        const formattedUser = {
+            userId: user.id,
+            email: user.email,
+                fullName: user.Profile[0]?.fullname || null,
+                phoneNumber: user.Profile[0]?.phnumber || null,
+                avatarId: generateAvatarUrl(user.Profile[0]?.avatarId) || null,
+                mentorVideoLink: generateVideoUrl(user.Profile[0]?.mentorevideolink) || null,
+                language: user.Profile[0]?.language || null,
+                tagline: user.Profile[0]?.tagline || null,
+                industry: user.Profile[0]?.industry || null,
+                resumeLink: generateResumeUrl(user.Profile[0]?.resumeLink) || null,
+                linkedinLink: user.Profile[0]?.linkedinLink || null,
+                about: user.Profile[0]?.about || null,
+            
+                city: user.Location[0]?.city || null,
+                state: user.Location[0]?.state || null,
+            
+            services: user.services || [],
+        };
+
+        // Send formatted response
+        res.status(200).json(formattedUser);
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+exports.getRecruiterHiring = async (req, res) => {
+    const { page = 1, limit = 10, sort = 'asc', search = '' } = req.query; // Extract query params
+
+    const take = parseInt(limit);
+    const skip = (parseInt(page) - 1) * take;
+
+    try {
+        // Count total records for pagination
+        const totalRecords = await prisma.recruiterHiring.count({
+            where: {
+                id: search ? parseInt(search) : undefined,
+            },
+        });
+
+        // Query the database with filters, pagination, and sorting
+        const bookings = await prisma.recruiterHiring.findMany({
+            where: {
+                id: search ? parseInt(search) : undefined,
+            },
+            orderBy: {
+                id: sort === 'asc' ? 'asc' : 'desc', // Sorting by id
+            },
+            take,
+            skip,
+            select: {
+                id: true,
+                adminApprovalStatus: true,
+                invoice: true,
+                paymentStatus: true,
+                createdAt: true,
+                recruiter: {
+                    select: {
+                        Profile: {
+                            select: {
+                                fullname: true,
+                            },
+                        },
+                    },
+                },
+                employer: {
+                    select: {
+                        Profile: {
+                            select: {
+                                companyName: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Format the response
+        const formattedBookings = bookings.map((booking) => {
+            const recruiterProfile = booking.recruiter?.Profile?.[0];
+            const employerProfile = booking.employer?.Profile?.[0];
+
+            return {
+                bookingId: booking.id,
+                recruiterName: recruiterProfile?.fullname || null,
+                employerCompanyName: employerProfile?.companyName || null,
+                appliedOn: booking.createdAt?.toISOString() || null,
+                adminStatus: booking.adminApprovalStatus || null,
+                invoice: booking.invoice || null,
+                paymentStatus: booking.paymentStatus || null,
+            };
+        });
+
+        // Return the formatted bookings with pagination meta
+        res.status(200).json({
+            data: formattedBookings,
+            meta: {
+                currentPage: parseInt(page),
+                perPage: take,
+                totalRecords,
+                totalPages: Math.ceil(totalRecords / take),
+            },
+        });
+    } catch (error) {
+        console.error("Error in getRecruiterHiring:", error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.getRecruiterHiringDetail = async (req, res) => {
+    const { bookingId } = req.params; // Extract booking ID from request parameters
+
+    try {
+        // Query the database for the specific RecruiterHiring record
+        const booking = await prisma.recruiterHiring.findUnique({
+            where: {
+                id: parseInt(bookingId),
+            },
+            select: {
+                id: true,
+                adminApprovalStatus: true,
+                invoice: true,
+                paymentStatus: true,
+                createdAt: true,
+                recruiter: {
+                    select: {
+                        Profile: {
+                            select: {
+                                fullname: true,
+                            },
+                        },
+                    },
+                },
+                employer: {
+                    select: {
+                        Profile: {
+                            select: {
+                                companyName: true,
+                            },
+                        },
+                    },
+                },
+                Service: {
+                    select: {
+                        IndustryName: true,
+                        name: true,
+                        price: true,
+                    },
+                },
+            },
+        });
+
+        // Check if booking exists
+        if (!booking) {
+            return res.status(404).json({ error: 'Booking not found.' });
+        }
+
+        // Format the response
+        const recruiterProfile = booking.recruiter?.Profile?.[0];
+        const employerProfile = booking.employer?.Profile?.[0];
+        const serviceDetails = booking.Service;
+
+        const response = {
+            bookingId: booking.id,
+            recruiterName: recruiterProfile?.fullname || null,
+            employerCompanyName: employerProfile?.companyName || null,
+            appliedOn: booking.createdAt?.toISOString() || null,
+            adminStatus: booking.adminApprovalStatus || null,
+            invoice: booking.invoice || null,
+            paymentStatus: booking.paymentStatus || null,
+            serviceDetails: serviceDetails
+                ? {
+                      industryName: serviceDetails.IndustryName,
+                      name: serviceDetails.name,
+                      price: serviceDetails.price,
+                  }
+                : null,
+        };
+
+        // Return the formatted response
+        res.status(200).json(response);
+    } catch (error) {
+        console.error("Error in getRecruiterHiringDetail:", error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
 
 
 
+exports.updateInvoice = async (req, res) => {
+    const { id } = req.params; // Extract the recruiterHiring ID from the request parameters
+    const { invoice } = req.body; // Extract the invoice value from the request body
 
+    try {
+        // Validate input
+        if (!id || !invoice) {
+            return res.status(400).json({ error: 'RecruiterHiring ID and invoice are required.' });
+        }
 
+        // Update the invoice in the database
+        const updatedRecruiterHiring = await prisma.recruiterHiring.update({
+            where: { id: parseInt(id) },
+            data: { invoice },
+        });
 
+        // Respond with the updated record
+        res.status(200).json({
+            message: 'Invoice updated successfully.',
+            data: updatedRecruiterHiring,
+        });
+    } catch (error) {
+        console.error('Error in updateInvoice:', error.message);
 
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'RecruiterHiring record not found.' });
+        }
 
-
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+};
 
 
 
