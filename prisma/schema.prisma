@@ -130,6 +130,7 @@ model User {
   updatedAt      DateTime       @updatedAt
   isActive       Boolean        @default(true)
   isAdmin        Boolean        @default(false)
+  deActivate     Boolean        @default(false)
   firstLogin     Boolean        @default(true)
   activeCardId   Int?
   profileStatus  ProfileStatus? @default(UNVARIFIED)
@@ -166,6 +167,7 @@ model User {
   EmployerPointOfContact EmployerPointOfContact[]
   Activity               Activity[]
   Card                   Card[]
+  Blog                   Blog[]
 
   @@index([email])
   @@index([role])
@@ -365,19 +367,21 @@ model Service {
 }
 
 model MentorSessionManagement {
-  id               Int            @id @default(autoincrement())
-  selectedService  Int? // Optional field
-  Service          Service?       @relation(fields: [selectedService], references: [id])
-  selectedDateTime DateTime? // Optional field
-  status           SessionStatus? @default(ACCEPTED) // Optional field
-  userId           Int
-  user             User           @relation("UserSessions", fields: [userId], references: [id], map: "FK_User_Session", onDelete: Cascade)
-  mentorProfileId  Int
-  mentor           User           @relation("MentorSessions", fields: [mentorProfileId], references: [id], map: "FK_Mentor_Session")
-  paymentStatus    PaymentStatus? @default(COMPLETED) // Optional field with default value
-  reviews          Review[] // Relation to Review
-  createdAt        DateTime?      @default(now()) // Optional field
-  updatedAt        DateTime?      @updatedAt // Optional field
+  id                Int            @id @default(autoincrement())
+  transactionNumber String?
+  selectedService   Int? // Optional field
+  Service           Service?       @relation(fields: [selectedService], references: [id])
+  selectedDateTime  DateTime? // Optional field
+  status            SessionStatus? @default(ACCEPTED) // Optional field
+  userId            Int
+  user              User           @relation("UserSessions", fields: [userId], references: [id], map: "FK_User_Session", onDelete: Cascade)
+  mentorProfileId   Int
+  mentor            User           @relation("MentorSessions", fields: [mentorProfileId], references: [id], map: "FK_Mentor_Session")
+  paymentStatus     PaymentStatus? @default(COMPLETED) // Optional field with default value
+  paidOn            DateTime?
+  reviews           Review[] // Relation to Review
+  createdAt         DateTime?      @default(now()) // Optional field
+  updatedAt         DateTime?      @updatedAt // Optional field
 }
 
 model RecruiterProfile {
@@ -395,8 +399,6 @@ model AdminProfile {
   id        Int     @id @default(autoincrement())
   profileId Int     @unique
   profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
-  Blog Blog[]
 }
 
 model EmployerProfile {
@@ -440,11 +442,13 @@ model JobApplication {
 
 model RecruiterHiring {
   id                      Int               @id @default(autoincrement())
+  transactionNumber       String?
   adminApprovalStatus     HiringStatusAdmin
   recruiterApprovalStatus HiringStatusRec
   jobStatus               JobStatus
   invoice                 String?
   paymentStatus           PaymentStatus?
+  paidOn                  DateTime?
   employerId              Int
   employer                User              @relation("EmployerRecruiterHirings", fields: [employerId], references: [id], map: "FK_EmployerId")
   recruiterId             Int?
@@ -506,16 +510,17 @@ model TimeSheet {
 //npx prisma migrate dev --name add_optional_columns
 
 model Blog {
-  id          Int           @id @default(autoincrement())
-  title       String
-  content     String
-  status      BlogStatus    @default(PENDING)
-  mentorId    Int
-  mentor      MentorProfile @relation(fields: [mentorId], references: [id])
-  fuseAdminId Int?
-  fuseAdmin   AdminProfile? @relation(fields: [fuseAdminId], references: [id])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id              Int            @id @default(autoincrement())
+  title           String
+  content         String         @db.LongText
+  status          BlogStatus     @default(PENDING)
+  mentorId        Int
+  mentor          User           @relation(fields: [mentorId], references: [id])
+  blogStatus      BlogStatus     @default(PENDING)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  MentorProfile   MentorProfile? @relation(fields: [mentorProfileId], references: [id])
+  mentorProfileId Int?
 }
 
 model Booking {
@@ -598,4 +603,40 @@ model Skill {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AdminSettings {
+  id                 Int      @id @default(autoincrement())
+  recruiterDes       String?
+  commission         Float?
+  postTitle          String?
+  postDes            String?
+  commissionDes      String?
+  aboutUs            String?  @db.LongText
+  termsAndConditions String?  @db.LongText
+  privacyPolicy      String?  @db.LongText
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Page {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  sections Section[]
+}
+
+model Section {
+  id       Int       @id @default(autoincrement())
+  title    String
+  pageId   Int
+  page     Page      @relation(fields: [pageId], references: [id])
+  contents Content[]
+}
+
+model Content {
+  id          Int     @id @default(autoincrement())
+  heading     String
+  description String? // Nullable for sections without descriptions
+  sectionId   Int
+  section     Section @relation(fields: [sectionId], references: [id])
 }

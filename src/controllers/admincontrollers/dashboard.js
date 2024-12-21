@@ -3,6 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { subDays } = require('date-fns');
 const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
+const bcrypt = require('bcryptjs');
 
 
 exports.getDashboard = async (req, res) => {
@@ -1486,7 +1487,7 @@ exports.getRecruiterHiringDetail = async (req, res) => {
                     select: {
                         IndustryName: true,
                         name: true,
-                        price: true,
+                        pricing: true,
                     },
                 },
             },
@@ -1514,7 +1515,7 @@ exports.getRecruiterHiringDetail = async (req, res) => {
                 ? {
                       industryName: serviceDetails.IndustryName,
                       name: serviceDetails.name,
-                      price: serviceDetails.price,
+                      price: serviceDetails.pricing,
                   }
                 : null,
         };
@@ -1560,6 +1561,337 @@ exports.updateInvoice = async (req, res) => {
         res.status(500).json({ error: 'Internal server error.' });
     }
 };
+
+
+
+exports.getPaymentDetails = async (req, res) => {
+    const { role } = req.params;
+    console.log("Role:", role);
+
+    try {
+        let formatedData = []; // Declare formatted data
+        let result = []; // Declare result
+
+        if (role === 'EMPLOYER') {
+            console.log("Inside EMPLOYER");
+
+            result = await prisma.recruiterHiring.findMany({
+                select: {
+                    transactionNumber: true,
+                    paidOn: true,
+                    paymentStatus: true,
+                    employer: {
+                        select: {
+                            Profile: {
+                                select: {
+                                    fullname: true,
+                                },
+                            },
+                        },
+                    },
+                    Service: {
+                        select: {
+                            name: true,
+                            pricing: true,
+                        },
+                    },
+                },
+            });
+
+            formatedData = result.map((hiring) => ({
+                transactionId: hiring.transactionNumber,
+                fullname: hiring.employer?.Profile[0]?.fullname || null,
+                paidOn: hiring.paidOn,
+                serviceName: hiring.Service?.name || null,
+                servicePrice: hiring.Service?.pricing || null,
+                paymentStatus: hiring.paymentStatus,
+            }));
+        } else if (role === 'JOB_SEEKER') {
+            console.log("Inside JOB_SEEKER");
+
+            result = await prisma.mentorSessionManagement.findMany({
+                select: {
+                    transactionNumber: true,
+                    paidOn: true,
+                    paymentStatus: true,
+                    user: {
+                        select: {
+                            Profile: {
+                                select: {
+                                    fullname: true,
+                                },
+                            },
+                        },
+                    },
+                    Service: {
+                        select: {
+                            name: true,
+                            pricing: true,
+                        },
+                    },
+                },
+            });
+
+            formatedData = result.map((session) => ({
+                transactionId: session.transactionNumber,
+                fullname: session.user?.Profile[0]?.fullname || null,
+                paidOn: session.paidOn,
+                serviceName: session.Service?.name || null,
+                servicePrice: session.Service?.pricing || null,
+                paymentStatus: session.paymentStatus,
+            }));
+        } else {
+            return res.status(400).json({ error: "Invalid role provided" });
+        }
+
+        res.status(200).json({
+            role,
+            data: formatedData,
+        });
+    } catch (error) {
+        console.error("Error in fetching data:", error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
+exports.upsertAdminSettings = async (req, res) => {
+    const {
+        recruiterDes,
+        commission,
+        postTitle,
+        postDes,
+        commissionDes,
+        aboutUs,
+        termsAndConditions,
+        privacyPolicy,
+    } = req.body;
+
+    try {
+        // Build update and create objects dynamically
+        const updateData = {};
+        const createData = {};
+
+        if (recruiterDes !== undefined) {
+            updateData.recruiterDes = recruiterDes;
+            createData.recruiterDes = recruiterDes;
+        }
+        if (commission !== undefined) {
+            updateData.commission = commission;
+            createData.commission = commission;
+        }
+        if (postTitle !== undefined) {
+            updateData.postTitle = postTitle;
+            createData.postTitle = postTitle;
+        }
+        if (postDes !== undefined) {
+            updateData.postDes = postDes;
+            createData.postDes = postDes;
+        }
+        if (commissionDes !== undefined) {
+            updateData.commissionDes = commissionDes;
+            createData.commissionDes = commissionDes;
+        }
+        if (aboutUs !== undefined) {
+            updateData.aboutUs = aboutUs;
+            createData.aboutUs = aboutUs;
+        }
+        if (termsAndConditions !== undefined) {
+            updateData.termsAndConditions = termsAndConditions;
+            createData.termsAndConditions = termsAndConditions;
+        }
+        if (privacyPolicy !== undefined) {
+            updateData.privacyPolicy = privacyPolicy;
+            createData.privacyPolicy = privacyPolicy;
+        }
+
+        // Always update the updatedAt field
+        updateData.updatedAt = new Date();
+
+        // Upsert the AdminSettings record
+        const adminSettings = await prisma.adminSettings.upsert({
+            where: { id: 1 }, // Ensure only one record exists
+            update: updateData,
+            create: createData,
+        });
+
+        res.status(200).json({
+            message: 'Admin settings updated successfully',
+            adminSettings,
+        });
+    } catch (error) {
+        console.error('Error updating admin settings:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+exports.postPages = async(req, res)=>{
+    const { name } = req.body;
+    try {
+      const page = await prisma.page.create({
+        data: { name },
+      });
+      res.json(page);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create page' });
+    }
+};
+
+exports.postSection= async (req, res) =>{
+    const { title, pageId } = req.body;
+    try {
+      const section = await prisma.section.create({
+        data: { title, pageId },
+      });
+      res.json(section);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create section' });
+    }
+};
+
+
+exports.postContents= async (req, res) =>{
+    const { heading, description, sectionId } = req.body;
+    try {
+      const content = await prisma.content.create({
+        data: { heading, description, sectionId },
+      });
+      res.json(content);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create content' });
+    }
+};
+
+exports.getPages = async(req, res)=>{
+    
+    try {
+        const pages = await prisma.page.findMany({
+          include: {
+            sections: {
+              include: {
+                contents: true,
+              },
+            },
+          },
+        });
+        res.json(pages);
+      } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch pages' });
+      }
+};
+
+
+exports.getProfile = async (req, res) => {
+    const { id } = req.params;
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          Profile: {
+            select: {
+              avatarId: true, // Include avatarId field
+            },
+          },
+        },
+      });
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+  
+  
+      // Extract and format fields
+      const avatarUrl = generateAvatarUrl(user.Profile[0].avatarId);
+  
+      // Remove unnecessary fields and format response
+      const {
+        password, // Exclude password
+        Profile,  // Exclude Profile object
+        email_confirm, // Transform to camelCase
+        ...restUser
+      } = user;
+  
+      const formattedResponse = {
+        ...restUser,
+        emailConfirm: user.email_confirm,
+        avatarUrl, // Add flattened avatarUrl
+      };
+  
+      res.json(formattedResponse);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: `An error occurred while fetching user details: ${error.message}` });
+    }
+  };
+  
+  
+  
+  
+
+  exports.manageUser = async (req, res) => {
+    const { id } = req.params;
+    const { action, email, secondaryEmail, isActive, deActivate, role, newPassword } = req.body;
+  
+    try {
+      let result;
+  
+      switch (action) {
+        case "updateProfile":
+          result = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: {
+              email,
+              secondaryEmail,
+              isActive,
+              deActivate,
+              role,
+            },
+          });
+          delete result.password;
+          res.json({ message: "User profile updated successfully", user: result });
+          break;
+  
+        case "changePassword":
+          if (!newPassword) {
+            return res.status(400).json({ error: "New password is required" });
+          }
+          const hashedPassword = await bcrypt.hash(newPassword, 10);
+          result = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: { password: hashedPassword },
+          });
+          delete result.password;
+          res.json({ message: "Password updated successfully", user: result });
+          break;
+  
+        case "deactivateAccount":
+          result = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: { deActivate: true, isActive: false },
+          });
+          delete result.password;
+          res.json({ message: "User deactivated successfully", user: result });
+          break;
+  
+        case "delete":
+          await prisma.user.delete({
+            where: { id: parseInt(id) },
+          });
+          delete result.password;
+          res.json({ message: "User deleted successfully" });
+          break;
+  
+        default:
+          res.status(400).json({ error: "Invalid action specified" });
+          break;
+      }
+    } catch (error) {
+      res.status(500).json({ error: `An error occurred: ${error.message}` });
+    }
+  };
+  
 
 
 
