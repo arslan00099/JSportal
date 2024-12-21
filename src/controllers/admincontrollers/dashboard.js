@@ -626,7 +626,7 @@ exports.getAllEmployers = async (req, res) => {
         const totalPages = Math.ceil(totalJobSeekers / pageSize);
 
         res.status(200).json({
-            jobSeekers: formattedJobSeekers,
+            Employers: formattedJobSeekers,
             pagination: {
                 totalItems: totalJobSeekers,
                 totalPages: totalPages,
@@ -1190,7 +1190,7 @@ exports.mentorApproval = async (req, res) => {
 
         // Define pagination logic
         const skip = (page - 1) * limit;
-        
+
         // Query users based on role and search filter on fullname
         const users = await prisma.user.findMany({
             where: {
@@ -1342,20 +1342,20 @@ exports.getRecMenDetails = async (req, res) => {
         const formattedUser = {
             userId: user.id,
             email: user.email,
-                fullName: user.Profile[0]?.fullname || null,
-                phoneNumber: user.Profile[0]?.phnumber || null,
-                avatarId: generateAvatarUrl(user.Profile[0]?.avatarId) || null,
-                mentorVideoLink: generateVideoUrl(user.Profile[0]?.mentorevideolink) || null,
-                language: user.Profile[0]?.language || null,
-                tagline: user.Profile[0]?.tagline || null,
-                industry: user.Profile[0]?.industry || null,
-                resumeLink: generateResumeUrl(user.Profile[0]?.resumeLink) || null,
-                linkedinLink: user.Profile[0]?.linkedinLink || null,
-                about: user.Profile[0]?.about || null,
-            
-                city: user.Location[0]?.city || null,
-                state: user.Location[0]?.state || null,
-            
+            fullName: user.Profile[0]?.fullname || null,
+            phoneNumber: user.Profile[0]?.phnumber || null,
+            avatarId: generateAvatarUrl(user.Profile[0]?.avatarId) || null,
+            mentorVideoLink: generateVideoUrl(user.Profile[0]?.mentorevideolink) || null,
+            language: user.Profile[0]?.language || null,
+            tagline: user.Profile[0]?.tagline || null,
+            industry: user.Profile[0]?.industry || null,
+            resumeLink: generateResumeUrl(user.Profile[0]?.resumeLink) || null,
+            linkedinLink: user.Profile[0]?.linkedinLink || null,
+            about: user.Profile[0]?.about || null,
+
+            city: user.Location[0]?.city || null,
+            state: user.Location[0]?.state || null,
+
             services: user.services || [],
         };
 
@@ -1513,10 +1513,10 @@ exports.getRecruiterHiringDetail = async (req, res) => {
             paymentStatus: booking.paymentStatus || null,
             serviceDetails: serviceDetails
                 ? {
-                      industryName: serviceDetails.IndustryName,
-                      name: serviceDetails.name,
-                      price: serviceDetails.pricing,
-                  }
+                    industryName: serviceDetails.IndustryName,
+                    name: serviceDetails.name,
+                    price: serviceDetails.pricing,
+                }
                 : null,
         };
 
@@ -1725,173 +1725,173 @@ exports.upsertAdminSettings = async (req, res) => {
     }
 };
 
-exports.postPages = async(req, res)=>{
+exports.postPages = async (req, res) => {
     const { name } = req.body;
     try {
-      const page = await prisma.page.create({
-        data: { name },
-      });
-      res.json(page);
+        const page = await prisma.page.create({
+            data: { name },
+        });
+        res.json(page);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create page' });
+        res.status(500).json({ error: 'Failed to create page' });
     }
 };
 
-exports.postSection= async (req, res) =>{
+exports.postSection = async (req, res) => {
     const { title, pageId } = req.body;
     try {
-      const section = await prisma.section.create({
-        data: { title, pageId },
-      });
-      res.json(section);
+        const section = await prisma.section.create({
+            data: { title, pageId },
+        });
+        res.json(section);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create section' });
+        res.status(500).json({ error: 'Failed to create section' });
     }
 };
 
 
-exports.postContents= async (req, res) =>{
+exports.postContents = async (req, res) => {
     const { heading, description, sectionId } = req.body;
     try {
-      const content = await prisma.content.create({
-        data: { heading, description, sectionId },
-      });
-      res.json(content);
+        const content = await prisma.content.create({
+            data: { heading, description, sectionId },
+        });
+        res.json(content);
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create content' });
+        res.status(500).json({ error: 'Failed to create content' });
     }
 };
 
-exports.getPages = async(req, res)=>{
-    
+exports.getPages = async (req, res) => {
+
     try {
         const pages = await prisma.page.findMany({
-          include: {
-            sections: {
-              include: {
-                contents: true,
-              },
+            include: {
+                sections: {
+                    include: {
+                        contents: true,
+                    },
+                },
             },
-          },
         });
         res.json(pages);
-      } catch (error) {
+    } catch (error) {
         res.status(500).json({ error: 'Failed to fetch pages' });
-      }
+    }
 };
 
 
 exports.getProfile = async (req, res) => {
     const { id } = req.params;
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: parseInt(id) },
-        include: {
-          Profile: {
-            select: {
-              avatarId: true, // Include avatarId field
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(id) },
+            include: {
+                Profile: {
+                    select: {
+                        avatarId: true, // Include avatarId field
+                    },
+                },
             },
-          },
-        },
-      });
-  
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-  
-  
-  
-      // Extract and format fields
-      const avatarUrl = generateAvatarUrl(user.Profile[0].avatarId);
-  
-      // Remove unnecessary fields and format response
-      const {
-        password, // Exclude password
-        Profile,  // Exclude Profile object
-        email_confirm, // Transform to camelCase
-        ...restUser
-      } = user;
-  
-      const formattedResponse = {
-        ...restUser,
-        emailConfirm: user.email_confirm,
-        avatarUrl, // Add flattened avatarUrl
-      };
-  
-      res.json(formattedResponse);
-    } catch (error) {
-      res
-        .status(500)
-        .json({ error: `An error occurred while fetching user details: ${error.message}` });
-    }
-  };
-  
-  
-  
-  
+        });
 
-  exports.manageUser = async (req, res) => {
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+
+
+        // Extract and format fields
+        const avatarUrl = generateAvatarUrl(user.Profile[0].avatarId);
+
+        // Remove unnecessary fields and format response
+        const {
+            password, // Exclude password
+            Profile,  // Exclude Profile object
+            email_confirm, // Transform to camelCase
+            ...restUser
+        } = user;
+
+        const formattedResponse = {
+            ...restUser,
+            emailConfirm: user.email_confirm,
+            avatarUrl, // Add flattened avatarUrl
+        };
+
+        res.json(formattedResponse);
+    } catch (error) {
+        res
+            .status(500)
+            .json({ error: `An error occurred while fetching user details: ${error.message}` });
+    }
+};
+
+
+
+
+
+exports.manageUser = async (req, res) => {
     const { id } = req.params;
     const { action, email, secondaryEmail, isActive, deActivate, role, newPassword } = req.body;
-  
+
     try {
-      let result;
-  
-      switch (action) {
-        case "updateProfile":
-          result = await prisma.user.update({
-            where: { id: parseInt(id) },
-            data: {
-              email,
-              secondaryEmail,
-              isActive,
-              deActivate,
-              role,
-            },
-          });
-          delete result.password;
-          res.json({ message: "User profile updated successfully", user: result });
-          break;
-  
-        case "changePassword":
-          if (!newPassword) {
-            return res.status(400).json({ error: "New password is required" });
-          }
-          const hashedPassword = await bcrypt.hash(newPassword, 10);
-          result = await prisma.user.update({
-            where: { id: parseInt(id) },
-            data: { password: hashedPassword },
-          });
-          delete result.password;
-          res.json({ message: "Password updated successfully", user: result });
-          break;
-  
-        case "deactivateAccount":
-          result = await prisma.user.update({
-            where: { id: parseInt(id) },
-            data: { deActivate: true, isActive: false },
-          });
-          delete result.password;
-          res.json({ message: "User deactivated successfully", user: result });
-          break;
-  
-        case "delete":
-          await prisma.user.delete({
-            where: { id: parseInt(id) },
-          });
-          delete result.password;
-          res.json({ message: "User deleted successfully" });
-          break;
-  
-        default:
-          res.status(400).json({ error: "Invalid action specified" });
-          break;
-      }
+        let result;
+
+        switch (action) {
+            case "updateProfile":
+                result = await prisma.user.update({
+                    where: { id: parseInt(id) },
+                    data: {
+                        email,
+                        secondaryEmail,
+                        isActive,
+                        deActivate,
+                        role,
+                    },
+                });
+                delete result.password;
+                res.json({ message: "User profile updated successfully", user: result });
+                break;
+
+            case "changePassword":
+                if (!newPassword) {
+                    return res.status(400).json({ error: "New password is required" });
+                }
+                const hashedPassword = await bcrypt.hash(newPassword, 10);
+                result = await prisma.user.update({
+                    where: { id: parseInt(id) },
+                    data: { password: hashedPassword },
+                });
+                delete result.password;
+                res.json({ message: "Password updated successfully", user: result });
+                break;
+
+            case "deactivateAccount":
+                result = await prisma.user.update({
+                    where: { id: parseInt(id) },
+                    data: { deActivate: true, isActive: false },
+                });
+                delete result.password;
+                res.json({ message: "User deactivated successfully", user: result });
+                break;
+
+            case "delete":
+                await prisma.user.delete({
+                    where: { id: parseInt(id) },
+                });
+                delete result.password;
+                res.json({ message: "User deleted successfully" });
+                break;
+
+            default:
+                res.status(400).json({ error: "Invalid action specified" });
+                break;
+        }
     } catch (error) {
-      res.status(500).json({ error: `An error occurred: ${error.message}` });
+        res.status(500).json({ error: `An error occurred: ${error.message}` });
     }
-  };
-  
+};
+
 
 
 
