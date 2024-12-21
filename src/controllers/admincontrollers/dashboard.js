@@ -1128,7 +1128,7 @@ exports.deleteEntry = async (req, res) => {
 
 // Get all entries with pagination
 exports.getEntries = async (req, res) => {
-    const { model, search } = { ...req.params, ...req.body }; // Extract model and optional search from URL params
+    const { model, search } = { ...req.params, ...req.params }; // Extract model and optional search from URL params
     const { page = 1, limit = 10 } = req.query; // Default page 1, limit 10
     console.log(model);
     console.log(search);

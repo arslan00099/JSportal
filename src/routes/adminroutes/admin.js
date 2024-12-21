@@ -42,25 +42,26 @@ router.get('/getIndustries', (req, res) => dashboard.getEntries({ ...req, params
 router.post('/addMentorService', (req, res) => dashboard.createEntry({ ...req, params: { model: 'mentorService' } }, res));
 router.put('/updateMentorService', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'mentorService' } }, res));
 router.delete('/deleteMentorService', (req, res) => dashboard.deleteEntry({ ...req, params: { model: 'mentorService' } }, res));
-router.get('/getMentorServices', (req, res) => dashboard.getEntries({ ...req, params: { model: 'mentorService' } }, res));
+router.get('/getMentorServices', (req, res) => {dashboard.getEntries({ ...req, params: { ...req.params, model: 'mentorService' } }, res);});
 
 // // RecService
 router.post('/addRecService', (req, res) => dashboard.createEntry({ ...req, params: { model: 'recService' } }, res));
 router.put('/updateRecService', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'recService' } }, res));
 router.delete('/deleteRecService', (req, res) => dashboard.deleteEntry({ ...req, params: { model: 'recService' } }, res));
-router.get('/getRecServices', (req, res) => dashboard.getEntries({ ...req, params: { model: 'recService' } }, res));
+router.get('/getRecServices/:search?', (req, res) => {
+    dashboard.getEntries({ ...req, params: { ...req.params, model: 'recService' } }, res);
+});
 
 // // Language
 router.post('/addLanguage', (req, res) => dashboard.createEntry({ ...req, params: { model: 'language' } }, res));
 router.put('/updateLanguage', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'language' } }, res));
 router.delete('/deleteLanguage', (req, res) => dashboard.deleteEntry({ ...req, params: { model: 'language' } }, res));
-router.get('/getLanguages', (req, res) => dashboard.getEntries({ ...req, params: { model: 'language' } }, res));
-
+router.get('/getLanguages', (req, res) => {dashboard.getEntries({ ...req, params: { ...req.params, model: 'language' } }, res);});
 // // Skill
 router.post('/addSkill', (req, res) => dashboard.createEntry({ ...req, params: { model: 'skill' } }, res));
 router.put('/updateSkil', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'skill' } }, res));
 router.delete('/deleteSkill', (req, res) => dashboard.deleteEntry({ ...req, params: { model: 'skill' } }, res));
-router.get('/getSkills', (req, res) => dashboard.getEntries({ ...req, params: { model: 'skill' } }, res));
+router.get('/getSkills',(req, res) => {dashboard.getEntries({ ...req, params: { ...req.params, model: 'skill' } }, res);});
 
 //  // Profile Approvals
 router.get('/mentorApproval/:role', dashboard.mentorApproval);
