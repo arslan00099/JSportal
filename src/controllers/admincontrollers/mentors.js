@@ -223,8 +223,8 @@ exports.getMentorByid = async (req, res) => {
           rating: review.rating,
           content: review.content,
           reviewer: {
-            fullname: review.mentorSessionManagement.user.Profile.fullname,
-            avatarId: generateAvatarUrl(review.mentorSessionManagement.user.Profile.avatarId),
+            fullname: review.mentorSessionManagement.user.Profile[0].fullname,
+            avatarId: generateAvatarUrl(review.mentorSessionManagement.user.Profile[0].avatarId),
           },
         })),
       })),
@@ -246,3 +246,5 @@ exports.getMentorByid = async (req, res) => {
     });
   }
 };
+
+

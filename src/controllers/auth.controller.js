@@ -4,13 +4,20 @@ const userViewModel = require('../viewmodels/user.viewmodel'); // Ensure only on
 
 exports.signup = async (req, res) => {
   try {
-    const { username, password, email, role } = req.body;
+    const { username, password, email, role ,fullname} = req.body;
     console.log(username);
     console.log(password);
     console.log(email);
     console.log(role);
 
-    const user = await userViewModel.signup(username, password, email, role);
+    let avatarId = null;
+    if (req.file) {
+      avatarId = req.file.filename; // Save the file name to use as avatarId
+    } else {
+      console.log("No file uploaded in the request.");
+    }
+
+    const user = await userViewModel.signup(username, password, email, role,fullname,avatarId);
 
     // Remove keys with null values from the user object
     const filteredUser = Object.fromEntries(

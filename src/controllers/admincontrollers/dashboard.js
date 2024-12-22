@@ -1893,6 +1893,101 @@ exports.manageUser = async (req, res) => {
 };
 
 
+exports.getBlog = async (req, res) => {
+    try {
+      // Fetch blogs with the required fields and associated mentor information
+      const blogs = await prisma.blog.findMany({
+        select: {
+            id:true,
+          title: true,
+          createdAt: true,
+          status: true,
+          mentor: {
+            select:{
+            Profile: {
+                select:{
+              fullname: true, 
+                }
+            }
+            },
+          },
+        },
+      });
+  
+      // Transform data to match the expected response format
+      const blogData = blogs.map((blog) => ({
+        id:blog.id,
+        title: blog.title,
+        postedBy: blog.mentor.Profile[0].fullname,
+        createdAt: blog.createdAt,
+        status: blog.status,
+      }));
+  
+      res.status(200).json({ success: true, data: blogData });
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+  };
+
+exports.updateBlogStatus = async (req, res) => {
+    const { id} = req.params;
+    const { status } = req.body;
+    console.log(id);
+    console.log(status);
+  
+    try {
+      // Validate the input
+      if (!id || !status) {
+        return res.status(400).json({
+          success: false,
+          message: 'Blog ID and status are required.',
+        });
+      }
+  
+      // Validate the status value
+      const validStatuses = ['PENDING', 'APPROVED', 'REJECTED'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Allowed values are: ${validStatuses.join(', ')}.`,
+        });
+      }
+  
+      // Update the blog status
+      const updatedBlog = await prisma.blog.update({
+        where: { id: Number(id) },
+        data: { status },
+      });
+  
+      // Respond with success
+      res.status(200).json({
+        success: true,
+        message: 'Blog status updated successfully.',
+        data: updatedBlog,
+      });
+    } catch (error) {
+      console.error('Error updating blog status:', error);
+  
+      // Handle specific error cases
+      if (error.code === 'P2025') {
+        return res.status(404).json({
+          success: false,
+          message: 'Blog not found.',
+        });
+      }
+  
+      // Generic error response
+      res.status(500).json({
+        success: false,
+        message: 'Internal Server Error',
+      });
+    }
+  };
+
+
+
+
 
 
 

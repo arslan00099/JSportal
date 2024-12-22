@@ -4,7 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class UserViewModel {
-  async signup(username, password, email, role) {
+  async signup(username, password, email, role,fullname, avatarId) {
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) {
       throw new Error("User already exists");
@@ -18,6 +18,15 @@ class UserViewModel {
         email,
         password: hashedPassword,
         role,
+      },
+    });
+
+     // Create the profile associated with the user
+     await prisma.profile.create({
+      data: {
+        userId: newUser.id,
+        fullname,
+        avatarId,
       },
     });
 

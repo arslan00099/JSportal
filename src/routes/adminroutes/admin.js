@@ -83,6 +83,10 @@ router.post('/postContents',dashboard.postContents);
 router.get('/getProfile/:id',dashboard.getProfile);
 router.put('/manageUser/:id',dashboard.manageUser);
 
+router.get('/getBlogs',dashboard.getBlog);
+router.put('/blogStatus/:id', dashboard.updateBlogStatus);
+
+
 
 
 

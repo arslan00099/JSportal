@@ -5,7 +5,7 @@ exports.postProfile = async (req, res) => {
   try {
     const { fullname, phnumber } = req.body;
     const { userId, role } = req.user;
-    const phoneNumber = parseInt(phnumber, 10);
+    const phoneNumber = parseInt(phnumber, 12);
 
     // Check if a file is uploaded
     let avatarId = null;
