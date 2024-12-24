@@ -946,3 +946,50 @@ exports.deleteCard = async (req, res) => {
     });
   }
 };
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////  APIS   ///////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+exports.getCounts = async (req, res) => {
+  const userId = req.user.userId;
+  const employerId = userId;
+
+  try {
+    const jobPostCount = await prisma.jobPost.count({
+      where: {
+        userId: employerId,
+      },
+    });
+
+    const applicationReceivedCount = await prisma.jobApplied.count({
+      where: {
+        jobpost: {
+          userId: employerId,
+        },
+      },
+    });
+
+    const hiredRecruiterCount = await prisma.recruiterHiring.count({
+      where: {
+        employerId: employerId,
+      },
+    });
+
+    // Send the counts in the response
+    res.status(200).json({
+      success: true,
+      data: {
+        jobPostCount,
+        applicationReceivedCount,
+        hiredRecruiterCount,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch counts",
+      error: error.message,
+    });
+  }
+};

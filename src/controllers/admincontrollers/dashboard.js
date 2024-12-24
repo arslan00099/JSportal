@@ -1179,11 +1179,12 @@ exports.getEntries = async (req, res) => {
 exports.mentorApproval = async (req, res) => {
     const { role } = req.params; // Extract role from params
     const { page = 1, limit = 10, search = '' } = req.query; // Extract pagination and search from query parameters
+
     console.log(role, page, limit, search);
 
     try {
         // Validate the role parameter
-        const validRoles = ['MENTOR', 'EMPLOYER', 'RECRUITER', 'ADMIN', 'JOB_SEEKER']; // Add all valid roles here
+        const validRoles = ['MENTOR', 'RECRUITER']; // Add all valid roles here
         if (!validRoles.includes(role.toUpperCase())) {
             return res.status(400).json({ error: 'Invalid role specified' });
         }
@@ -1194,10 +1195,13 @@ exports.mentorApproval = async (req, res) => {
         // Query users based on role and search filter on fullname
         const users = await prisma.user.findMany({
             where: {
-                role: role.toUpperCase(), // Use the role dynamically
+                role: role.toUpperCase(),
                 Profile: {
-                    fullname: {
-                        contains: search, // Apply search filter on fullname (case-sensitive)
+                    some: { // Use 'some' for hasMany relationship filtering
+                        fullname: {
+                            contains: search, // Apply search filter
+                          
+                        },
                     },
                 },
             },
@@ -1221,24 +1225,27 @@ exports.mentorApproval = async (req, res) => {
             where: {
                 role: role.toUpperCase(),
                 Profile: {
-                    fullname: {
-                        contains: search,
+                    some: {
+                        fullname: {
+                            contains: search,
+                        
+                        },
                     },
                 },
             },
         });
 
-        // Format the createdAt field to only return the date
+        // Format the users array for the response
         const formattedUsers = users.map((user) => ({
             userId: user.id,
-            userStatus: user.userStatus,
-            createdAt: user.createdAt.toISOString().split('T')[0],
-            fullname: user.Profile.length > 0 ? user.Profile[0].fullname : 'No fullname found',
+            userStatus: user.userStatus || null,
+            createdAt: user.createdAt.toISOString().split('T')[0] || null, // Format date
+            fullname: user.Profile.length > 0 ? user.Profile[0].fullname : 'No fullname found', // Handle potential array
         }));
 
         // Return paginated response with total count
         res.status(200).json({
-            users: formattedUsers,
+            users: formattedUsers, // Use formatted users
             pagination: {
                 totalUsers,
                 totalPages: Math.ceil(totalUsers / limit),
@@ -1250,6 +1257,7 @@ exports.mentorApproval = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
 
 
 
@@ -1272,7 +1280,6 @@ exports.updateUserStatus = async (req, res) => {
                 email: true,
                 userStatus: true,
                 createdAt: true,
-                // Omit password field here
             },
         });
 
@@ -1289,7 +1296,7 @@ exports.updateUserStatus = async (req, res) => {
                 email: true,
                 userStatus: true,
                 createdAt: true,
-                // Omit password field in update response as well
+                
             },
         });
 
