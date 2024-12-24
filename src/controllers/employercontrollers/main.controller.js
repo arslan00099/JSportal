@@ -29,7 +29,7 @@ exports.updateProfile = async (req, res) => {
     if (companyName) profileData.companyName = companyName;
     if (companySize) profileData.companySize = companySize;
     if (companyLink) profileData.companyLink = companyLink;
-    if (phnumber) profileData.phnumber = Number(phnumber);
+    if (phnumber) profileData.phnumber = (phnumber);
     if (avatarPath) profileData.avatarId = avatarPath;
 
     // Check if there is an existing profile
@@ -48,15 +48,15 @@ exports.updateProfile = async (req, res) => {
       // Update Profile
       const updatedProfile = profileId
         ? await prisma.profile.update({
-            where: { id: profileId },
-            data: profileData,
-          })
+          where: { id: profileId },
+          data: profileData,
+        })
         : await prisma.profile.create({
-            data: {
-              userId,
-              ...profileData,
-            },
-          });
+          data: {
+            userId,
+            ...profileData,
+          },
+        });
       return { updatedProfile };
     });
 
@@ -102,15 +102,15 @@ exports.updateLocation = async (req, res) => {
     // Update Location
     const updatedLocation = locationId
       ? await prisma.location.update({
-          where: { id: locationId },
-          data: locationData,
-        })
+        where: { id: locationId },
+        data: locationData,
+      })
       : await prisma.location.create({
-          data: {
-            ...locationData,
-            userId,
-          },
-        });
+        data: {
+          ...locationData,
+          userId,
+        },
+      });
 
     res.status(200).json({ success: true, data: updatedLocation });
   } catch (error) {
