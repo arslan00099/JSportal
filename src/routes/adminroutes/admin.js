@@ -87,6 +87,8 @@ router.put('/manageUser/:id',dashboard.manageUser);
 
 router.get('/getBlogs',dashboard.getBlog);
 router.put('/blogStatus/:id', dashboard.updateBlogStatus);
+router.get('/blogs/:id', dashboard.getBlogById); 
+router.put('/blogs/:id', dashboard.updateBlogContent);
 
 
 

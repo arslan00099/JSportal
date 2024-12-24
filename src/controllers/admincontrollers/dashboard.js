@@ -2085,7 +2085,70 @@ exports.updateBlogStatus = async (req, res) => {
     }
   };
 
+  exports.getBlogById = async (req, res) => {
+    try {
+        const { id } = req.params; 
 
+        // Validate input
+        if (!id) {
+            return res.status(400).json({ message: "Blog ID is required." });
+        }
+
+        // Fetch the blog
+        const blog = await prisma.blog.findUnique({
+            where: { id: parseInt(id) },
+        });
+
+        // Check if blog exists
+        if (!blog) {
+            return res.status(404).json({ message: "Blog not found." });
+        }
+
+        // Respond with the blog data
+        return res.status(200).json(blog);
+    } catch (error) {
+        console.error("Error fetching blog:", error);
+        return res.status(500).json({ message: "Internal server error.", error });
+    }
+};
+
+
+// Update blog title and content
+exports.updateBlogContent = async (req, res) => {
+    try {
+        const { id } = req.params; // Blog ID from request parameters
+        const { title, content } = req.body; // Data from request body
+
+        // Validate input
+        if (!id || (!title && !content)) {
+            return res.status(400).json({ message: "Invalid input. Provide blog ID and at least one field (title or content) to update." });
+        }
+
+        // Fetch the blog to ensure it exists
+        const existingBlog = await prisma.blog.findUnique({
+            where: { id: parseInt(id) },
+        });
+
+        if (!existingBlog) {
+            return res.status(404).json({ message: "Blog not found." });
+        }
+
+        // Update the blog with only title and content
+        const updatedBlog = await prisma.blog.update({
+            where: { id: parseInt(id) },
+            data: {
+                ...(title && { title }), // Update title if provided
+                ...(content && { content }), // Update content if provided
+            },
+        });
+
+        // Respond with the updated blog
+        return res.status(200).json({ message: "Blog updated successfully.", data: updatedBlog });
+    } catch (error) {
+        console.error("Error updating blog:", error);
+        return res.status(500).json({ message: "Internal server error.", error });
+    }
+};
 
 
 
