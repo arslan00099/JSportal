@@ -1571,7 +1571,7 @@ exports.updateInvoice = async (req, res) => {
 
 
 
-exports.getPaymentDetails = async (req, res) => {
+exports.getPaymentDetailrole = async (req, res) => {
     const { role } = req.params;
     console.log("Role:", role);
 
@@ -1660,6 +1660,99 @@ exports.getPaymentDetails = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+exports.getPaymentDetails = async (req, res) => {
+    try {
+        // Fetch data from recruiterHiring table
+        const employerData = await prisma.recruiterHiring.findMany({
+            select: {
+                transactionNumber: true,
+                paidOn: true,
+                paymentStatus: true,
+                createdAt: true,
+                employer: {
+                    select: {
+                        Profile: {
+                            select: {
+                                fullname: true,
+                            },
+                        },
+                    },
+                },
+                Service: {
+                    select: {
+                        name: true,
+                        pricing: true,
+                    },
+                },
+            },
+        });
+
+        // Format employer data
+        const formattedEmployerData = employerData.map((hiring) => ({
+            transactionId: hiring.transactionNumber,
+            fullname: hiring.employer?.Profile[0]?.fullname || null,
+            paidOn: hiring.paidOn,
+            serviceName: hiring.Service?.name || null,
+            servicePrice: hiring.Service?.pricing || null,
+            paymentStatus: hiring.paymentStatus,
+            createdAt: hiring.createdAt,
+            source: 'EMPLOYER',
+        }));
+
+        // Fetch data from mentorSessionManagement table
+        const jobSeekerData = await prisma.mentorSessionManagement.findMany({
+            select: {
+                transactionNumber: true,
+                paidOn: true,
+                paymentStatus: true,
+                createdAt: true,
+                user: {
+                    select: {
+                        Profile: {
+                            select: {
+                                fullname: true,
+                            },
+                        },
+                    },
+                },
+                Service: {
+                    select: {
+                        name: true,
+                        pricing: true,
+                    },
+                },
+            },
+        });
+
+        // Format job seeker data
+        const formattedJobSeekerData = jobSeekerData.map((session) => ({
+            transactionId: session.transactionNumber,
+            fullname: session.user?.Profile[0]?.fullname || null,
+            paidOn: session.paidOn,
+            serviceName: session.Service?.name || null,
+            servicePrice: session.Service?.pricing || null,
+            paymentStatus: session.paymentStatus,
+            createdAt: session.createdAt,
+            source: 'JOB_SEEKER',
+        }));
+
+        // Combine and sort data based on createdAt
+        const combinedData = [...formattedEmployerData, ...formattedJobSeekerData].sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        // Return response
+        res.status(200).json({
+            data: combinedData,
+        });
+    } catch (error) {
+        console.error("Error in fetching data:", error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
 
 
 exports.upsertAdminSettings = async (req, res) => {

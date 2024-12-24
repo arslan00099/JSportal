@@ -73,7 +73,9 @@ router.get('/getRecruiterHiring', dashboard.getRecruiterHiring);
 router.put('/updateInvoice/:id', dashboard.updateInvoice);
 router.put('/updateInvoice/:id', dashboard.updateInvoice);
 router.get('/getRecruiterHiringDetail/:bookingId',dashboard.getRecruiterHiringDetail);
-router.get('/getPaymentDetails/:role',dashboard.getPaymentDetails);
+router.get('/getPaymentDetails',dashboard.getPaymentDetails);
+router.get('/getPaymentDetails:/role',dashboard.getPaymentDetailrole);
+
 
 router.post('/AdminSettings',dashboard.upsertAdminSettings);
 router.post('/postPages',dashboard.postPages);
