@@ -1205,86 +1205,271 @@ exports.getActivities = async (req, res) => {
 };
 
 
-exports.getStaffmemberbyId = async (req, res) => {
-  const { userId } = req.params;
-  console.log("Fetching mentor details for userId:", userId);
+// exports.getStaffmemberbyId = async (req, res) => {
+//   const { userId } = req.params;
+//   console.log("Fetching mentor details for userId:", userId);
+
+//   try {
+//     // Fetch mentors with their sessions, services, and reviews
+//     const mentorsWithDetails = await prisma.profile.findMany({
+//       where: { userId: parseInt(userId) },
+//       include: {
+//         user: {
+//           include: {
+//             services: true, // Fetch services linked to the user
+//             mentorSessions: {
+//               include: {
+//                 reviews: {
+//                   include: {
+//                     mentorSessionManagement: {
+//                       include: {
+//                         user: {
+//                           include: {
+//                             Profile: true, // Include the reviewer's profile
+//                           },
+//                         },
+//                       },
+//                     },
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     // Transform the data for better readability
+//     const formattedResponse = mentorsWithDetails.map((mentor) => ({
+//       id: mentor.id,
+//       email: mentor.user.email,
+//       name: mentor.fullname,
+//       phnumber: mentor.phnumber,
+//       video: generateVideoUrl(mentor.mentorvideolink),
+//       avatarId:generateAvatarUrl(mentor.avatarId),
+//       tagline: mentor.tagline,
+//       about: mentor.about,
+//       languages: mentor.language || [], // Default to empty array if no languages
+//       profileStatus: mentor.profileStatus,
+//       rating: mentor.rating || 0, // Default rating if missing
+//       totalReview: mentor.totalReview || 0, // Default total reviews if missing
+//       location: mentor.location || "Not provided", // Default location if missing
+//       yearOfExperience: mentor.yearOfExperience || 0, // Default experience if missing
+//       linkedinProfile: mentor.companyLink || "Not provided", // Default LinkedIn profile if missing
+//       services: mentor.user?.services || [], // Services linked to the mentor
+//       sessions: mentor.user?.mentorSessions.map((session) => ({
+//         reviews: session.reviews.map((review) => ({
+//           rating: review.rating,
+//           content: review.content,
+//           reviewer: {
+//             fullname: review.mentorSessionManagement.user.Profile[0].fullname,
+//             avatarId: generateAvatarUrl(review.mentorSessionManagement.user.Profile[0].avatarId),
+//           },
+//         })),
+//       })),
+//     }));
+
+//     // Respond with the formatted data
+//     res.status(200).json({
+//       success: true,
+//       data: formattedResponse,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching mentors with details:", error.message);
+
+//     // Send error response with specific error information
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch mentor details.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+exports.getSubscriptionDetails = async (req, res) => {
+  console.log("Fetching subscription details and purchase history");
 
   try {
-    // Fetch mentors with their sessions, services, and reviews
-    const mentorsWithDetails = await prisma.profile.findMany({
-      where: { userId: parseInt(userId) },
+    // Fetch all available subscriptions
+    const allSubscriptions = await prisma.subscription.findMany();
+
+    // Fetch subscription purchase history (without filtering by userId)
+    const subscriptionHistory = await prisma.subscriptionBought.findMany({
       include: {
+        subscription: true, // Include subscription details
+      },
+      orderBy: {
+        broughtAt: 'desc', // Sort by the date of purchase in descending order
+      },
+    });
+
+    // If no subscriptions found in the purchase history
+    if (subscriptionHistory.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No subscription history found.",
+      });
+    }
+
+    // Transform the subscription history for better readability
+    const formattedHistory = subscriptionHistory.map((history) => ({
+      subscriptionId: history.subscriptionId,
+      // subscriptionName: history.subscription.name,
+      // description: history.subscription.description || "No description",
+      // price: history.subscription.price,
+      // jobSlots: history.subscription.jobSlots || 0,
+      // resumeSearches: history.subscription.resumeSearches || 0,
+      broughtAt: history.broughtAt,
+    }));
+
+    // Transform all subscriptions for better readability
+    const formattedSubscriptions = allSubscriptions.map((subscription) => ({
+      subscriptionId: subscription.id,
+      subscriptionName: subscription.name,
+      description: subscription.description || "No description",
+      price: subscription.price,
+      jobSlots: subscription.jobSlots || 0,
+      resumeSearches: subscription.resumeSearches || 0,
+    }));
+
+    // Respond with both subscription details and purchase history
+    res.status(200).json({
+      success: true,
+      data: {
+        allSubscriptions: formattedSubscriptions,
+        purchaseHistory: formattedHistory,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching subscription details:", error.message);
+
+    // Send error response with specific error information
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch subscription details.",
+      error: error.message,
+    });
+  }
+};
+
+exports.getAllStaffMembers = async (req, res) => {
+  try {
+    // Fetch all staff members
+    const staffMembers = await prisma.profile.findMany({
+      where: {
         user: {
-          include: {
-            services: true, // Fetch services linked to the user
-            mentorSessions: {
-              include: {
-                reviews: {
-                  include: {
-                    mentorSessionManagement: {
-                      include: {
-                        user: {
-                          include: {
-                            Profile: true, // Include the reviewer's profile
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
+          role: 'STAFF_MEMBER', // Filter by role 'STAFF_MEMBER'
+        },
+      },
+      select: {
+        fullname: true,
+        phnumber:true,
+        avatarId: true,
+        user: {
+          select: {
+            email: true,
           },
         },
       },
     });
 
-    // Transform the data for better readability
-    const formattedResponse = mentorsWithDetails.map((mentor) => ({
-      id: mentor.id,
-      email: mentor.user.email,
-      name: mentor.fullname,
-      phnumber: mentor.phnumber,
-      video: generateVideoUrl(mentor.mentorvideolink),
-      avatarId:generateAvatarUrl(mentor.avatarId),
-      tagline: mentor.tagline,
-      about: mentor.about,
-      languages: mentor.language || [], // Default to empty array if no languages
-      profileStatus: mentor.profileStatus,
-      rating: mentor.rating || 0, // Default rating if missing
-      totalReview: mentor.totalReview || 0, // Default total reviews if missing
-      location: mentor.location || "Not provided", // Default location if missing
-      yearOfExperience: mentor.yearOfExperience || 0, // Default experience if missing
-      linkedinProfile: mentor.companyLink || "Not provided", // Default LinkedIn profile if missing
-      services: mentor.user?.services || [], // Services linked to the mentor
-      sessions: mentor.user?.mentorSessions.map((session) => ({
-        reviews: session.reviews.map((review) => ({
-          rating: review.rating,
-          content: review.content,
-          reviewer: {
-            fullname: review.mentorSessionManagement.user.Profile[0].fullname,
-            avatarId: generateAvatarUrl(review.mentorSessionManagement.user.Profile[0].avatarId),
-          },
-        })),
-      })),
+    // Check if staff members exist
+    if (staffMembers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No staff members found.",
+      });
+    }
+
+    // Format the response data
+    const formattedStaffMembers = staffMembers.map((member) => ({
+      email: member.user.email,
+      fullname: member.fullname,
+      phnumber: member.phnumber,
+      avatarId: generateAvatarUrl(member.avatarId), // Assuming you have a function to generate the avatar URL
     }));
 
-    // Respond with the formatted data
-    res.status(200).json({
+    // Respond with the data
+    return res.status(200).json({
       success: true,
-      data: formattedResponse,
+      message: "Staff members fetched successfully.",
+      data: formattedStaffMembers,
     });
   } catch (error) {
-    console.error("Error fetching mentors with details:", error.message);
+    console.error("Error fetching staff members:", error.message);
 
     // Send error response with specific error information
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to fetch mentor details.",
+      message: "Internal server error.",
       error: error.message,
     });
   }
 };
+
+exports.manageUser = async (req, res) => {
+    const { id } = req.params;
+    const { action, email, secondaryEmail, isActive, deActivate, role, newPassword } = req.body;
+
+    try {
+        let result;
+
+        switch (action) {
+            case "updateProfile":
+                result = await prisma.user.update({
+                    where: { id: parseInt(id) },
+                    data: {
+                        email,
+                        secondaryEmail,
+                        isActive,
+                        deActivate,
+                        role,
+                    },
+                });
+                delete result.password;
+                res.json({ message: "User profile updated successfully", user: result });
+                break;
+
+            case "changePassword":
+                if (!newPassword) {
+                    return res.status(400).json({ error: "New password is required" });
+                }
+                const hashedPassword = await bcrypt.hash(newPassword, 10);
+                result = await prisma.user.update({
+                    where: { id: parseInt(id) },
+                    data: { password: hashedPassword },
+                });
+                delete result.password;
+                res.json({ message: "Password updated successfully", user: result });
+                break;
+
+            case "deactivateAccount":
+                result = await prisma.user.update({
+                    where: { id: parseInt(id) },
+                    data: { deActivate: true, isActive: false },
+                });
+                delete result.password;
+                res.json({ message: "User deactivated successfully", user: result });
+                break;
+
+            case "delete":
+                await prisma.user.delete({
+                    where: { id: parseInt(id) },
+                });
+                delete result.password;
+                res.json({ message: "User deleted successfully" });
+                break;
+
+            default:
+                res.status(400).json({ error: "Invalid action specified" });
+                break;
+        }
+    } catch (error) {
+        res.status(500).json({ error: `An error occurred: ${error.message}` });
+    }
+};
+
 
 
 
