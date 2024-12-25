@@ -1825,6 +1825,38 @@ exports.upsertAdminSettings = async (req, res) => {
     }
 };
 
+exports.getAdminSettings = async (req, res) => {
+    try {
+        // Fetch the AdminSettings record
+        const adminSettings = await prisma.adminSettings.findUnique({
+            where: { id: 1 }, // Ensure only one record exists
+        });
+
+        // Check if the AdminSettings exists
+        if (!adminSettings) {
+            return res.status(404).json({
+                success: false,
+                message: 'Admin settings not found.',
+            });
+        }
+
+        // Respond with the fetched admin settings
+        return res.status(200).json({
+            success: true,
+            message: 'Admin settings fetched successfully.',
+            data: adminSettings,
+        });
+    } catch (error) {
+        console.error('Error fetching admin settings:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error.',
+            error: error.message,
+        });
+    }
+};
+
+
 exports.postPages = async (req, res) => {
     const { name } = req.body;
     try {

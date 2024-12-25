@@ -117,6 +117,15 @@ enum UserStatus {
   PENDING
 }
 
+enum SubscriptionType {
+  GOLD
+  DIAMOND
+  PLATINUM
+  STARTER
+  LITE
+  PRO
+}
+
 model User {
   id             Int            @id @default(autoincrement())
   email          String         @unique
@@ -169,6 +178,8 @@ model User {
   Card                   Card[]
   Blog                   Blog[]
 
+  SubscriptionBought SubscriptionBought[]
+
   @@index([email])
   @@index([role])
 }
@@ -199,6 +210,31 @@ model Profile {
   RecruiterProfile RecruiterProfile?
   EmployerProfile  EmployerProfile?
   AdminProfile     AdminProfile?
+}
+
+model SubscriptionBought {
+  id             Int              @id @default(autoincrement())
+  userId         Int
+  subscriptionId Int
+  user           User             @relation(fields: [userId], references: [id])
+  subscription   Subscription     @relation(fields: [subscriptionId], references: [id])
+  name           SubscriptionType?   //can be removedin future
+  description    String?          @db.Text
+  price          Float
+  jobSlots       Int?
+  resumeSearches Int?
+  broughtAt      DateTime         @default(now())
+}
+
+model Subscription {
+  id                 Int                  @id @default(autoincrement())
+  name               SubscriptionType
+  price              Float
+  jobSlots           Int?
+  resumeSearches     Int?
+  description        String?              @db.Text
+  createdAt          DateTime             @default(now())
+  SubscriptionBought SubscriptionBought[]
 }
 
 model JobSeekerProfile {

@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const crypto = require("crypto");
+const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
 exports.updateProfile = async (req, res) => {
   const { fullname, companyName, companyLink, email, phnumber, companySize } =
@@ -995,6 +996,298 @@ exports.getCounts = async (req, res) => {
 };
 
 
-exports.getStaffmember=async(req,res) => {
-  
-}
+exports.getStaffMembersByEmployerCompany = async (req, res) => {
+  try {
+    const { employerId } = req.params; // Employer's user ID from request parameters
+    const { name, page = 1, limit = 10 } = req.query; // Query parameters for name filter and pagination
+
+    // Validate input
+    if (!employerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employer ID is required.",
+      });
+    }
+
+    // Fetch the employer profile
+    const employerProfile = await prisma.profile.findUnique({
+      where: { userId: parseInt(employerId) },
+    });
+
+    // Check if employer profile exists
+    if (!employerProfile) {
+      return res.status(404).json({
+        success: false,
+        message: "Employer profile not found.",
+      });
+    }
+
+    const { companyName } = employerProfile;
+
+    // Validate companyName
+    if (!companyName) {
+      return res.status(400).json({
+        success: false,
+        message: "Employer does not have a companyName associated.",
+      });
+    }
+
+    // Build filter conditions for staff members
+    const staffFilter = {
+      companyName: companyName,
+      user: {
+        role: "STAFF_MEMBER",
+      },
+    };
+
+    // If a name filter is provided, add it to the filter
+    if (name) {
+      staffFilter.fullname = {
+        contains: name, // MySQL equivalent for partial matching
+
+      };
+    }
+
+    // Convert `page` and `limit` to numbers and calculate skip value
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    // Fetch paginated staff members
+    const staffMembers = await prisma.profile.findMany({
+      where: staffFilter,
+      select: {
+        fullname: true,
+        phnumber: true,
+        avatarId: true,
+        user: {
+          select: {
+            email: true,
+          },
+        },
+      },
+      skip: skip,
+      take: limitNumber,
+    });
+
+    // Fetch total count of staff members for pagination
+    const totalStaffCount = await prisma.profile.count({
+      where: staffFilter,
+    });
+
+    // Check if staff members exist
+    if (staffMembers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No staff members found for the given company.",
+      });
+    }
+
+    // Fetch subscriptions bought by the employer
+    const subscriptionsBought = await prisma.subscriptionBought.findMany({
+      where: { userId: parseInt(employerId) },
+      select: {
+        id: true,
+        subscription: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            description: true,
+          },
+        },
+        price: true,
+        jobSlots: true,
+        resumeSearches: true,
+        broughtAt: true,
+      },
+    });
+
+    // Format staff members' response data
+    const formattedStaffMembers = staffMembers.map((member) => ({
+      fullname: member.fullname,
+      phnumber: member.phnumber,
+      avatarId: generateAvatarUrl(member.avatarId),
+      email: member.user.email,
+    }));
+
+    // Format subscriptions bought response data
+    const formattedSubscriptions = subscriptionsBought.map((subscription) => ({
+      subscriptionBoughtId: subscription.id,
+      name: subscription.subscription.name,
+      description: subscription.subscription.description,
+      pricePaid: subscription.price,
+      jobSlots: subscription.jobSlots,
+      resumeSearches: subscription.resumeSearches,
+      purchasedAt: subscription.broughtAt,
+    }));
+
+    // Respond with paginated data
+    return res.status(200).json({
+      success: true,
+      message: "Data fetched successfully.",
+      data: {
+        staffMembers: formattedStaffMembers,
+        subscriptionsBought: formattedSubscriptions,
+      },
+      pagination: {
+        totalStaffCount,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalStaffCount / limitNumber),
+        pageSize: limitNumber,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
+  }
+};
+
+exports.getActivities = async (req, res) => {
+  try {
+      // Pagination query parameters
+      const { page = 1, limit = 10 } = req.query;
+
+      // Convert pagination values to integers
+      const pageNumber = parseInt(page, 10);
+      const limitNumber = parseInt(limit, 10);
+      const skip = (pageNumber - 1) * limitNumber;
+
+      // Fetch paginated activities (without filtering by userId)
+      const activities = await prisma.activity.findMany({
+          select: {
+              title: true,
+              createdAt: true,
+              updatedAt: true,
+          },
+          skip: skip,
+          take: limitNumber,
+          orderBy: {
+              id: 'desc', // Sort activities by ID in descending order
+          },
+      });
+
+      // Fetch total count of activities for pagination
+      const totalActivitiesCount = await prisma.activity.count();
+
+      // Check if activities exist
+      if (activities.length === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "No activities found.",
+          });
+      }
+
+      // Respond with paginated activities and metadata
+      return res.status(200).json({
+          success: true,
+          message: "Activities fetched successfully.",
+          data: activities,
+          pagination: {
+              totalActivitiesCount,
+              currentPage: pageNumber,
+              totalPages: Math.ceil(totalActivitiesCount / limitNumber),
+              pageSize: limitNumber,
+          },
+      });
+  } catch (error) {
+      console.error("Error fetching activities:", error);
+      return res.status(500).json({
+          success: false,
+          message: "Internal server error.",
+          error: error.message,
+      });
+  }
+};
+
+
+exports.getStaffmemberbyId = async (req, res) => {
+  const { userId } = req.params;
+  console.log("Fetching mentor details for userId:", userId);
+
+  try {
+    // Fetch mentors with their sessions, services, and reviews
+    const mentorsWithDetails = await prisma.profile.findMany({
+      where: { userId: parseInt(userId) },
+      include: {
+        user: {
+          include: {
+            services: true, // Fetch services linked to the user
+            mentorSessions: {
+              include: {
+                reviews: {
+                  include: {
+                    mentorSessionManagement: {
+                      include: {
+                        user: {
+                          include: {
+                            Profile: true, // Include the reviewer's profile
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Transform the data for better readability
+    const formattedResponse = mentorsWithDetails.map((mentor) => ({
+      id: mentor.id,
+      email: mentor.user.email,
+      name: mentor.fullname,
+      phnumber: mentor.phnumber,
+      video: generateVideoUrl(mentor.mentorvideolink),
+      avatarId:generateAvatarUrl(mentor.avatarId),
+      tagline: mentor.tagline,
+      about: mentor.about,
+      languages: mentor.language || [], // Default to empty array if no languages
+      profileStatus: mentor.profileStatus,
+      rating: mentor.rating || 0, // Default rating if missing
+      totalReview: mentor.totalReview || 0, // Default total reviews if missing
+      location: mentor.location || "Not provided", // Default location if missing
+      yearOfExperience: mentor.yearOfExperience || 0, // Default experience if missing
+      linkedinProfile: mentor.companyLink || "Not provided", // Default LinkedIn profile if missing
+      services: mentor.user?.services || [], // Services linked to the mentor
+      sessions: mentor.user?.mentorSessions.map((session) => ({
+        reviews: session.reviews.map((review) => ({
+          rating: review.rating,
+          content: review.content,
+          reviewer: {
+            fullname: review.mentorSessionManagement.user.Profile[0].fullname,
+            avatarId: generateAvatarUrl(review.mentorSessionManagement.user.Profile[0].avatarId),
+          },
+        })),
+      })),
+    }));
+
+    // Respond with the formatted data
+    res.status(200).json({
+      success: true,
+      data: formattedResponse,
+    });
+  } catch (error) {
+    console.error("Error fetching mentors with details:", error.message);
+
+    // Send error response with specific error information
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch mentor details.",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
+

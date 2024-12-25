@@ -59,6 +59,7 @@ router.get("/timesheet", timesheet.getTimesheetsByRecruitingId);
 
 
 //new
-
+router.get("/getStaffMember/:employerId",main.getStaffMembersByEmployerCompany)
+router.get("/getActivites",main.getActivities);
 
 module.exports = router;

@@ -78,6 +78,7 @@ router.get('/getPaymentDetails:/role',dashboard.getPaymentDetailrole);
 
 
 router.post('/AdminSettings',dashboard.upsertAdminSettings);
+router.get('/AdminSettings',dashboard.getAdminSettings);
 router.post('/postPages',dashboard.postPages);
 router.post('/postSelection',dashboard.postSection);
 router.post('/postContents',dashboard.postContents);
