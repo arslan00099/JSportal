@@ -64,6 +64,6 @@ router.get("/getActivites",main.getActivities);
 router.get("/subscription",main.getSubscriptionDetails);
 router.get("/getAllstaffmembers", main.getAllStaffMembers);
 router.put("/userSetting",main.manageUser);
-router
+
 
 module.exports = router;

@@ -1174,18 +1174,10 @@ exports.getActivities = async (req, res) => {
       // Fetch total count of activities for pagination
       const totalActivitiesCount = await prisma.activity.count();
 
-      // Check if activities exist
-      if (activities.length === 0) {
-          return res.status(404).json({
-              success: false,
-              message: "No activities found.",
-          });
-      }
-
       // Respond with paginated activities and metadata
       return res.status(200).json({
           success: true,
-          message: "Activities fetched successfully.",
+          message: activities.length > 0 ? "Activities fetched successfully." : "No activities found.",
           data: activities,
           pagination: {
               totalActivitiesCount,
@@ -1203,6 +1195,7 @@ exports.getActivities = async (req, res) => {
       });
   }
 };
+
 
 
 // exports.getStaffmemberbyId = async (req, res) => {
