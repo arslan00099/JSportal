@@ -10,6 +10,7 @@ const userController=require ('../../controllers/mentorcontrollers/user.controll
 const middleware = require('../../middleware/middleware');
 const settingController = require('../../controllers/mentorcontrollers/setting.controller');
 const serviceController = require('../../controllers/mentorcontrollers/service.controller');
+const dashboard=require('../../controllers/mentorcontrollers/dashboard');
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -114,6 +115,12 @@ router.delete('/service', serviceController.deleteService);
 
 
 router.post('/upload-video', uploadVideo.single('mentorVideo'),middleware, userController.uploadVideo);
+
+//dashbord
+router.get('/getMentorStatsCount/:mentorId',dashboard.getMentorStats);
+router.get('/UpcomingSessions/:mentorId',dashboard.getUpcomingSessions);
+router.get('/getMentorReviews/:mentorId',dashboard.getMentorReviews);
+router.get('/getMentorEarnings/:mentorId',dashboard.getMentorEarnings);
 
 
 module.exports = router;
