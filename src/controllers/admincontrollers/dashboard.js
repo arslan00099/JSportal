@@ -2030,27 +2030,29 @@ exports.getBlog = async (req, res) => {
       // Fetch blogs with the required fields and associated mentor information
       const blogs = await prisma.blog.findMany({
         select: {
-            id:true,
+          id: true,
           title: true,
           createdAt: true,
           status: true,
-          mentor: {
-            select:{
-            Profile: {
-                select:{
-              fullname: true, 
-                }
-            }
+          user: {
+            select: {
+              Profile: {
+                select: {
+                  fullname: true, // Ensure this matches your schema
+                },
+              },
             },
           },
         },
       });
+
+     // console.log(blogs);
   
       // Transform data to match the expected response format
       const blogData = blogs.map((blog) => ({
-        id:blog.id,
+        id: blog.id,
         title: blog.title,
-        postedBy: blog.mentor.Profile[0].fullname,
+        postedBy: blog.user?.Profile[0].fullname || 'Unknown', // Handle null values
         createdAt: blog.createdAt,
         status: blog.status,
       }));
@@ -2061,6 +2063,7 @@ exports.getBlog = async (req, res) => {
       res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
   };
+  
 
 exports.updateBlogStatus = async (req, res) => {
     const { id} = req.params;

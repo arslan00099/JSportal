@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const userController = require('../../controllers/jscontrollers/user.controller');
+const blogcontroller=require('../../controllers/jscontrollers/blog.controller');
 const middleware = require('../../middleware/middleware');
 
 // Set up multer storage configuration
@@ -62,6 +63,8 @@ router.post('/documents', middleware, cvupload.fields([
   { name: 'resume', maxCount: 1 },
   { name: 'portfolio', maxCount: 1 }
 ]), userController.uploadDocuments);
+
+router.post('/postBlog',blogcontroller.createBlog);
 
 
 

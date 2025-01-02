@@ -213,17 +213,17 @@ model Profile {
 }
 
 model SubscriptionBought {
-  id             Int              @id @default(autoincrement())
+  id             Int               @id @default(autoincrement())
   userId         Int
   subscriptionId Int
-  user           User             @relation(fields: [userId], references: [id])
-  subscription   Subscription     @relation(fields: [subscriptionId], references: [id])
-  name           SubscriptionType?   //can be removedin future
-  description    String?          @db.Text
+  user           User              @relation(fields: [userId], references: [id])
+  subscription   Subscription      @relation(fields: [subscriptionId], references: [id])
+  name           SubscriptionType? //can be removedin future
+  description    String?           @db.Text
   price          Float
   jobSlots       Int?
   resumeSearches Int?
-  broughtAt      DateTime         @default(now())
+  broughtAt      DateTime          @default(now())
 }
 
 model Subscription {
@@ -367,7 +367,7 @@ model Review {
 }
 
 model MentorProfile {
-  id               Int     @id @default(autoincrement())
+  id               Int       @id @default(autoincrement())
   name             String?
   phonenumber      String?
   tagline          String
@@ -381,11 +381,9 @@ model MentorProfile {
   rating           Int
   totalReview      Int?
   userId           Int
-  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedinProfile  String?
-
-  Blog    Blog[]
-  Earning Earning[]
+  Earning          Earning[]
 }
 
 model Service {
@@ -546,17 +544,15 @@ model TimeSheet {
 //npx prisma migrate dev --name add_optional_columns
 
 model Blog {
-  id              Int            @id @default(autoincrement())
-  title           String
-  content         String         @db.LongText
-  status          BlogStatus     @default(PENDING)
-  mentorId        Int
-  mentor          User           @relation(fields: [mentorId], references: [id])
-  blogStatus      BlogStatus     @default(PENDING)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  MentorProfile   MentorProfile? @relation(fields: [mentorProfileId], references: [id])
-  mentorProfileId Int?
+  id         Int        @id @default(autoincrement())
+  title      String
+  content    String     @db.LongText
+  status     BlogStatus @default(PENDING)
+  postedBy   Int?
+  user       User?      @relation(fields: [postedBy], references: [id])
+  blogStatus BlogStatus @default(PENDING)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 }
 
 model Booking {
