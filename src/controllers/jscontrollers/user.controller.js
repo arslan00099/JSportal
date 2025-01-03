@@ -351,6 +351,9 @@ exports.createMentorSession = async (req, res) => {
   let { userId } = req.user;
 
   try {
+    // Ensure selectedDateTime is in ISO-8601 format
+    const formattedDateTime = new Date(selectedDateTime).toISOString();
+
     // Fetch the service name from the selectedService ID
     const service = await prisma.service.findUnique({
       where: { id: selectedService }, // Find service by ID
@@ -362,11 +365,11 @@ exports.createMentorSession = async (req, res) => {
 
     const servicename = service.name;
 
-    // Create the mentor session
+    // Create the mentor session with the correct date format
     const newSession = await prisma.mentorSessionManagement.create({
       data: {
         selectedService,
-        selectedDateTime,
+        selectedDateTime: formattedDateTime, // Use ISO 8601 formatted date
         userId,
         mentorProfileId: mentorId,
       },
@@ -380,6 +383,7 @@ exports.createMentorSession = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 // Define the createNotification function
 const createNotification = async (userId, title, message, mentorId = null) => {
