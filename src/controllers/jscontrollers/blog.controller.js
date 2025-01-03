@@ -44,14 +44,46 @@ exports.getBlogs = async (req, res) => {
         }
         conditions.status = status === 'APPROVED' ? 'APPROVED' : 'APPROVED'; // Default to 'APPROVED'
 
-        // Fetch blogs from the database based on conditions
+        // Fetch blogs with related user and profile
         const blogs = await prisma.blog.findMany({
             where: conditions,
+            include: {
+                user: {
+                    select: {
+                        Profile: {
+                            select: {
+                                fullname: true, // Include the fullname from Profile
+                            },
+                        },
+                    },
+                },
+            },
         });
 
-        res.status(200).json(blogs);
+        // Format the response to include additional details
+        const formattedResponse = blogs.map(blog => ({
+            id: blog.id,
+            title: blog.title,
+            content: blog.content,
+            status: blog.status,
+            postedBy: blog.user?.Profile[0]?.fullname || "Anonymous", // Default to "Anonymous" if no fullname
+            createdAt: blog.createdAt,
+            updatedAt: blog.updatedAt,
+        }));
+
+        res.status(200).json({
+            success: true,
+            message: "Blogs fetched successfully",
+            data: formattedResponse,
+        });
     } catch (error) {
         console.error('Error fetching blogs:', error);
-        res.status(500).json({ error: 'An error occurred while fetching the blogs.' });
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while fetching the blogs.",
+            error: error.message,
+        });
     }
 };
+
+
