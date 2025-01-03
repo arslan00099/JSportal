@@ -39,7 +39,6 @@ async function main() {
     ['Alice', 'Bob', 'Charlie'].map((name, index) =>
       prisma.user.create({
         data: {
-          name,
           email: `${name.toLowerCase()}@example.com`,
           role: 'JOB_SEEKER',
           password : 'secure1233',

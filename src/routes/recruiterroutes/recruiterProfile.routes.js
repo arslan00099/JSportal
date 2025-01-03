@@ -178,5 +178,6 @@ router.get("/getAllJobseeker", allJobSeeker.getallJobseekerProfile);
 
 router.get("/earnings", middleware, earnings.getEarnings);
 router.get("/bookings", middleware, earnings.getBookings);
+router.get("/getCounts", earnings.getRecruiterStats);
 
 module.exports = router;

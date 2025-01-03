@@ -128,9 +128,9 @@ exports.getUpcomingSessions = async (req, res) => {
             userEmail: session.user.email, // Flattened email
             fullname: session.user.Profile[0].fullname,
             profile: generateAvatarUrl(session.user.Profile[0].avatarId),
-           
-           // serviceName: session.Service.name, // Flattened service name
-           // servicePricing: session.Service.pricing, // Flattened service pricing
+
+            serviceName: session.Service.name, // Flattened service name
+            servicePricing: session.Service.pricing, // Flattened service pricing
         }));
 
         return res.status(200).json({
@@ -206,7 +206,7 @@ exports.getMentorReviews = async (req, res) => {
         });
 
         // Flatten the reviews into a non-nested structure
-        const formattedReviews = reviews.flatMap(session => 
+        const formattedReviews = reviews.flatMap(session =>
             session.reviews.map(review => ({
                 rating: review.rating,
                 content: review.content,  // Review content
@@ -250,100 +250,100 @@ exports.getMentorReviews = async (req, res) => {
 
 exports.getMentorEarnings = async (req, res) => {
     try {
-      const { mentorId } = req.params;
-      const { year } = req.query; // Optional query parameter for filtering by year
-  
-      if (!mentorId) {
-        return res.status(400).json({
-          success: false,
-          message: "Mentor ID is required.",
-        });
-      }
-  
-      const mentorIdInt = parseInt(mentorId, 10); // Ensure mentorId is an integer
-  
-      if (isNaN(mentorIdInt)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid Mentor ID.",
-        });
-      }
-  
-      // Fetch earnings data
-      const earnings = await prisma.mentorSessionManagement.findMany({
-        where: {
-          mentorProfileId: mentorIdInt,
-          paymentStatus: "COMPLETED", // Include only completed payments
-        },
-        select: {
-          selectedDateTime: true, // For grouping
-          Service: {
-            select: {
-              pricing: true, // Fetch the pricing of the service
-            },
-          },
-        },
-        orderBy: {
-          selectedDateTime: "asc",
-        },
-      });
-  
-      // Calculate total, monthly, and yearly earnings
-      let totalEarnings = 0;
-      const monthlyEarnings = {};
-      const yearlyEarnings = {};
-  
-      earnings.forEach((session) => {
-        const pricing = session.Service?.pricing || 0; // Default to 0 if no service pricing
-        totalEarnings += pricing;
-  
-        const sessionDate = new Date(session.selectedDateTime);
-        const month = sessionDate.toLocaleString("default", { month: "long" });
-        const yearKey = sessionDate.getFullYear();
-  
-        // Group earnings by month and year
-        monthlyEarnings[`${yearKey}-${month}`] = (monthlyEarnings[`${yearKey}-${month}`] || 0) + pricing;
-        yearlyEarnings[yearKey] = (yearlyEarnings[yearKey] || 0) + pricing;
-      });
-  
-      // If a year is provided, filter the results by the specified year
-      let filteredYearlyEarnings = yearlyEarnings;
-      let filteredMonthlyEarnings = monthlyEarnings;
-      if (year) {
-        const yearInt = parseInt(year, 10);
-        if (!isNaN(yearInt)) {
-          filteredYearlyEarnings = { [yearInt]: yearlyEarnings[yearInt] || 0 };
-          filteredMonthlyEarnings = Object.fromEntries(
-            Object.entries(monthlyEarnings).filter(([key]) => key.startsWith(`${yearInt}-`))
-          );
-        } else {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid year format.",
-          });
+        const { mentorId } = req.params;
+        const { year } = req.query; // Optional query parameter for filtering by year
+
+        if (!mentorId) {
+            return res.status(400).json({
+                success: false,
+                message: "Mentor ID is required.",
+            });
         }
-      }
-  
-      return res.status(200).json({
-        success: true,
-        message: "Earnings fetched successfully.",
-        data: {
-          totalEarnings: totalEarnings.toFixed(2),
-          monthlyEarnings: filteredMonthlyEarnings,
-          yearlyEarnings: filteredYearlyEarnings,
-        },
-      });
+
+        const mentorIdInt = parseInt(mentorId, 10); // Ensure mentorId is an integer
+
+        if (isNaN(mentorIdInt)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Mentor ID.",
+            });
+        }
+
+        // Fetch earnings data
+        const earnings = await prisma.mentorSessionManagement.findMany({
+            where: {
+                mentorProfileId: mentorIdInt,
+                paymentStatus: "COMPLETED", // Include only completed payments
+            },
+            select: {
+                selectedDateTime: true, // For grouping
+                Service: {
+                    select: {
+                        pricing: true, // Fetch the pricing of the service
+                    },
+                },
+            },
+            orderBy: {
+                selectedDateTime: "asc",
+            },
+        });
+
+        // Calculate total, monthly, and yearly earnings
+        let totalEarnings = 0;
+        const monthlyEarnings = {};
+        const yearlyEarnings = {};
+
+        earnings.forEach((session) => {
+            const pricing = session.Service?.pricing || 0; // Default to 0 if no service pricing
+            totalEarnings += pricing;
+
+            const sessionDate = new Date(session.selectedDateTime);
+            const month = sessionDate.toLocaleString("default", { month: "long" });
+            const yearKey = sessionDate.getFullYear();
+
+            // Group earnings by month and year
+            monthlyEarnings[`${yearKey}-${month}`] = (monthlyEarnings[`${yearKey}-${month}`] || 0) + pricing;
+            yearlyEarnings[yearKey] = (yearlyEarnings[yearKey] || 0) + pricing;
+        });
+
+        // If a year is provided, filter the results by the specified year
+        let filteredYearlyEarnings = yearlyEarnings;
+        let filteredMonthlyEarnings = monthlyEarnings;
+        if (year) {
+            const yearInt = parseInt(year, 10);
+            if (!isNaN(yearInt)) {
+                filteredYearlyEarnings = { [yearInt]: yearlyEarnings[yearInt] || 0 };
+                filteredMonthlyEarnings = Object.fromEntries(
+                    Object.entries(monthlyEarnings).filter(([key]) => key.startsWith(`${yearInt}-`))
+                );
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid year format.",
+                });
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Earnings fetched successfully.",
+            data: {
+                totalEarnings: totalEarnings.toFixed(2),
+                monthlyEarnings: filteredMonthlyEarnings,
+                yearlyEarnings: filteredYearlyEarnings,
+            },
+        });
     } catch (error) {
-      console.error("Error fetching earnings:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Internal server error.",
-        error: error.message,
-      });
+        console.error("Error fetching earnings:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error.",
+            error: error.message,
+        });
     }
-  };
-  
-  
+};
+
+
 
 
 

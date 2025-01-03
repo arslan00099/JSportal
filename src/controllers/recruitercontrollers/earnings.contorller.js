@@ -330,3 +330,34 @@ exports.getBookings = async (req, res) => {
     });
   }
 };
+
+
+exports.getRecruiterStats=async (req, res)=> {
+  try {
+      // Count the distinct employer IDs in the RecruiterHiring model
+      const employerCount = await prisma.recruiterHiring.count({
+          distinct: ['employerId'], // Count unique employer IDs
+      });
+
+      // Return a properly formatted response
+      return res.status(200).json({
+          success: true,
+          message: "Total number of employers served fetched successfully.",
+          data: {
+              totalEmployersServed: employerCount,
+          },
+      });
+  } catch (error) {
+      console.error('Error counting employers served:', error);
+
+      // Return an error response with details
+      return res.status(500).json({
+          success: false,
+          message: "An error occurred while fetching the total number of employers served.",
+          error: error.message,
+      });
+  } finally {
+      await prisma.$disconnect();
+  }
+}
+
