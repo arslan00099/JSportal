@@ -1,5 +1,7 @@
 // src/controllers/user.controller.js
 const userViewModel = require('../../viewmodels/jsviewmodels/profile.viewmodel');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 exports.postProfile = async (req, res) => {
   try {
