@@ -30,7 +30,6 @@ exports.createBlog = async (req, res) => {
     }
 };
 
-
 exports.getBlogs = async (req, res) => {
     try {
         const { title, status } = req.query; // Get filters from query params
@@ -44,9 +43,27 @@ exports.getBlogs = async (req, res) => {
         }
         conditions.status = status === 'APPROVED' ? 'APPROVED' : 'APPROVED'; // Default to 'APPROVED'
 
-        // Fetch blogs with related user and profile
+        // Fetch blogs from the database based on conditions
         const blogs = await prisma.blog.findMany({
             where: conditions,
+        });
+
+        res.status(200).json(blogs);
+    } catch (error) {
+        console.error('Error fetching blogs:', error);
+        res.status(500).json({ error: 'An error occurred while fetching the blogs.' });
+    }
+};
+
+exports.getBlogDetails = async (req, res) => {
+    try {
+        const { id } = req.params; // Corrected: Use 'params' to access the route parameter
+
+        // Fetch the blog by its ID with related user and profile
+        const blog = await prisma.blog.findUnique({
+            where: {
+                id: parseInt(id), // Make sure to parse the id as an integer
+            },
             include: {
                 user: {
                     select: {
@@ -60,30 +77,39 @@ exports.getBlogs = async (req, res) => {
             },
         });
 
+        // Check if the blog was found
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found",
+            });
+        }
+
         // Format the response to include additional details
-        const formattedResponse = blogs.map(blog => ({
+        const formattedResponse = {
             id: blog.id,
             title: blog.title,
             content: blog.content,
             status: blog.status,
-            postedBy: blog.user?.Profile[0]?.fullname || "Anonymous", // Default to "Anonymous" if no fullname
+            postedBy: blog.user?.Profile[0]?.fullname || "n/a", // Default to "Anonymous" if no fullname
             createdAt: blog.createdAt,
             updatedAt: blog.updatedAt,
-        }));
+        };
 
         res.status(200).json({
             success: true,
-            message: "Blogs fetched successfully",
+            message: "Blog fetched successfully",
             data: formattedResponse,
         });
     } catch (error) {
-        console.error('Error fetching blogs:', error);
+        console.error('Error fetching blog:', error);
         res.status(500).json({
             success: false,
-            message: "An error occurred while fetching the blogs.",
+            message: "An error occurred while fetching the blog.",
             error: error.message,
         });
     }
 };
+
 
 
