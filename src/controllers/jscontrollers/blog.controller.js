@@ -5,7 +5,9 @@ const prisma = new PrismaClient();
 // Controller for creating a new blog
 exports.createBlog = async (req, res) => {
     try {
-        const { title, content, status, postedBy } = req.body;
+        const { userId } = req.user;
+        postedBy = userId;
+        const { title, content } = req.body;
 
         // Validate input
         if (!title || !content) {
