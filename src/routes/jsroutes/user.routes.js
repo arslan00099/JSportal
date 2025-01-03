@@ -65,6 +65,7 @@ router.post('/documents', middleware, cvupload.fields([
 ]), userController.uploadDocuments);
 
 router.post('/postBlog',blogcontroller.createBlog);
+router.get('/getBlog',blogcontroller.getBlogs);
 
 
 

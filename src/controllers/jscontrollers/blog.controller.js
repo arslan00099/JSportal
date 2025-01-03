@@ -27,3 +27,29 @@ exports.createBlog = async (req, res) => {
         res.status(500).json({ error: 'An error occurred while creating the blog.' });
     }
 };
+
+
+exports.getBlogs = async (req, res) => {
+    try {
+        const { title, status } = req.query; // Get filters from query params
+
+        // Build query conditions dynamically
+        const conditions = {};
+        if (title) {
+            conditions.title = {
+                contains: title, // Search for partial match in title
+            };
+        }
+        conditions.status = status === 'APPROVED' ? 'APPROVED' : 'APPROVED'; // Default to 'APPROVED'
+
+        // Fetch blogs from the database based on conditions
+        const blogs = await prisma.blog.findMany({
+            where: conditions,
+        });
+
+        res.status(200).json(blogs);
+    } catch (error) {
+        console.error('Error fetching blogs:', error);
+        res.status(500).json({ error: 'An error occurred while fetching the blogs.' });
+    }
+};
