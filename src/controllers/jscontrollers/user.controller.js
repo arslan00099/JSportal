@@ -347,20 +347,27 @@ exports.deleteDocuments = async (req, res) => {
 exports.createMentorSession = async (req, res) => {
   const { selectedService, selectedDateTime, mentorId } = req.body;
   let { userId } = req.user;
+
   try {
     // Fetch the service name from the selectedService ID
-    const service = await serviceModel.findServiceById(selectedService);
+    const service = await prisma.service.findUnique({
+      where: { id: selectedService }, // Find service by ID
+    });
+
     if (!service) {
       return res.status(404).json({ success: false, message: "Service not found" });
     }
+
     const servicename = service.name;
 
     // Create the mentor session
-    const newSession = await userViewModel.createMentorSession({
-      selectedService,
-      selectedDateTime,
-      userId,
-      mentorId,
+    const newSession = await prisma.mentorSessionManagement.create({
+      data: {
+        selectedService,
+        selectedDateTime,
+        userId,
+        mentorProfileId: mentorId,
+      },
     });
 
     // Create the notification for the user
@@ -396,6 +403,7 @@ const createNotification = async (userId, title, message, mentorId = null) => {
     throw new Error(`Error creating notification: ${error.message}`);
   }
 };
+
 
 
 exports.fetchMentorSession = async (req, res) => {
