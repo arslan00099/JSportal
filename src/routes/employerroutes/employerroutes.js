@@ -61,7 +61,7 @@ router.get("/timesheet", timesheet.getTimesheetsByRecruitingId);
 //new
 router.get("/getStaffMember/:employerId",main.getStaffMembersByEmployerCompany);
 router.get("/getActivites",main.getActivities);
-router.get("/subscription",main.getSubscriptionDetails);
+router.get("/subscription/:userId",main.getSubscriptionDetails);
 router.get("/getAllstaffmembers", main.getAllStaffMembers);
 router.put("/userSetting",main.manageUser);
 router.post("/buySubscription",main.buySubscription);
@@ -74,7 +74,8 @@ router.put("/changepassword/:userId",main.changePassword);
 router.post("/deactivate/:userId",main.deactivateProfile);
 router.delete("/account/:userId",main.deleteProfile);
 
-//
+//TransferAccount
+router.post("/transferaccount",main.transferEmployerAccount);
 
 
 module.exports = router;

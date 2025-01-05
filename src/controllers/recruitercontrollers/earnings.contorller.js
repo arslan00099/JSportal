@@ -332,7 +332,7 @@ exports.getBookings = async (req, res) => {
 };
 
 
-exports.getRecruiterStats=async (req, res)=> {
+exports.getRecruiterStatsold=async (req, res)=> {
   try {
       // Count the distinct employer IDs in the RecruiterHiring model
       const employerCount = await prisma.recruiterHiring.count({
@@ -360,4 +360,53 @@ exports.getRecruiterStats=async (req, res)=> {
       await prisma.$disconnect();
   }
 }
+
+
+exports.getRecruiterStats = async (req, res) => {
+  try {
+    // Step 1: Count distinct employer IDs
+    const employerCount = await prisma.recruiterHiring.groupBy({
+      by: ['employerId'], // Group by employerId
+    });
+    const totalEmployersServed = employerCount.length;
+
+    // Step 2: Calculate total earnings from the `Service` model
+    const totalEarnings = await prisma.service.aggregate({
+      _sum: {
+        pricing: true, // Summing up the `pricing` field from the `Service` model
+      },
+      where: {
+        RecruiterHiring: {
+          some: {
+            paymentStatus: 'PAID', // Ensure payment status is `PAID`
+          },
+        },
+      },
+    });
+
+    // Return a properly formatted response
+    return res.status(200).json({
+      success: true,
+      message: "Recruiter stats fetched successfully.",
+      data: {
+        totalEmployersServed,
+        totalEarnings: totalEarnings._sum.pricing || 0,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching recruiter stats:', error);
+
+    // Return an error response with details
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching recruiter stats.",
+      error: error.message,
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+
+
+
 

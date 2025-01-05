@@ -1150,50 +1150,50 @@ exports.getStaffMembersByEmployerCompany = async (req, res) => {
 
 exports.getActivities = async (req, res) => {
   try {
-      // Pagination query parameters
-      const { page = 1, limit = 10 } = req.query;
+    // Pagination query parameters
+    const { page = 1, limit = 10 } = req.query;
 
-      // Convert pagination values to integers
-      const pageNumber = parseInt(page, 10);
-      const limitNumber = parseInt(limit, 10);
-      const skip = (pageNumber - 1) * limitNumber;
+    // Convert pagination values to integers
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
 
-      // Fetch paginated activities (without filtering by userId)
-      const activities = await prisma.activity.findMany({
-          select: {
-              title: true,
-              createdAt: true,
-              updatedAt: true,
-          },
-          skip: skip,
-          take: limitNumber,
-          orderBy: {
-              id: 'desc', // Sort activities by ID in descending order
-          },
-      });
+    // Fetch paginated activities (without filtering by userId)
+    const activities = await prisma.activity.findMany({
+      select: {
+        title: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      skip: skip,
+      take: limitNumber,
+      orderBy: {
+        id: 'desc', // Sort activities by ID in descending order
+      },
+    });
 
-      // Fetch total count of activities for pagination
-      const totalActivitiesCount = await prisma.activity.count();
+    // Fetch total count of activities for pagination
+    const totalActivitiesCount = await prisma.activity.count();
 
-      // Respond with paginated activities and metadata
-      return res.status(200).json({
-          success: true,
-          message: activities.length > 0 ? "Activities fetched successfully." : "No activities found.",
-          data: activities,
-          pagination: {
-              totalActivitiesCount,
-              currentPage: pageNumber,
-              totalPages: Math.ceil(totalActivitiesCount / limitNumber),
-              pageSize: limitNumber,
-          },
-      });
+    // Respond with paginated activities and metadata
+    return res.status(200).json({
+      success: true,
+      message: activities.length > 0 ? "Activities fetched successfully." : "No activities found.",
+      data: activities,
+      pagination: {
+        totalActivitiesCount,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalActivitiesCount / limitNumber),
+        pageSize: limitNumber,
+      },
+    });
   } catch (error) {
-      console.error("Error fetching activities:", error);
-      return res.status(500).json({
-          success: false,
-          message: "Internal server error.",
-          error: error.message,
-      });
+    console.error("Error fetching activities:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+      error: error.message,
+    });
   }
 };
 
@@ -1281,7 +1281,7 @@ exports.getActivities = async (req, res) => {
 // };
 
 
-exports.getSubscriptionDetails = async (req, res) => {
+exports.getSubscriptionDetailsOLD = async (req, res) => {
   console.log("Fetching subscription details and purchase history");
 
   try {
@@ -1298,22 +1298,9 @@ exports.getSubscriptionDetails = async (req, res) => {
       },
     });
 
-    // If no subscriptions found in the purchase history
-    if (subscriptionHistory.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No subscription history found.",
-      });
-    }
-
-    // Transform the subscription history for better readability
-    const formattedHistory = subscriptionHistory.map((history) => ({
+    // If no subscriptions found in the purchase history, return empty array
+    const formattedHistory = subscriptionHistory.length === 0 ? [] : subscriptionHistory.map((history) => ({
       subscriptionId: history.subscriptionId,
-      // subscriptionName: history.subscription.name,
-      // description: history.subscription.description || "No description",
-      // price: history.subscription.price,
-      // jobSlots: history.subscription.jobSlots || 0,
-      // resumeSearches: history.subscription.resumeSearches || 0,
       broughtAt: history.broughtAt,
     }));
 
@@ -1347,6 +1334,78 @@ exports.getSubscriptionDetails = async (req, res) => {
   }
 };
 
+exports.getSubscriptionDetails = async (req, res) => {
+  console.log("Fetching subscription details and purchase history for userId:", req.params.userId);
+
+  try {
+    const userId = parseInt(req.params.userId);  // Extract userId from the request parameters
+
+    if (isNaN(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId provided.",
+      });
+    }
+
+    // Fetch all available subscriptions
+    const allSubscriptions = await prisma.subscription.findMany();
+
+    // Fetch subscription purchase history for the specific userId
+    const subscriptionHistory = await prisma.subscriptionBought.findMany({
+      where: {
+        userId: userId,  // Filter history by userId
+      },
+      include: {
+        subscription: true, // Include subscription details
+      },
+      orderBy: {
+        broughtAt: 'desc', // Sort by the date of purchase in descending order
+      },
+    });
+
+    // If no subscriptions found in the purchase history, return an empty array
+    const formattedHistory = subscriptionHistory.length === 0 ? [] : subscriptionHistory.map((history) => ({
+      subscriptionId: history.subscriptionId,
+      broughtAt: history.broughtAt,
+      name: history.subscription.name,
+      description: history.subscription.description || "No description",
+      price: history.subscription.price,
+      jobSlots: history.subscription.jobSlots || 0,
+      resumeSearches: history.subscription.resumeSearches || 0,
+    }));
+
+    // Transform all subscriptions for better readability
+    const formattedSubscriptions = allSubscriptions.map((subscription) => ({
+      subscriptionId: subscription.id,
+      subscriptionName: subscription.name,
+      description: subscription.description || "No description",
+      price: subscription.price,
+      jobSlots: subscription.jobSlots || 0,
+      resumeSearches: subscription.resumeSearches || 0,
+    }));
+
+    // Respond with both subscription details and purchase history
+    res.status(200).json({
+      success: true,
+      data: {
+        allSubscriptions: formattedSubscriptions,
+        purchaseHistory: formattedHistory,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching subscription details:", error.message);
+
+    // Send error response with specific error information
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch subscription details.",
+      error: error.message,
+    });
+  }
+};
+
+
+
 exports.getAllStaffMembers = async (req, res) => {
   try {
     // Fetch all staff members
@@ -1358,7 +1417,7 @@ exports.getAllStaffMembers = async (req, res) => {
       },
       select: {
         fullname: true,
-        phnumber:true,
+        phnumber: true,
         avatarId: true,
         user: {
           select: {
@@ -1403,65 +1462,65 @@ exports.getAllStaffMembers = async (req, res) => {
 };
 
 exports.manageUser = async (req, res) => {
-    const { id } = req.params;
-    const { action, email, secondaryEmail, isActive, deActivate, role, newPassword } = req.body;
+  const { id } = req.params;
+  const { action, email, secondaryEmail, isActive, deActivate, role, newPassword } = req.body;
 
-    try {
-        let result;
+  try {
+    let result;
 
-        switch (action) {
-            case "updateProfile":
-                result = await prisma.user.update({
-                    where: { id: parseInt(id) },
-                    data: {
-                        email,
-                        secondaryEmail,
-                        isActive,
-                        deActivate,
-                        role,
-                    },
-                });
-                delete result.password;
-                res.json({ message: "User profile updated successfully", user: result });
-                break;
+    switch (action) {
+      case "updateProfile":
+        result = await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: {
+            email,
+            secondaryEmail,
+            isActive,
+            deActivate,
+            role,
+          },
+        });
+        delete result.password;
+        res.json({ message: "User profile updated successfully", user: result });
+        break;
 
-            case "changePassword":
-                if (!newPassword) {
-                    return res.status(400).json({ error: "New password is required" });
-                }
-                const hashedPassword = await bcrypt.hash(newPassword, 10);
-                result = await prisma.user.update({
-                    where: { id: parseInt(id) },
-                    data: { password: hashedPassword },
-                });
-                delete result.password;
-                res.json({ message: "Password updated successfully", user: result });
-                break;
-
-            case "deactivateAccount":
-                result = await prisma.user.update({
-                    where: { id: parseInt(id) },
-                    data: { deActivate: true, isActive: false },
-                });
-                delete result.password;
-                res.json({ message: "User deactivated successfully", user: result });
-                break;
-
-            case "delete":
-                await prisma.user.delete({
-                    where: { id: parseInt(id) },
-                });
-                delete result.password;
-                res.json({ message: "User deleted successfully" });
-                break;
-
-            default:
-                res.status(400).json({ error: "Invalid action specified" });
-                break;
+      case "changePassword":
+        if (!newPassword) {
+          return res.status(400).json({ error: "New password is required" });
         }
-    } catch (error) {
-        res.status(500).json({ error: `An error occurred: ${error.message}` });
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        result = await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: { password: hashedPassword },
+        });
+        delete result.password;
+        res.json({ message: "Password updated successfully", user: result });
+        break;
+
+      case "deactivateAccount":
+        result = await prisma.user.update({
+          where: { id: parseInt(id) },
+          data: { deActivate: true, isActive: false },
+        });
+        delete result.password;
+        res.json({ message: "User deactivated successfully", user: result });
+        break;
+
+      case "delete":
+        await prisma.user.delete({
+          where: { id: parseInt(id) },
+        });
+        delete result.password;
+        res.json({ message: "User deleted successfully" });
+        break;
+
+      default:
+        res.status(400).json({ error: "Invalid action specified" });
+        break;
     }
+  } catch (error) {
+    res.status(500).json({ error: `An error occurred: ${error.message}` });
+  }
 };
 
 
@@ -1566,7 +1625,7 @@ exports.updateEmail = async (req, res) => {
   const { secondaryEmail } = req.body;
 
   try {
-  
+
 
     // Update user emails
     const updatedUser = await prisma.user.update({
@@ -1592,7 +1651,7 @@ exports.updateEmail = async (req, res) => {
 };
 
 exports.changePassword = async (req, res) => {
-  const { userId } = req.params; 
+  const { userId } = req.params;
   const { currentPassword, newPassword } = req.body;
 
   try {
@@ -1650,13 +1709,13 @@ exports.changePassword = async (req, res) => {
 
 
 exports.deactivateProfile = async (req, res) => {
-  const { userId } = req.params; 
+  const { userId } = req.params;
 
   try {
-    
+
     await prisma.user.update({
       where: { id: Number(userId) },
-      data: { isActive: false }, 
+      data: { isActive: false },
     });
 
     res.status(200).json({
@@ -1690,6 +1749,61 @@ exports.deleteProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       message: `Error deleting profile: ${error.message}`,
+    });
+  }
+};
+
+
+
+exports.transferEmployerAccount = async (req, res) => {
+  const { currentEmployerId, newEmployerId } = req.body;
+
+  try {
+    // Validate IDs
+    const currentId = Number(currentEmployerId);
+    const newId = Number(newEmployerId);
+
+    if (isNaN(currentId) || isNaN(newId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid employer IDs provided.",
+      });
+    }
+
+    // Check if both employers exist
+    const currentEmployerExists = await prisma.user.findUnique({
+      where: { id: currentId },
+    });
+    const newEmployerExists = await prisma.user.findUnique({
+      where: { id: newId },
+    });
+
+    if (!currentEmployerExists || !newEmployerExists) {
+      return res.status(404).json({
+        success: false,
+        message: "One or both employers do not exist.",
+      });
+    }
+
+    // Transfer ownership of all related RecruiterHiring records
+    const updatedRecords = await prisma.recruiterHiring.updateMany({
+      where: { employerId: currentId },
+      data: { employerId: newId },
+    });
+    const updatedSubscriptions = await prisma.subscriptionBought.updateMany({
+      where: { userId: currentId },
+      data: { userId: newId },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Account successfully transferred from Employer ${currentId} to Employer ${newId}.`,
+      updatedRecords: updatedRecords.count,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Error transferring account: ${error.message}`,
     });
   }
 };
