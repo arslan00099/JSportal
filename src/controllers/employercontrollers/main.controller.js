@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const crypto = require("crypto");
+const bcrypt = require('bcryptjs');
 const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
 exports.updateProfile = async (req, res) => {
@@ -1462,6 +1463,237 @@ exports.manageUser = async (req, res) => {
         res.status(500).json({ error: `An error occurred: ${error.message}` });
     }
 };
+
+
+exports.buySubscription = async (req, res) => {
+  const { userId, subscriptionId } = req.body;
+
+  try {
+    // Validate the subscription exists
+    const subscription = await prisma.subscription.findUnique({
+      where: { id: subscriptionId },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: "Subscription not found.",
+      });
+    }
+
+    // Check if the user has already bought this subscription
+    const existingSubscription = await prisma.subscriptionBought.findFirst({
+      where: {
+        userId,
+        subscriptionId,
+      },
+    });
+
+    if (existingSubscription) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already purchased this subscription.",
+      });
+    }
+
+    // Create the subscription purchase
+    const subscriptionBought = await prisma.subscriptionBought.create({
+      data: {
+        userId,
+        subscriptionId,
+        name: subscription.name, // Optional; can be removed in the future
+        description: subscription.description,
+        price: subscription.price,
+        jobSlots: subscription.jobSlots || null,
+        totalJobSlots: subscription.jobSlots || null, // Initialize total slots
+        resumeSearches: subscription.resumeSearches || null,
+        toalResumeSerarches: subscription.resumeSearches || null, // Initialize total searches
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Subscription purchased successfully.",
+      data: subscriptionBought,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Error buying subscription: ${error.message}`,
+    });
+  }
+};
+
+
+exports.getBoughtSubscriptions = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Validate userId is provided
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required.",
+      });
+    }
+
+    // Fetch subscriptions bought by the user
+    const subscriptions = await prisma.subscriptionBought.findMany({
+      where: {
+        userId: parseInt(userId), // Ensure userId is an integer
+      },
+      include: {
+        subscription: true, // Include details of the subscription
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Subscriptions retrieved successfully.",
+      data: subscriptions, // Returns empty array if no subscriptions found
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Error fetching subscriptions: ${error.message}`,
+    });
+  }
+};
+
+
+exports.updateEmail = async (req, res) => {
+  const { userId } = req.params; // Assuming user ID is available from auth middleware
+  const { secondaryEmail } = req.body;
+
+  try {
+  
+
+    // Update user emails
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: parseInt("1", 10),
+      },
+      data: {
+        secondaryEmail,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Email addresses updated successfully.",
+      data: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Error updating emails: ${error.message}`,
+    });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  const { userId } = req.params; 
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    // Ensure userId is a valid number
+    const userIdNumber = Number(userId);
+    if (isNaN(userIdNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user ID.",
+      });
+    }
+
+    // Find the user
+    const user = await prisma.user.findUnique({ where: { id: userIdNumber } });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // Compare current password with stored password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Incorrect current password.",
+      });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the user's password
+    await prisma.user.update({
+      where: { id: userIdNumber },
+      data: { password: hashedPassword },
+    });
+
+    // Send success response
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully.",
+    });
+  } catch (error) {
+    // Send error response
+    return res.status(500).json({
+      success: false,
+      message: `Error updating password: ${error.message}`,
+    });
+  }
+};
+
+
+exports.deactivateProfile = async (req, res) => {
+  const { userId } = req.params; 
+
+  try {
+    
+    await prisma.user.update({
+      where: { id: Number(userId) },
+      data: { isActive: false }, 
+    });
+
+    res.status(200).json({
+
+
+      success: true,
+      message: "Profile deactivated successfully.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Error deactivating profile: ${error.message}`,
+    });
+  }
+};
+
+exports.deleteProfile = async (req, res) => {
+  const { userId } = req.params; // Assuming user ID is available from auth middleware
+
+  try {
+    // Delete user record
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile deleted successfully.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: `Error deleting profile: ${error.message}`,
+    });
+  }
+};
+
 
 
 

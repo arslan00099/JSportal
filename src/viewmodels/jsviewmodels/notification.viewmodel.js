@@ -53,22 +53,7 @@ class NotificationViewModel {
     }
   }
 
-  async submitReview(notificationId, message, rating) {
-    try {
-      const review = await prisma.review.create({
-        data: {
-          content: message,
-          notificationId,
-          rating
-        },
-      });
-  
-    return review;
-    }
-      catch (error) {
-      throw new Error(`Error submitting review: ${error.message}`);
-    }
-  }
+ 
   
 }
 

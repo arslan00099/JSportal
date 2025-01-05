@@ -375,32 +375,43 @@ exports.createMentorSession = async (req, res) => {
       },
     });
 
-    // Create the notification for the user
-    const notificationResponse = await createNotification(userId, servicename, `Your session for ${servicename} has been booked!`, mentorId);
+    // Pass the new session ID to the notification creation function
+    const notificationResponse = await createNotification(
+      userId,
+      servicename,
+      `Your session for ${servicename} has been booked!`,
+      mentorId,
+      newSession.id // Pass the mentorSessionManagement ID
+    );
 
-    res.status(201).json({ success: true, data: newSession, notification: notificationResponse.notification });
+    res.status(201).json({
+      success: true,
+      data: newSession,
+      notification: notificationResponse.notification,
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
 
 
-// Define the createNotification function
-const createNotification = async (userId, title, message, mentorId = null) => {
+const createNotification = async (userId, title, message, mentorId = null, mentorSessionManagmentId = null) => {
   try {
     // Log the incoming parameters for debugging
     console.log("UserID:", userId);
     console.log("Title:", title);
     console.log("Message:", message);
     console.log("MentorID:", mentorId);
+    console.log("MentorSessionManagementID:", mentorSessionManagmentId);
 
     // Create the notification
     const newNotification = await prisma.notification.create({
       data: {
         title,
         message,
-        userId,    // Foreign key for the user
-        mentorId,  // Optional foreign key for the mentor
+        userId,    
+        mentorId,  
+        mentorSessionManagmentId, 
       },
     });
 
@@ -409,6 +420,7 @@ const createNotification = async (userId, title, message, mentorId = null) => {
     throw new Error(`Error creating notification: ${error.message}`);
   }
 };
+
 
 
 

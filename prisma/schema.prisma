@@ -213,17 +213,19 @@ model Profile {
 }
 
 model SubscriptionBought {
-  id             Int               @id @default(autoincrement())
-  userId         Int
-  subscriptionId Int
-  user           User              @relation(fields: [userId], references: [id])
-  subscription   Subscription      @relation(fields: [subscriptionId], references: [id])
-  name           SubscriptionType? //can be removedin future
-  description    String?           @db.Text
-  price          Float
-  jobSlots       Int?
-  resumeSearches Int?
-  broughtAt      DateTime          @default(now())
+  id                  Int               @id @default(autoincrement())
+  userId              Int
+  subscriptionId      Int
+  user                User              @relation(fields: [userId], references: [id])
+  subscription        Subscription      @relation(fields: [subscriptionId], references: [id])
+  name                SubscriptionType? //can be removedin future
+  description         String?           @db.Text
+  price               Float
+  jobSlots            Int?
+  totalJobSlots       Int?
+  resumeSearches      Int?
+  toalResumeSerarches Int?
+  broughtAt           DateTime          @default(now())
 }
 
 model Subscription {
@@ -343,27 +345,29 @@ model JobApplied {
 }
 
 model Notification {
-  id        Int      @id @default(autoincrement())
-  title     String
-  message   String
-  userId    Int
-  user      User     @relation("UserNotification", fields: [userId], references: [id], map: "FK_User_Notification", onDelete: Cascade)
-  mentorId  Int?
-  mentor    User?    @relation("MentorNotification", fields: [mentorId], references: [id], map: "FK_Mentor_Notification")
-  createdAt DateTime @default(now())
-  Review    Review[]
+  id                       Int                      @id @default(autoincrement())
+  title                    String
+  message                  String
+  userId                   Int
+  user                     User                     @relation("UserNotification", fields: [userId], references: [id], map: "FK_User_Notification", onDelete: Cascade)
+  mentorId                 Int?
+  mentor                   User?                    @relation("MentorNotification", fields: [mentorId], references: [id], map: "FK_Mentor_Notification")
+  mentorSessionManagmentId Int?
+  mentorSessionManagement  MentorSessionManagement? @relation(fields: [mentorSessionManagmentId], references: [id])
+  createdAt                DateTime                 @default(now())
+  Review                   Review[]
 }
 
 model Review {
-  id                        Int                     @id @default(autoincrement())
-  content                   String // Actual review content
-  notificationId            Int? // Relation to Notification
-  rating                    Int // Review rating (e.g., 1-5)
-  notification              Notification?           @relation(fields: [notificationId], references: [id])
-  mentorSessionManagementId Int // Relation to MentorSessionManagement
-  mentorSessionManagement   MentorSessionManagement @relation(fields: [mentorSessionManagementId], references: [id])
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @updatedAt
+  id                       Int                      @id @default(autoincrement())
+  content                  String // Actual review content
+  notificationId           Int? // Relation to Notification
+  rating                   Int // Review rating (e.g., 1-5)
+  notification             Notification?            @relation(fields: [notificationId], references: [id])
+  mentorSessionManagmentId Int? // Relation to MentorSessionManagement
+  mentorSessionManagement  MentorSessionManagement? @relation(fields: [mentorSessionManagmentId], references: [id])
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
 }
 
 model MentorProfile {
@@ -416,6 +420,8 @@ model MentorSessionManagement {
   reviews           Review[] // Relation to Review
   createdAt         DateTime?      @default(now()) // Optional field
   updatedAt         DateTime?      @updatedAt // Optional field
+
+  Notification Notification[]
 }
 
 model RecruiterProfile {

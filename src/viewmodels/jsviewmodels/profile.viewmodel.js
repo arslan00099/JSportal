@@ -507,7 +507,7 @@ class UserProfileViewModel {
               name: true, // Only select service name
             },
           },
-          MentorProfile: {
+          mentor: {
             select: {
               Profile: {
                 select: {
@@ -521,7 +521,7 @@ class UserProfileViewModel {
 
       // Return only the required fields in list format
       const filteredSessions = sessions.map((session) => ({
-        mentorName: session.MentorProfile?.name || "N/A",
+        mentorName: session.mentor?.Profile[0].fullname || "N/A",
         serviceName: session.Service?.name || "N/A",
         selectedDateTime: session.selectedDateTime,
       }));

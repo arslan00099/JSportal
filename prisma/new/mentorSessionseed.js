@@ -6,7 +6,7 @@ async function main() {
   const mentor = await prisma.user.create({
     data: {
       
-      email: 'mentor11@example.com',
+      email: 'mentor11s@example.com',
       password : 'secure1233',
       role: 'MENTOR',
       Profile: {

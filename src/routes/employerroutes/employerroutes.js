@@ -64,7 +64,17 @@ router.get("/getActivites",main.getActivities);
 router.get("/subscription",main.getSubscriptionDetails);
 router.get("/getAllstaffmembers", main.getAllStaffMembers);
 router.put("/userSetting",main.manageUser);
+router.post("/buySubscription",main.buySubscription);
+router.get("/buySubscription/:userId",main.getBoughtSubscriptions);
 
+
+//setting
+router.put("/secondaryemail/:userId",main.updateEmail);
+router.put("/changepassword/:userId",main.changePassword);
+router.post("/deactivate/:userId",main.deactivateProfile);
+router.delete("/account/:userId",main.deleteProfile);
+
+//
 
 
 module.exports = router;
