@@ -520,6 +520,8 @@ model HiredService {
   id               Int             @id @default(autoincrement())
   hiredRecruiterId Int
   serviceId        Int
+  serviceName      String?
+  serviceAmount    Int           @default(400)
   jobDetail        String
   startDate        DateTime
   endDate          DateTime

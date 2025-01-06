@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
 // exports.getEarnings = async (req, res) => {
 //     try {
@@ -362,7 +363,7 @@ exports.getRecruiterStatsold=async (req, res)=> {
 }
 
 
-exports.getRecruiterStats = async (req, res) => {
+exports.getRecruiterStatsOLD = async (req, res) => {
   try {
     // Step 1: Count distinct employer IDs
     const employerCount = await prisma.recruiterHiring.groupBy({
@@ -406,6 +407,367 @@ exports.getRecruiterStats = async (req, res) => {
     await prisma.$disconnect();
   }
 };
+
+exports.getRecruiterStats = async (req, res) => {
+  const { recruiterId } = req.params; // Extract recruiterId from request parameters
+
+  try {
+    // Step 1: Count distinct employers served by the recruiter
+    const employerCount = await prisma.recruiterHiring.groupBy({
+      by: ['employerId'], // Group by employerId
+      where: {
+        recruiterId: parseInt(recruiterId), // Filter by recruiterId
+      },
+    });
+    const totalEmployersServed = employerCount.length;
+
+    // Step 2: Calculate total earnings from the `Service` model for the specific recruiter
+    const totalEarnings = await prisma.service.aggregate({
+      _sum: {
+        pricing: true, // Summing up the `pricing` field from the `Service` model
+      },
+      where: {
+        RecruiterHiring: {
+          some: {
+            recruiterId: parseInt(recruiterId), // Filter by recruiterId
+            paymentStatus: 'PAID', // Ensure payment status is `PAID`
+          },
+        },
+      },
+    });
+
+    // Step 3: Calculate the total number of reviews left for the recruiter
+    const reviewCount = await prisma.timesheetReview.count({
+      where: {
+        recruiterHiringId: {
+          in: await prisma.recruiterHiring.findMany({
+            where: { recruiterId: parseInt(recruiterId) },
+            select: { id: true },
+          }).then(res => res.map(hiring => hiring.id)), // Fetch all recruiterHiringIds for this recruiter
+        },
+      },
+    });
+
+    // Step 4: Fetch additional details for the recruiter
+    // const recruiterDetails = await prisma.user.findUnique({
+    //   where: { id: parseInt(recruiterId) },
+    //   select: {
+    //     id: true,
+    //     email: true,
+    //     createdAt: true,
+    //     updatedAt: true,
+    //   },
+    // });
+
+    // if (!recruiterDetails) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Recruiter not found.",
+    //   });
+    // }
+
+    // Return a properly formatted response
+    return res.status(200).json({
+      success: true,
+      message: "Recruiter stats fetched successfully.",
+      data: {
+      //  recruiterDetails,
+        totalEmployersServed,
+        totalEarnings: totalEarnings._sum.pricing || 0,
+        reviewCount,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching recruiter stats:', error);
+
+    // Return an error response with details
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching recruiter stats.",
+      error: error.message,
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+
+
+exports.getBookings = async (req, res) => {
+  const { recruiterId } = req.params;
+  const type = req.query.type || "upcoming";
+
+  try {
+    // Validate recruiterId
+    if (isNaN(recruiterId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid recruiter ID.",
+      });
+    }
+
+    if (!["allbooking", "upcoming"].includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid type. Allowed values are 'allbooking' or 'upcoming'.",
+      });
+    }
+
+    const recruiterIdInt = parseInt(recruiterId, 10);
+    const currentDate = new Date();
+
+    // Determine filter based on the "type" parameter
+    const startDateFilter =
+      type !== "allbooking"
+        ? {
+            startDate: {
+              gt: currentDate, // Filter for upcoming bookings
+            },
+          }
+        : {};
+
+    const hiredServices = await prisma.recruiterHiring.findMany({
+      where: {
+        recruiterId: recruiterIdInt,
+      },
+      select: {
+        hiredServices: {
+          where: startDateFilter,
+          select: {
+            startDate: true,
+            serviceName: true,
+          },
+        },
+        employer: {
+          select: {
+            email: true,
+            Profile: {
+              select: {
+                fullname: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Format the response
+    const formattedResponse = hiredServices.map(({ employer, hiredServices }) => ({
+      employerEmail: employer?.email || null,
+      employerFullName: employer?.Profile[0]?.fullname || null,
+      services: hiredServices || [], // Default to an empty array if no services
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: formattedResponse,
+    });
+  } catch (error) {
+    console.error("Error fetching bookings for recruiterId:", recruiterId, error);
+
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching bookings.",
+      error: error.message,
+    });
+  }
+};
+
+
+exports.getReviews = async (req, res) => {
+  const { recruiterId } = req.params; // Get recruiterId from params
+
+  // Pagination parameters: default to page 1 and limit 1 (for the most recent review)
+  const page = parseInt(req.query.page) || 1;  // Page number (default: 1)
+  const limit = parseInt(req.query.limit) || 1;  // Limit (default: 1)
+
+  try {
+    // Fetch reviews based on recruiterId and paginate
+    const reviews = await prisma.timesheetReview.findMany({
+      where: {
+        OR: [
+          { RecruiterHiring: { recruiterId: parseInt(recruiterId, 10) } }, // Filter by recruiterId
+          { RecruiterHiring: { employerId: parseInt(recruiterId, 10) } },   // Include if recruiterId is for the employer
+        ],
+      },
+      select: {
+        content: true,        // Review content
+        rating: true,         // Review rating
+        createdAt: true,      // Review created date
+        recruiterHiringId: true,
+        RecruiterHiring: {
+          select: {
+            recruiter: {
+              select: {
+                id: true,
+                Profile: {
+                  select: {
+                    fullname: true,  // Recruiter's full name
+                    avatarId: true,  // Recruiter's avatar ID
+                  },
+                },
+              },
+            },
+            employer: {
+              select: {
+                id: true,
+                Profile: {
+                  select: {
+                    fullname: true,  // Employer's full name
+                    avatarId: true,  // Employer's avatar ID
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      take: limit,  // Limit the number of results per page
+      skip: (page - 1) * limit,  // Skip results based on the page number
+      orderBy: {
+        createdAt: 'desc',  // Order by createdAt to get the most recent reviews
+      },
+    });
+
+    // Format the response
+    const formattedReviews = reviews.map((review) => {
+      const reviewer = review.RecruiterHiring?.recruiterId === parseInt(recruiterId, 10)
+        ? review.RecruiterHiring?.recruiter
+        : review.RecruiterHiring?.employer; // Either recruiter or employer reviewed
+      return {
+        content: review.content,
+        rating: review.rating,
+        reviewedByFullname: reviewer?.Profile[0]?.fullname || "Unknown",  // Name of the reviewer (recruiter/employer)
+        reviewedByAvatarId: reviewer?.Profile[0]?.avatarId || null,      // Avatar of the reviewer
+        createdAt: review.createdAt,
+      };
+    });
+
+    // Return the reviews in a formatted response
+    return res.status(200).json({
+      success: true,
+      data: formattedReviews,
+    });
+  } catch (error) {
+    console.error("Error fetching reviews for recruiterId:", recruiterId, error);
+
+    // Return error response
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching reviews.",
+      error: error.message,
+    });
+  }
+};
+
+
+exports.getRecruiterEarnings = async (req, res) => {
+  try {
+      const { recruiterId } = req.params;
+      const { year } = req.query; // Optional query parameter for filtering by year
+
+      if (!recruiterId) {
+          return res.status(400).json({
+              success: false,
+              message: "Recruiter ID is required.",
+          });
+      }
+
+      const recruiterIdInt = parseInt(recruiterId, 10); // Ensure recruiterId is an integer
+
+      if (isNaN(recruiterIdInt)) {
+          return res.status(400).json({
+              success: false,
+              message: "Invalid Recruiter ID.",
+          });
+      }
+
+      // Fetch earnings data from RecruiterHiring and HiredService
+      const earnings = await prisma.recruiterHiring.findMany({
+          where: {
+              recruiterId: recruiterIdInt,
+          },
+          select: {
+              hiredServices: {
+                  select: {
+                      serviceAmount: true, // Get serviceAmount from HiredService model
+                      startDate: true, // For grouping by month/year
+                  },
+                  orderBy: {
+                      startDate: "asc", // Order by startDate in HiredService model
+                  },
+              },
+          },
+      });
+
+      // Calculate total, monthly, and yearly earnings
+      let totalEarnings = 0;
+      const monthlyEarnings = {};
+      const yearlyEarnings = {};
+
+      // Flatten and process earnings from timeSheets
+      earnings.forEach((recruiter) => {
+          recruiter.hiredServices.forEach((earning) => {
+              const serviceAmount = earning.serviceAmount || 0; // Default to 0 if no service amount
+              totalEarnings += serviceAmount;
+
+              const startDate = new Date(earning.startDate);
+              const month = startDate.toLocaleString("default", { month: "long" });
+              const yearKey = startDate.getFullYear();
+
+              // Group earnings by month and year
+              monthlyEarnings[`${yearKey}-${month}`] = (monthlyEarnings[`${yearKey}-${month}`] || 0) + serviceAmount;
+              yearlyEarnings[yearKey] = (yearlyEarnings[yearKey] || 0) + serviceAmount;
+          });
+      });
+
+      // If a year is provided, filter the results by the specified year
+      let filteredYearlyEarnings = yearlyEarnings;
+      let filteredMonthlyEarnings = monthlyEarnings;
+      if (year) {
+          const yearInt = parseInt(year, 10);
+          if (!isNaN(yearInt)) {
+              filteredYearlyEarnings = { [yearInt]: yearlyEarnings[yearInt] || 0 };
+              filteredMonthlyEarnings = Object.fromEntries(
+                  Object.entries(monthlyEarnings).filter(([key]) => key.startsWith(`${yearInt}-`))
+              );
+          } else {
+              return res.status(400).json({
+                  success: false,
+                  message: "Invalid year format.",
+              });
+          }
+      }
+
+      return res.status(200).json({
+          success: true,
+          message: "Earnings fetched successfully.",
+          data: {
+              totalEarnings: totalEarnings.toFixed(2), // Total earnings rounded to 2 decimal places
+              monthlyEarnings: filteredMonthlyEarnings,
+              yearlyEarnings: filteredYearlyEarnings,
+          },
+      });
+  } catch (error) {
+      console.error("Error fetching earnings:", error);
+      return res.status(500).json({
+          success: false,
+          message: "Internal server error.",
+          error: error.message,
+      });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
