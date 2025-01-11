@@ -1891,18 +1891,26 @@ exports.updateActiveCard = async (req, res) => {
 };
 
 //////////////////////////////////////////////////////////////
-exports.getStafmemberDetails= async (req, res) => {
-  
-  const userId = req.params;
-  employerId=userId;
+exports.getStafmemberDetails = async (req, res) => {
+  // Extract and convert userId from params to an integer
+  const employerId = Number(req.params.userId);
+
+  if (isNaN(employerId)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid employer ID provided.",
+    });
+  }
 
   try {
+    // Count the number of job posts created by the employer
     const jobPostCount = await prisma.jobPost.count({
       where: {
         userId: employerId,
       },
     });
 
+    // Count the number of applications received for jobs posted by this employer
     const applicationReceivedCount = await prisma.jobApplied.count({
       where: {
         jobpost: {
@@ -1911,14 +1919,17 @@ exports.getStafmemberDetails= async (req, res) => {
       },
     });
 
+    // Count the number of recruiters hired by the employer
     const hiredRecruiterCount = await prisma.recruiterHiring.count({
       where: {
         employerId: employerId,
       },
     });
+
+    // Fetch the employer's recent activities
     const activities = await prisma.activity.findMany({
       where: {
-        userId: Number(employerId),
+        userId: employerId,
       },
       select: {
         id: true,
@@ -1930,25 +1941,26 @@ exports.getStafmemberDetails= async (req, res) => {
       },
     });
 
-    // Send the counts in the response
+    // Send the response
     res.status(200).json({
       success: true,
       data: {
         jobPostCount,
         applicationReceivedCount,
         hiredRecruiterCount,
-        activites:activities,
+        activities,
       },
     });
   } catch (error) {
     console.error("Error fetching counts:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch counts",
+      message: "Failed to fetch counts.",
       error: error.message,
     });
   }
 };
+
 
 
 
