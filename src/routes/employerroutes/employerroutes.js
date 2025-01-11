@@ -15,7 +15,7 @@ router.post(
   main.updateProfile
 );
 router.post("/location", middleware, main.updateLocation);
-router.get("/profile", middleware, main.getProfile);
+router.get("/profile", middleware,main.getProfile);
 
 // DASHBOARD ROUTES
 // JOB ROUTES
@@ -76,6 +76,7 @@ router.delete("/account/:userId",main.deleteProfile);
 
 //TransferAccount
 router.post("/transferaccount",main.transferEmployerAccount);
+router.post("/activecard",main.updateActiveCard);
 
 
 module.exports = router;

@@ -1770,22 +1770,40 @@ exports.transferEmployerAccount = async (req, res) => {
       });
     }
 
-    // Check if both employers exist
-    const currentEmployerExists = await prisma.user.findUnique({
-      where: { id: currentId },
-    });
-    const newEmployerExists = await prisma.user.findUnique({
-      where: { id: newId },
-    });
+    // Fetch both users and validate their roles
+    const [currentEmployer, newEmployer] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: currentId },
+        select: { id: true, role: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: newId },
+        select: { id: true, role: true },
+      }),
+    ]);
 
-    if (!currentEmployerExists || !newEmployerExists) {
+    if (!currentEmployer || !newEmployer) {
       return res.status(404).json({
         success: false,
-        message: "One or both employers do not exist.",
+        message: "One or both users do not exist.",
       });
     }
 
-    // Transfer ownership of all related RecruiterHiring records
+    if (currentEmployer.role !== "EMPLOYER") {
+      return res.status(400).json({
+        success: false,
+        message: `User with ID ${currentId} is not an employer.`,
+      });
+    }
+
+    if (newEmployer.role !== "EMPLOYER") {
+      return res.status(400).json({
+        success: false,
+        message: `User with ID ${newId} is not an employer.`,
+      });
+    }
+
+    // Transfer ownership of related RecruiterHiring records
     const updatedRecords = await prisma.recruiterHiring.updateMany({
       where: { employerId: currentId },
       data: { employerId: newId },
@@ -1799,11 +1817,75 @@ exports.transferEmployerAccount = async (req, res) => {
       success: true,
       message: `Account successfully transferred from Employer ${currentId} to Employer ${newId}.`,
       updatedRecords: updatedRecords.count,
+      updatedSubscriptions: updatedSubscriptions.count,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: `Error transferring account: ${error.message}`,
+    });
+  }
+};
+
+
+exports.updateActiveCard = async (req, res) => {
+  const { userId, activeCardId } = req.body;
+
+  try {
+    // Validate input
+    const userIdInt = Number(userId);
+    const activeCardIdInt = Number(activeCardId);
+
+    if (isNaN(userIdInt) || isNaN(activeCardIdInt)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or activeCardId provided.",
+      });
+    }
+
+    // Check if the user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userIdInt },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: `User with ID ${userIdInt} not found.`,
+      });
+    }
+
+    // Check if the card exists and belongs to the user
+    const card = await prisma.card.findUnique({
+      where: { id: activeCardIdInt },
+    });
+
+    if (!card || card.userId !== userIdInt) {
+      return res.status(400).json({
+        success: false,
+        message: `Card with ID ${activeCardIdInt} not found or does not belong to the user.`,
+      });
+    }
+
+    // Update user's activeCardId
+    const updatedUser = await prisma.user.update({
+      where: { id: userIdInt },
+      data: { activeCardId: activeCardIdInt },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Active card updated successfully.",
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        activeCardId: updatedUser.activeCardId,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Error updating active card: ${error.message}`,
     });
   }
 };
