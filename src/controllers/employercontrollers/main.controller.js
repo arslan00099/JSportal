@@ -1890,6 +1890,65 @@ exports.updateActiveCard = async (req, res) => {
   }
 };
 
+//////////////////////////////////////////////////////////////
+exports.getStafmemberDetails= async (req, res) => {
+  
+  const userId = req.params;
+  employerId=userId;
+
+  try {
+    const jobPostCount = await prisma.jobPost.count({
+      where: {
+        userId: employerId,
+      },
+    });
+
+    const applicationReceivedCount = await prisma.jobApplied.count({
+      where: {
+        jobpost: {
+          userId: employerId,
+        },
+      },
+    });
+
+    const hiredRecruiterCount = await prisma.recruiterHiring.count({
+      where: {
+        employerId: employerId,
+      },
+    });
+    const activities = await prisma.activity.findMany({
+      where: {
+        userId: Number(employerId),
+      },
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Send the counts in the response
+    res.status(200).json({
+      success: true,
+      data: {
+        jobPostCount,
+        applicationReceivedCount,
+        hiredRecruiterCount,
+        activites:activities,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch counts",
+      error: error.message,
+    });
+  }
+};
 
 
 

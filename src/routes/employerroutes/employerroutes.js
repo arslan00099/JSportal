@@ -77,6 +77,7 @@ router.delete("/account/:userId",main.deleteProfile);
 //TransferAccount
 router.post("/transferaccount",main.transferEmployerAccount);
 router.post("/activecard",main.updateActiveCard);
+router.get("/staffmemberDetails/:userId",main.getStafmemberDetails)
 
 
 module.exports = router;
