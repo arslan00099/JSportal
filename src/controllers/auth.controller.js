@@ -45,3 +45,19 @@ exports.login = async (req, res) => {
   }
 };
 
+
+
+exports.adminlogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const { user, token } = await userViewModel.adminLogin(email, password);
+     // Remove keys with null values from the user object
+     const filteredUser = Object.fromEntries(
+      Object.entries(user).filter(([_, value]) => value !== null)
+    );
+    res.status(200).json({ success: true, token, data: filteredUser });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+

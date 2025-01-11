@@ -21,6 +21,7 @@ const upload = multer({ storage: storage });
 
 router.post('/signup', upload.single('profilePic'),authController.signup);
 router.post('/login', authController.login);
+router.post('/adminlogin',authController.adminlogin);
 
 module.exports = router;
 
