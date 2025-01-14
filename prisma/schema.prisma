@@ -179,6 +179,7 @@ model User {
   Blog                   Blog[]
 
   SubscriptionBought SubscriptionBought[]
+  AdminNotification  AdminNotification[]
 
   @@index([email])
   @@index([role])
@@ -501,6 +502,7 @@ model RecruiterHiring {
   updatedAt               DateTime?         @updatedAt
   recruiterHiringId       Int?
   TimesheetReview         TimesheetReview[]
+
   @@map("RecruiterHiring")
 }
 
@@ -520,7 +522,7 @@ model HiredService {
   hiredRecruiterId Int
   serviceId        Int
   serviceName      String?
-  serviceAmount    Int           @default(400)
+  serviceAmount    Int             @default(400)
   jobDetail        String
   startDate        DateTime
   endDate          DateTime
@@ -529,14 +531,14 @@ model HiredService {
 }
 
 model TimeSheet {
-  id                    Int             @id @default(autoincrement())
+  id                    Int                 @id @default(autoincrement())
   weeklyTimesheet       Json?
   totalHourWorked       Int
   totalAmountDue        Int
   totalPayableAmount    Int
-  approvalStatusEmp     TimesheetStatus @default(PENDING)
+  approvalStatusEmp     TimesheetStatus     @default(PENDING)
   recruitingId          Int
-  recruiterHiring       RecruiterHiring @relation(fields: [recruitingId], references: [id])
+  recruiterHiring       RecruiterHiring     @relation(fields: [recruitingId], references: [id])
   independentContracter Boolean? // Made optional
   sendingtoclient       Boolean? // Made optional
   sendChargestoFuse     Boolean? // Made optional
@@ -544,8 +546,9 @@ model TimeSheet {
   recruiterName         String? // Made optional
   HiredBy               String? // Made optional
   phoneNumber           String? // Made optional
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  AdminNotification     AdminNotification[]
 }
 
 //npx prisma migrate dev --name add_optional_columns
@@ -677,4 +680,16 @@ model Content {
   description String? // Nullable for sections without descriptions
   sectionId   Int
   section     Section @relation(fields: [sectionId], references: [id])
+}
+
+model AdminNotification {
+  id            Int        @id @default(autoincrement())
+  title         String
+  message       String
+  senderId      Int?
+  user          User?      @relation(fields: [senderId], references: [id])
+  timesheetId   Int?
+  timesheet     TimeSheet? @relation(fields: [timesheetId], references: [id])
+  actionButtons Json?
+  createdAt     DateTime   @default(now())
 }

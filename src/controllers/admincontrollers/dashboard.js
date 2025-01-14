@@ -2479,6 +2479,86 @@ exports.getCountsTimesheet = async (req, res) => {
     }
   };
   
+
+
+  exports.getNotification = async (req, res) => {
+    try {
+      // Fetch notifications in descending order of createdAt
+      const notifications = await prisma.adminNotification.findMany({
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+         // user: true,        // Include sender details
+        //  timesheet: true,   // Include timesheet details
+        },
+      });
+  
+      if (!notifications || notifications.length === 0) {
+        // Return empty array if no records found
+        return res.status(200).json([]);
+      }
+  
+      // Process notifications to exclude senderId and null/undefined fields
+      const filteredNotifications = notifications.map((notification) => {
+        const parsedNotification = {
+          ...notification,
+          actionButtons: notification.actionButtons ? JSON.parse(notification.actionButtons) : null,
+        };
+  
+        // Remove fields with null or undefined values, and skip senderId
+        return Object.fromEntries(
+          Object.entries(parsedNotification).filter(
+            ([key, value]) => key !== 'senderId' && value != null
+          )
+        );
+      });
+  
+      res.status(200).json(filteredNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+  };
+
+
+
+  exports.getTimesheetById = async (req, res) => {
+    const { id } = req.params;
+  
+    if (!id) {
+      return res.status(400).json({ error: "Timesheet ID is required" });
+    }
+  
+    try {
+      // Fetch the timesheet based on the provided ID
+      const timesheet = await prisma.timeSheet.findUnique({
+        where: {
+          id: parseInt(id, 10),
+        },
+        include: {
+       //   recruiterHiring: true,        // Include related recruiterHiring details
+       //   AdminNotification: true,     // Include related AdminNotification details
+        },
+      });
+  
+      if (!timesheet) {
+        // Return 404 if the timesheet does not exist
+        return res.status(404).json({ message: "Timesheet not found" });
+      }
+  
+      // Filter null/undefined fields from the timesheet object
+      const filteredTimesheet = Object.fromEntries(
+        Object.entries(timesheet).filter(([_, value]) => value != null)
+      );
+  
+      res.status(200).json(filteredTimesheet);
+    } catch (error) {
+      console.error('Error fetching timesheet:', error);
+      res.status(500).json({ error: 'Failed to fetch timesheet' });
+    }
+  };
+  
   
   
   

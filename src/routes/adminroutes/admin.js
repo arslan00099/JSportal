@@ -96,6 +96,9 @@ router.get('/timesheetDetails', dashboard.getTimesheetDetails);
 router.put('/paymentstatus/:timesheetId', dashboard.updatePaymentStatus);
 router.put('/adminapprovalstatus/:timesheetId', dashboard.updateAdminApprovalStatus);
 router.post('/addInvoice/:timesheetId', dashboard.addInvoice);
+router.get('/adminNotification', dashboard.getNotification);
+router.get('/getTimesheetById/:id', dashboard.getTimesheetById);
+
 
 
 
