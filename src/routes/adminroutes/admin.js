@@ -42,7 +42,7 @@ router.get('/getIndustries', (req, res) => dashboard.getEntries({ ...req, params
 router.post('/addMentorService', (req, res) => dashboard.createEntry({ ...req, params: { model: 'mentorService' } }, res));
 router.put('/updateMentorService', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'mentorService' } }, res));
 router.delete('/deleteMentorService', (req, res) => dashboard.deleteEntry({ ...req, params: { model: 'mentorService' } }, res));
-router.get('/getMentorServices', (req, res) => {dashboard.getEntries({ ...req, params: { ...req.params, model: 'mentorService' } }, res);});
+router.get('/getMentorServices', (req, res) => { dashboard.getEntries({ ...req, params: { ...req.params, model: 'mentorService' } }, res); });
 
 // // RecService
 router.post('/addRecService', (req, res) => dashboard.createEntry({ ...req, params: { model: 'recService' } }, res));
@@ -56,12 +56,12 @@ router.get('/getRecServices/:search?', (req, res) => {
 router.post('/addLanguage', (req, res) => dashboard.createEntry({ ...req, params: { model: 'language' } }, res));
 router.put('/updateLanguage', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'language' } }, res));
 router.delete('/deleteLanguage', (req, res) => dashboard.deleteEntry({ ...req, params: { model: 'language' } }, res));
-router.get('/getLanguages', (req, res) => {dashboard.getEntries({ ...req, params: { ...req.params, model: 'language' } }, res);});
+router.get('/getLanguages', (req, res) => { dashboard.getEntries({ ...req, params: { ...req.params, model: 'language' } }, res); });
 // // Skill
 router.post('/addSkill', (req, res) => dashboard.createEntry({ ...req, params: { model: 'skill' } }, res));
 router.put('/updateSkil', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'skill' } }, res));
 router.delete('/deleteSkill', (req, res) => dashboard.deleteEntry({ ...req, params: { model: 'skill' } }, res));
-router.get('/getSkills',(req, res) => {dashboard.getEntries({ ...req, params: { ...req.params, model: 'skill' } }, res);});
+router.get('/getSkills', (req, res) => { dashboard.getEntries({ ...req, params: { ...req.params, model: 'skill' } }, res); });
 
 //  // Profile Approvals
 router.get('/mentorApproval/:role', dashboard.mentorApproval);
@@ -72,24 +72,30 @@ router.get('/getRecDetail/:userId', dashboard.getRecMenDetails);
 router.get('/getRecruiterHiring', dashboard.getRecruiterHiring);
 router.put('/updateInvoice/:id', dashboard.updateInvoice);
 router.put('/updateInvoice/:id', dashboard.updateInvoice);
-router.get('/getRecruiterHiringDetail/:bookingId',dashboard.getRecruiterHiringDetail);
-router.get('/getPaymentDetails',dashboard.getPaymentDetails);
-router.get('/getPaymentDetails:/role',dashboard.getPaymentDetailrole);
+router.get('/getRecruiterHiringDetail/:bookingId', dashboard.getRecruiterHiringDetail);
+router.get('/getPaymentDetails', dashboard.getPaymentDetails);
+router.get('/getPaymentDetails:/role', dashboard.getPaymentDetailrole);
 
 
-router.post('/AdminSettings',dashboard.upsertAdminSettings);
-router.get('/AdminSettings',dashboard.getAdminSettings);
-router.post('/postPages',dashboard.postPages);
-router.post('/postSelection',dashboard.postSection);
-router.post('/postContents',dashboard.postContents);
+router.post('/AdminSettings', dashboard.upsertAdminSettings);
+router.get('/AdminSettings', dashboard.getAdminSettings);
+router.post('/postPages', dashboard.postPages);
+router.post('/postSelection', dashboard.postSection);
+router.post('/postContents', dashboard.postContents);
 
-router.get('/getProfile/:id',dashboard.getProfile);
-router.put('/manageUser/:id',dashboard.manageUser);
+router.get('/getProfile/:id', dashboard.getProfile);
+router.put('/manageUser/:id', dashboard.manageUser);
 
-router.get('/getBlogs',dashboard.getBlog);
+router.get('/getBlogs', dashboard.getBlog);
 router.put('/blogStatus/:id', dashboard.updateBlogStatus);
-router.get('/blogs/:id', dashboard.getBlogById); 
+router.get('/blogs/:id', dashboard.getBlogById);
 router.put('/blogs/:id', dashboard.updateBlogContent);
+
+router.get('/timesheetCounts', dashboard.getCountsTimesheet);
+router.get('/timesheetDetails', dashboard.getTimesheetDetails);
+router.put('/paymentstatus/:timesheetId', dashboard.updatePaymentStatus);
+router.put('/adminapprovalstatus/:timesheetId', dashboard.updateAdminApprovalStatus);
+router.post('/addInvoice/:timesheetId', dashboard.addInvoice);
 
 
 

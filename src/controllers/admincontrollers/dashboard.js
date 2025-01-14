@@ -2187,6 +2187,310 @@ exports.updateBlogContent = async (req, res) => {
 
 
 
+exports.getCountsTimesheet = async (req, res) => {
+    try {
+      // Fetch the required counts
+      const [pendingPaymentsCount, pendingAdminApprovalCount, totalRecruitersCount, totalEmployersCount] = await Promise.all([
+        // Count of "PENDING" payment status
+        prisma.recruiterHiring.count({
+          where: {
+            paymentStatus: "PENDING",
+          },
+        }),
+        // Count of 'adminApprovalStatus' as "PENDING"
+        prisma.recruiterHiring.count({
+          where: {
+            adminApprovalStatus: "PENDING",
+          },
+        }),
+        // Count of distinct recruiters using findMany and Set
+        prisma.recruiterHiring.findMany({
+          where: {
+            recruiterId: {
+            },
+          },
+          select: {
+            recruiterId: true,
+          },
+        }).then((result) => new Set(result.map((r) => r.recruiterId)).size),
+        // Count of distinct employers using findMany and Set
+        prisma.recruiterHiring.findMany({
+          where: {
+            employerId: {
+            },
+          },
+          select: {
+            employerId: true,
+          },
+        }).then((result) => new Set(result.map((e) => e.employerId)).size),
+      ]);
+  
+      // If all counts are zero, return an empty list
+      if (
+        pendingPaymentsCount === 0 &&
+        pendingAdminApprovalCount === 0 &&
+        totalRecruitersCount === 0 &&
+        totalEmployersCount === 0
+      ) {
+        return res.status(200).json({
+          success: true,
+          counts: [],
+        });
+      }
+  
+      // Send the counts
+      res.status(200).json({
+        success: true,
+        counts: {
+          pendingPaymentsCount,
+          pendingAdminApprovalCount,
+          totalRecruitersCount,
+          totalEmployersCount,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching counts:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching the counts.",
+        error: error.message,
+      });
+    }
+  };
+
+
+
+  exports.getTimesheetDetails = async (req, res) => {
+    try {
+      // Extract query parameters from the request
+      const { companyName, startDate, endDate, page = 1, pageSize = 10 } = req.query;
+      console.log(companyName);
+  
+      // Construct the 'where' clause dynamically based on provided filters
+      const whereClause = {};
+  
+      // Add company name filter if provided
+      if (companyName) {
+        whereClause.recruiterHiring = {
+          employer: {
+            Profile: {
+              some: {  // Use 'some' to match any profile that contains the company name
+                companyName: {
+                  contains: companyName,
+                }
+              }
+            }
+          }
+        };
+      }
+  
+      // Add date filters if provided
+      if (startDate || endDate) {
+        whereClause.createdAt = {
+          ...(startDate && { gte: new Date(startDate) }),
+          ...(endDate && { lte: new Date(endDate) })
+        };
+      }
+  
+      // Query the timesheets with dynamic filtering, pagination, and sorting
+      const timesheets = await prisma.timeSheet.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          recruiterHiring: {
+            select: {
+              id: true,
+              recruiter: {
+                select: {
+                  Profile: {
+                    select: {
+                      fullname: true,
+                    },
+                  },
+                },
+              },
+              employer: {
+                select: {
+                  Profile: {
+                    select: {
+                      companyName: true,
+                    },
+                  },
+                },
+              },
+              adminApprovalStatus: true,
+              paymentStatus: true,
+            },
+          },
+          createdAt: true,
+          totalAmountDue: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+  
+      // Map the results to the desired format
+      const formattedTimesheets = timesheets.map((ts) => ({
+        timesheetNo: ts.id,
+        bookingID: ts.recruiterHiring?.id || null,
+        recruiterName: ts.recruiterHiring?.recruiter?.Profile[0]?.fullname || null,
+        employerCompanyName: ts.recruiterHiring?.employer?.Profile[0]?.companyName || null,
+        createdAt: ts.createdAt,
+        totalAmountDue: ts.totalAmountDue,
+        recruiterAmount: 300,
+        paymentStatus: ts.recruiterHiring?.paymentStatus || null,
+        adminApprovalStatus: ts.recruiterHiring?.adminApprovalStatus || null,
+      }));
+  
+      // Return the response with pagination details
+      res.status(200).json({
+        success: true,
+        timesheets: formattedTimesheets,
+        page,
+        pageSize,
+        totalTimesheets: await prisma.timeSheet.count({ where: whereClause }),
+      });
+    } catch (error) {
+      console.error("Error fetching timesheet details:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching the timesheet details.",
+        error: error.message,
+      });
+    }
+  };
+
+  exports.updatePaymentStatus = async (req, res) => {
+    const { timesheetId } = req.params;
+    const { paymentStatus } = req.body;
+  
+    if (!paymentStatus || !["PENDING", "COMPLETED", "FAILED", "REFUNDED", "CANCELLED", "PAID", "DECLINE"].includes(paymentStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment status.',
+      });
+    }
+  
+    try {
+      const updatedTimesheet = await prisma.timeSheet.update({
+        where: { id: parseInt(timesheetId) },
+        data: {
+          recruiterHiring: {
+            update: {
+              paymentStatus,  // Update paymentStatus in the related recruiterHiring model
+            },
+          },
+        },
+      });
+  
+      res.status(200).json({
+        success: true,
+        message: 'Payment status updated successfully.',
+        updatedTimesheet,
+      });
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while updating the payment status.',
+        error: error.message,
+      });
+    }
+  };
+  
+
+  exports.updateAdminApprovalStatus = async (req, res) => {
+    const { timesheetId } = req.params;
+    const { adminApprovalStatus } = req.body;
+  
+    if (!adminApprovalStatus || !["ACCEPTED", "APPROVED", "DECLINED", "DECLINE", "CANCELLED", "PENDING"].includes(adminApprovalStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid admin approval status.',
+      });
+    }
+  
+    try {
+      const updatedTimesheet = await prisma.timeSheet.update({
+        where: { id: parseInt(timesheetId) },
+        data: {
+          recruiterHiring: {
+            update: {
+              adminApprovalStatus,  // Update adminApprovalStatus in the related recruiterHiring model
+            },
+          },
+        },
+      });
+  
+      res.status(200).json({
+        success: true,
+        message: 'Admin approval status updated successfully.',
+        updatedTimesheet,
+      });
+    } catch (error) {
+      console.error("Error updating admin approval status:", error);
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while updating the admin approval status.',
+        error: error.message,
+      });
+    }
+  };
+  
+
+  exports.addInvoice = async (req, res) => {
+    const { timesheetId } = req.params;
+    const {invoice } = req.body;
+  
+    if (!invoice || typeof invoice !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invoice must be a valid string.',
+      });
+    }
+  
+    try {
+      const updatedTimesheet = await prisma.timeSheet.update({
+        where: { id: parseInt(timesheetId) },
+        data: {
+          recruiterHiring: {
+            update: {
+              invoice, // Update the invoice field in the related recruiterHiring model
+            },
+          },
+        },
+      });
+  
+      res.status(200).json({
+        success: true,
+        message: 'Invoice added successfully.',
+        updatedTimesheet,
+      });
+    } catch (error) {
+      console.error("Error adding invoice:", error);
+      res.status(500).json({
+        success: false,
+        message: 'An error occurred while adding the invoice.',
+        error: error.message,
+      });
+    }
+  };
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
 
 
 

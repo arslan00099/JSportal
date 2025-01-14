@@ -501,7 +501,6 @@ model RecruiterHiring {
   updatedAt               DateTime?         @updatedAt
   recruiterHiringId       Int?
   TimesheetReview         TimesheetReview[]
-
   @@map("RecruiterHiring")
 }
 
