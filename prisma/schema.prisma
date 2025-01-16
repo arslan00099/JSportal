@@ -33,6 +33,18 @@ enum JobStatus {
   DECLINE
 }
 
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  FREELANCE
+  INTERNSHIP
+  TEMPORARY
+  REMOTE
+  VOLUNTEER
+}
+
+
 enum SessionStatus {
   ACCEPTED
   DECLINED
@@ -108,7 +120,9 @@ enum JobAppliedStatus {
 
 enum ProfileStatus {
   VERIFIED
+  UNVERIFIED
   UNVARIFIED
+  PENDING
 }
 
 enum UserStatus {
@@ -125,6 +139,8 @@ enum SubscriptionType {
   LITE
   PRO
 }
+
+
 
 model User {
   id             Int            @id @default(autoincrement())
@@ -314,10 +330,10 @@ model JobPost {
   applicationLink String
   companyIcon     String?
   time            String?
-  jobType         String
+  jobType         JobType
   salary          String?
-  minPrice        String?
-  maxPrice        String?
+  minPrice        Int
+  maxPrice        Int
   userId          Int
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   status          JobStatus     @default(OPEN)
