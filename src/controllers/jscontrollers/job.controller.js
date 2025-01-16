@@ -1,6 +1,6 @@
 // src/controllers/user.controller.js
 const jobviewmodel = require("../../viewmodels/jsviewmodels/job.viewmodel");
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient,JobType } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
@@ -311,7 +311,6 @@ exports.getJobDetails = async (req, res) => {
         createdAt: true,
         description: true,
         location: true,
-        companyName: true,
         applicationLink: true,
         companyIcon: true,
         time: true,
@@ -344,13 +343,13 @@ exports.getJobDetails = async (req, res) => {
     const transformedJob = {
       jobId: job.id,
       title: job.jobTitle,
-      companyName: job.companyName,
+      companyName: job.user?.Profile?.companyName || null,
       companyIcon: generateAvatarUrl(job.user?.Profile?.avatarId) || null,
       jobType: job.jobType,
       minPrice: job.minPrice,
       maxPrice: job.maxPrice,
       description: job.description,
-      location: job.location,
+     // location: job.location,
       applicationLink: job.applicationLink,
       salary: job.salary,
       time: job.time,
@@ -406,6 +405,66 @@ exports.appliedjob = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.getJobType = async (req, res) => {
+  try {
+    const jobTypes = Object.values(JobType); // Get enum values as an array
+    return res.status(200).json({
+      message: "Job types fetched successfully",
+      data: jobTypes,
+    });
+  } catch (error) {
+    console.error("Error fetching job types:", error);
+    res.status(500).json({ error: "Failed to fetch job types" });
+  }
+};
+
+exports.getCities = async (req, res) => {
+  try {
+    const cities = await prisma.jobPost.findMany({
+      select: {
+        location: true, // Assuming 'location' stores city names
+      },
+      distinct: ["location"], // Fetch unique city names
+    });
+
+    // Extract unique city names into an array
+    const uniqueCities = cities.map((job) => job.location).filter(Boolean);
+
+    return res.status(200).json({
+      message: "Cities fetched successfully",
+      data: uniqueCities,
+    });
+  } catch (error) {
+    console.error("Error fetching cities:", error);
+    res.status(500).json({ error: "Failed to fetch cities" });
+  }
+};
+
+exports.getCompanyNames = async (req, res) => {
+  try {
+    const companies = await prisma.profile.findMany({
+      select: {
+        companyName: true,
+      },
+      distinct: ["companyName"], // Apply distinct to Profile model
+    });
+
+    // Extract unique company names and filter out null values
+    const uniqueCompanyNames = companies
+      .map((profile) => profile.companyName)
+      .filter(Boolean);
+
+    return res.status(200).json({
+      message: "Company names fetched successfully",
+      data: uniqueCompanyNames,
+    });
+  } catch (error) {
+    console.error("Error fetching company names:", error);
+    res.status(500).json({ error: "Failed to fetch company names" });
+  }
+};
+
 
 
 
