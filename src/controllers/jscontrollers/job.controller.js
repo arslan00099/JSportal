@@ -1,6 +1,6 @@
 // src/controllers/user.controller.js
 const jobviewmodel = require("../../viewmodels/jsviewmodels/job.viewmodel");
-const { PrismaClient,JobType } = require('@prisma/client');
+const { PrismaClient, JobType } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
@@ -139,7 +139,7 @@ exports.getJobl = async (req, res) => {
     const jobs = await prisma.jobPost.findMany({
       where: whereClause,
       select: {
-        id:true,
+        id: true,
         jobTitle: true,
         jobType: true,
         minPrice: true,
@@ -165,7 +165,7 @@ exports.getJobl = async (req, res) => {
 
     // Map over the fetched jobs to transform the data structure as required
     const transformedJobs = jobs.map((job) => ({
-      jobId:job.id,
+      jobId: job.id,
       companyName: job.user?.Profile?.companyName || null, // Ensure compatibility with array structure
       companyIcon: generateAvatarUrl(job.user?.Profile?.avatarId) || null,
       title: job.jobTitle,
@@ -174,7 +174,7 @@ exports.getJobl = async (req, res) => {
       maxPrice: job.maxPrice,
       createdAt: job.createdAt,
       city: job.user?.Location?.city || null,
-    
+
     }));
 
     // Return the transformed jobs in the response
@@ -230,6 +230,7 @@ exports.getJob = async (req, res) => {
       select: {
         id: true,
         jobTitle: true,
+        description: true,
         jobType: true,
         minPrice: true,
         maxPrice: true,
@@ -272,6 +273,7 @@ exports.getJob = async (req, res) => {
       companyIcon: generateAvatarUrl(job.user?.Profile?.avatarId) || null,
       title: job.jobTitle,
       jobType: job.jobType,
+      description: job.description,
       minPrice: job.minPrice,
       maxPrice: job.maxPrice,
       createdAt: job.createdAt,
@@ -349,7 +351,7 @@ exports.getJobDetails = async (req, res) => {
       minPrice: job.minPrice,
       maxPrice: job.maxPrice,
       description: job.description,
-     // location: job.location,
+      // location: job.location,
       applicationLink: job.applicationLink,
       salary: job.salary,
       time: job.time,
@@ -368,7 +370,7 @@ exports.getJobDetails = async (req, res) => {
   }
 };
 
-exports.saveJobpost= async (req, res) => {
+exports.saveJobpost = async (req, res) => {
   try {
     const { jobId } = req.body;
     const { userId } = req.user;
