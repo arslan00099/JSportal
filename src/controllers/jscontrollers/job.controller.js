@@ -266,19 +266,27 @@ exports.getJobDetails = async (req, res) => {
     }
 
     let jobApply = false;
+    let appliedDate = null;
     let saveJob = false;
 
     if (userId) {
       const parsedUserId = parseInt(userId);
 
-      // Check if the user has applied for the job
+      // Check if the user has applied for the job and fetch appliedDate
       const appliedJob = await prisma.jobApplied.findFirst({
         where: {
           userId: parsedUserId,
           jobId: parseInt(id),
         },
+        select: {
+          appliedDate: true, // Fetch appliedDate
+        },
       });
-      jobApply = !!appliedJob;
+
+      if (appliedJob) {
+        jobApply = true;
+        appliedDate = appliedJob.appliedDate; // Store appliedDate
+      }
 
       // Check if the user has saved the job
       const savedJob = await prisma.saveJobpost.findFirst({
@@ -306,6 +314,7 @@ exports.getJobDetails = async (req, res) => {
       city: job.user?.Location?.city || null,
       createdAt: job.createdAt,
       jobApply,
+      appliedDate, // Include appliedDate in the response
       saveJob,
     };
 
@@ -321,10 +330,12 @@ exports.getJobDetails = async (req, res) => {
 };
 
 
+
 exports.saveJobpost = async (req, res) => {
   try {
     const { jobId } = req.body;
     const { userId } = req.user;
+    //const  userId= 11;
 
     if (!jobId) {
       return res.status(400).json({ success: false, message: "Job ID is required" });
@@ -413,8 +424,8 @@ exports.saveJobpost = async (req, res) => {
 exports.appliedjob = async (req, res) => {
   try {
     const { jobId } = req.body;
-    const { userId } = req.user;
-
+    // const { userId } = req.user;
+    const userId = 11;
     if (!jobId) {
       return res.status(400).json({ success: false, message: "Job ID is required" });
     }
