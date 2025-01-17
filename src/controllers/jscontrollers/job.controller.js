@@ -188,6 +188,112 @@ exports.getJobl = async (req, res) => {
   }
 };
 
+// exports.getJoboo = async (req, res) => {
+//   try {
+//     const { jobTitle, city, jobType, pay, companyName, startDate, endDate, userId } = req.query;
+
+//     console.log(jobTitle, city, jobType, pay, companyName, startDate, endDate, userId);
+
+//     const parsedPay = pay ? parseInt(pay) : undefined;
+//     const parsedStartDate = startDate ? new Date(startDate) : undefined;
+//     const parsedEndDate = endDate ? new Date(endDate) : undefined;
+
+//     // Building the where clause dynamically
+//     const whereClause = {
+//       jobTitle: jobTitle ? { contains: jobTitle } : undefined,
+//       jobType: jobType || undefined,
+//       user: {
+//         Location: city ? { some: { city: { contains: city } } } : undefined,
+//         Profile: companyName ? { some: { companyName: { contains: companyName } } } : undefined,
+//       },
+//       AND: [],
+//     };
+
+//     if (parsedPay) {
+//       whereClause.AND.push(
+//         { minPrice: { lte: parsedPay } },
+//         { maxPrice: { gte: parsedPay } }
+//       );
+//     }
+
+//     if (parsedStartDate) {
+//       whereClause.AND.push({ createdAt: { gte: parsedStartDate } });
+//     }
+
+//     if (parsedEndDate) {
+//       whereClause.AND.push({ createdAt: { lte: parsedEndDate } });
+//     }
+
+//     // Fetch jobs
+//     const jobs = await prisma.jobPost.findMany({
+//       where: whereClause,
+//       select: {
+//         id: true,
+//         jobTitle: true,
+//         description: true,
+//         jobType: true,
+//         minPrice: true,
+//         maxPrice: true,
+//         createdAt: true,
+//         user: {
+//           select: {
+//             Profile: { select: { companyName: true, avatarId: true } },
+//             Location: { select: { city: true } },
+//           },
+//         },
+//       },
+//     });
+
+//     let savedJobIds = new Set();
+//     let appliedJobIds = new Set();
+
+//     if (userId) {
+//       const parsedUserId = parseInt(userId);
+
+//       // Fetch saved jobs
+//       const savedJobs = await prisma.saveJobpost.findMany({
+//         where: { userId: parsedUserId },
+//         select: { jobId: true },
+//       });
+
+//       // Fetch applied jobs
+//       const appliedJobs = await prisma.jobApplied.findMany({
+//         where: { userId: parsedUserId },
+//         select: { jobId: true },
+//       });
+
+//       savedJobIds = new Set(savedJobs.map((job) => job.jobId));
+//       appliedJobIds = new Set(appliedJobs.map((job) => job.jobId));
+//     }
+
+//     // Transform job data
+//     const transformedJobs = jobs.map((job) => ({
+//       jobId: job.id,
+//       companyName: job.user?.Profile?.companyName || null,
+//       companyIcon: generateAvatarUrl(job.user?.Profile?.avatarId) || null,
+//       title: job.jobTitle,
+//       jobType: job.jobType,
+//       description: job.description,
+//       minPrice: job.minPrice,
+//       maxPrice: job.maxPrice,
+//       createdAt: job.createdAt,
+//       city: job.user?.Location?.city || null,
+//       savedjob: savedJobIds.has(job.id), // Returns true if job is saved
+//       appliedjob: appliedJobIds.has(job.id), // Returns true if job is applied
+//     }));
+
+//     return res.status(200).json({
+//       message: "Successfully fetched job posts with company details.",
+//       jobs: transformedJobs,
+//       savedjob:
+//         appliedjobs:
+//     });
+//   } catch (error) {
+//     console.error("Error fetching jobs:", error);
+//     res.status(500).json({ error: "Failed to fetch jobs" });
+//   }
+// };
+
 exports.getJob = async (req, res) => {
   try {
     const { jobTitle, city, jobType, pay, companyName, startDate, endDate, userId } = req.query;
@@ -224,7 +330,7 @@ exports.getJob = async (req, res) => {
       whereClause.AND.push({ createdAt: { lte: parsedEndDate } });
     }
 
-    // Fetch jobs
+    // Fetch all jobs
     const jobs = await prisma.jobPost.findMany({
       where: whereClause,
       select: {
@@ -244,26 +350,29 @@ exports.getJob = async (req, res) => {
       },
     });
 
-    let savedJobIds = new Set();
-    let appliedJobIds = new Set();
+    let savedJobs = [];
+    let appliedJobs = [];
 
     if (userId) {
       const parsedUserId = parseInt(userId);
 
       // Fetch saved jobs
-      const savedJobs = await prisma.saveJobpost.findMany({
+      const savedJobRecords = await prisma.saveJobpost.findMany({
         where: { userId: parsedUserId },
         select: { jobId: true },
       });
 
       // Fetch applied jobs
-      const appliedJobs = await prisma.jobApplied.findMany({
+      const appliedJobRecords = await prisma.jobApplied.findMany({
         where: { userId: parsedUserId },
         select: { jobId: true },
       });
 
-      savedJobIds = new Set(savedJobs.map((job) => job.jobId));
-      appliedJobIds = new Set(appliedJobs.map((job) => job.jobId));
+      const savedJobIds = new Set(savedJobRecords.map((job) => job.jobId));
+      const appliedJobIds = new Set(appliedJobRecords.map((job) => job.jobId));
+
+      savedJobs = jobs.filter((job) => savedJobIds.has(job.id));
+      appliedJobs = jobs.filter((job) => appliedJobIds.has(job.id));
     }
 
     // Transform job data
@@ -278,19 +387,46 @@ exports.getJob = async (req, res) => {
       maxPrice: job.maxPrice,
       createdAt: job.createdAt,
       city: job.user?.Location?.city || null,
-      savedjob: savedJobIds.has(job.id), // Returns true if job is saved
-      appliedjob: appliedJobIds.has(job.id), // Returns true if job is applied
+    }));
+
+    const transformedSavedJobs = savedJobs.map((job) => ({
+      jobId: job.id,
+      companyName: job.user?.Profile?.companyName || null,
+      companyIcon: generateAvatarUrl(job.user?.Profile?.avatarId) || null,
+      title: job.jobTitle,
+      jobType: job.jobType,
+      description: job.description,
+      minPrice: job.minPrice,
+      maxPrice: job.maxPrice,
+      createdAt: job.createdAt,
+      city: job.user?.Location?.city || null,
+    }));
+
+    const transformedAppliedJobs = appliedJobs.map((job) => ({
+      jobId: job.id,
+      companyName: job.user?.Profile?.companyName || null,
+      companyIcon: generateAvatarUrl(job.user?.Profile?.avatarId) || null,
+      title: job.jobTitle,
+      jobType: job.jobType,
+      description: job.description,
+      minPrice: job.minPrice,
+      maxPrice: job.maxPrice,
+      createdAt: job.createdAt,
+      city: job.user?.Location?.city || null,
     }));
 
     return res.status(200).json({
       message: "Successfully fetched job posts with company details.",
-      data: transformedJobs,
+      jobs: transformedJobs,
+      savedJobs: transformedSavedJobs,
+      appliedJobs: transformedAppliedJobs,
     });
   } catch (error) {
     console.error("Error fetching jobs:", error);
     res.status(500).json({ error: "Failed to fetch jobs" });
   }
 };
+
 
 
 
