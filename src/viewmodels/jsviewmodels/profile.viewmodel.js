@@ -13,7 +13,7 @@ class UserProfileViewModel {
 
     let updateData = {
       fullname,
-      phnumber,
+      phnumber:String(phnumber),
     };
 
     // Only add avatarId to updateData if a new file is uploaded
@@ -34,7 +34,7 @@ class UserProfileViewModel {
         data: {
           userId,
           fullname,
-          phnumber,
+          phnumber:String(phnumber),
           avatarId, // Save avatarId when creating a new profile
         },
       });

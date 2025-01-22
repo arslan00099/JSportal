@@ -23,7 +23,7 @@ class UserProfileViewModel {
 
     let updateData = {
       fullname,
-      phnumber,
+      phnumber: String(phnumber),
       location,
       companyName,
       about,
@@ -49,7 +49,7 @@ class UserProfileViewModel {
         data: {
           userId,
           fullname,
-          phnumber,
+          phnumber: String(phnumber),
           avatarId,
           location,
           companyName,

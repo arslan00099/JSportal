@@ -64,6 +64,7 @@ router.post('/documents', middleware, cvupload.fields([
   { name: 'portfolio', maxCount: 1 }
 ]), userController.uploadDocuments);
 
+
 router.post('/postBlog',middleware,blogcontroller.createBlog);
 router.get('/getBlog',blogcontroller.getBlogs);
 router.get('/getBlogDetials/:id',blogcontroller.getBlogDetails);

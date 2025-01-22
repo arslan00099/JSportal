@@ -44,7 +44,6 @@ enum JobType {
   VOLUNTEER
 }
 
-
 enum SessionStatus {
   ACCEPTED
   DECLINED
@@ -139,8 +138,6 @@ enum SubscriptionType {
   LITE
   PRO
 }
-
-
 
 model User {
   id             Int            @id @default(autoincrement())
@@ -312,8 +309,8 @@ model Location {
 
 model Documents {
   id             Int     @id @default(autoincrement())
-  resumeLink     String
-  portfolioLink  String
+  resumeLink     String?
+  portfolioLink  String?
   websiteLink    String?
   additionalLink String?
   userId         Int     @unique

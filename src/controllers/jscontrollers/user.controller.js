@@ -25,16 +25,14 @@ exports.postProfile = async (req, res) => {
 
 exports.uploadDocuments = async (req, res) => {
   try {
-    if (!req.files || !req.files.resume || !req.files.portfolio) {
-      return res.status(400).json({ error: 'Please upload both resume and portfolio files.' });
-    }
 
     const { websiteLink, additionalLink } = req.body;
     const { userId } = req.user;
 
     // Extract file paths for resume and portfolio
-    const resumePath = req.files.resume[0].filename;
-    const portfolioPath = req.files.portfolio[0].filename;
+    const resumePath = req.files?.resume?.[0]?.filename || null;
+    const portfolioPath = req.files?.portfolio?.[0]?.filename || null;
+
     const result = await userViewModel.InsertDocuments(userId, resumePath, portfolioPath, websiteLink, additionalLink);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
@@ -409,9 +407,9 @@ const createNotification = async (userId, title, message, mentorId = null, mento
       data: {
         title,
         message,
-        userId,    
-        mentorId,  
-        mentorSessionManagmentId, 
+        userId,
+        mentorId,
+        mentorSessionManagmentId,
       },
     });
 

@@ -25,7 +25,7 @@ exports.postProfile = async (req, res) => {
     // Data to update or create
     let updateData = {
       fullname,
-      phnumber: phoneNumber,
+      phnumber: String(phoneNumber),
       about,
       language,
       services,
@@ -50,7 +50,7 @@ exports.postProfile = async (req, res) => {
         data: {
           userId,
           fullname,
-          phnumber: phoneNumber,
+          phnumber: String(phoneNumber),
           about,
           language,
           services,
@@ -615,19 +615,14 @@ exports.getLocations = async (req, res) => {
 
 exports.uploadDocuments = async (req, res) => {
   try {
-    // Check if both resume and portfolio files are uploaded
-    if (!req.files || !req.files.resume || !req.files.portfolio) {
-      return res
-        .status(400)
-        .json({ error: "Please upload both resume and portfolio files." });
-    }
+
 
     const { websiteLink, additionalLink } = req.body;
     const { userId } = req.user;
 
     // Extract file paths for resume and portfolio
-    const resumePath = req.files.resume[0].filename;
-    const portfolioPath = req.files.portfolio[0].filename;
+    const resumePath = req.files?.resume?.[0]?.filename || null;
+    const portfolioPath = req.files?.portfolio?.[0]?.filename || null;
 
     // Check if a document record already exists for this user
     const existingDocument = await prisma.documents.findFirst({
