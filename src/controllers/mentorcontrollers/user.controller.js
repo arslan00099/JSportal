@@ -44,24 +44,25 @@ exports.postProfile = async (req, res) => {
 
 exports.uploadDocuments = async (req, res) => {
   try {
-
-
     const { websiteLink, additionalLink } = req.body;
     const { userId } = req.user;
 
-    // Extract file paths for resume and portfolio
+    // Extract file paths for resume and portfolio (both are optional)
     const resumePath = req.files?.resume?.[0]?.filename || null;
     const portfolioPath = req.files?.portfolio?.[0]?.filename || null;
+
+    // Call the InsertDocuments function with all optional fields
     const result = await userViewModel.InsertDocuments(
       userId,
       resumePath,
       portfolioPath,
-      websiteLink,
-      additionalLink
+      websiteLink || null, // Ensure null if missing
+      additionalLink || null // Ensure null if missing
     );
+
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(400).json({ sucess: false, message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 

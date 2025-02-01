@@ -615,12 +615,10 @@ exports.getLocations = async (req, res) => {
 
 exports.uploadDocuments = async (req, res) => {
   try {
-
-
     const { websiteLink, additionalLink } = req.body;
     const { userId } = req.user;
 
-    // Extract file paths for resume and portfolio
+    // Extract file paths for resume and portfolio (both are optional)
     const resumePath = req.files?.resume?.[0]?.filename || null;
     const portfolioPath = req.files?.portfolio?.[0]?.filename || null;
 
@@ -632,27 +630,27 @@ exports.uploadDocuments = async (req, res) => {
     let result;
 
     if (existingDocument) {
-      console.log("data updated");
+      console.log('data updated');
       // Update the existing document
       result = await prisma.documents.update({
         where: { id: existingDocument.id }, // Use the unique 'id' field to update
         data: {
-          resumeLink: resumePath,
-          portfolioLink: portfolioPath,
+          resumeLink: resumePath || existingDocument.resumeLink, // Optional update
+          portfolioLink: portfolioPath || existingDocument.portfolioLink, // Optional update
           websiteLink: websiteLink || existingDocument.websiteLink, // Optional update
           additionalLink: additionalLink || existingDocument.additionalLink, // Optional update
         },
       });
     } else {
-      console.log("data inserted");
+      console.log('data inserted');
       // Create a new document record
       result = await prisma.documents.create({
         data: {
           userId,
-          resumeLink: resumePath,
-          portfolioLink: portfolioPath,
-          websiteLink, // Nullable, can be undefined
-          additionalLink, // Nullable, can be undefined
+          resumeLink: resumePath, // Nullable, can be null
+          portfolioLink: portfolioPath, // Nullable, can be null
+          websiteLink: websiteLink || null, // Nullable, can be null
+          additionalLink: additionalLink || null, // Nullable, can be null
         },
       });
     }
@@ -660,7 +658,7 @@ exports.uploadDocuments = async (req, res) => {
     // Respond with the result
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.error("Error during document upload:", error.message); // Improved logging
+    console.error('Error during document upload:', error.message); // Improved logging
     res.status(400).json({ success: false, message: error.message });
   }
 };

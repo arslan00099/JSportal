@@ -428,36 +428,34 @@ class UserProfileViewModel {
       });
 
       if (existingDocument) {
-        console.log("data updated");
+        console.log('data updated');
         // Update the existing document
         const updatedDocument = await prisma.documents.update({
           where: { id: existingDocument.id }, // Use the unique 'id' field to update
           data: {
-            resumeLink: resumePath,
-            portfolioLink: portfolioPath,
+            resumeLink: resumePath || existingDocument.resumeLink, // Optional update
+            portfolioLink: portfolioPath || existingDocument.portfolioLink, // Optional update
             websiteLink: websiteLink || existingDocument.websiteLink, // Optional update
-            additionalLink: additionalLink || existingDocument.additionLink, // Optional update
+            additionalLink: additionalLink || existingDocument.additionalLink, // Optional update
           },
         });
         return updatedDocument;
       } else {
-        console.log("data inserted");
+        console.log('data inserted');
         // Create a new document record
         const newDocument = await prisma.documents.create({
           data: {
             userId,
-            resumeLink: resumePath,
-            portfolioLink: portfolioPath,
-            websiteLink, // Nullable, can be undefined
-            additionalLink, // Nullable, can be undefined
+            resumeLink: resumePath, // Nullable, can be null
+            portfolioLink: portfolioPath, // Nullable, can be null
+            websiteLink: websiteLink || null, // Nullable, can be null
+            additionalLink: additionalLink || null, // Nullable, can be null
           },
         });
         return newDocument;
       }
     } catch (error) {
-      throw new Error(
-        "Error inserting or updating documents: " + error.message
-      );
+      throw new Error('Error inserting or updating documents: ' + error.message);
     }
   }
 
