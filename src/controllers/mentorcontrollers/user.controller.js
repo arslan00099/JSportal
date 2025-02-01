@@ -90,6 +90,8 @@ exports.getProfile = async (req, res) => {
       )}/utils/video/${userProfile.mentorvideolink}`;
     }
 
+    console.log(userProfile);
+
     res.status(200).json({
       success: true,
       data: userProfile,
