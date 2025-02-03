@@ -150,6 +150,7 @@ class UserProfileViewModel {
             profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
           }
           if (profile.mentorvideolink) {
+            profile.mentorvideolink = `/utils/video/${profile.mentorvideolink}`;
             profile.mentorvideolink = `${videoBaseUrl}/${profile.mentorvideolink}`;
           }
         });

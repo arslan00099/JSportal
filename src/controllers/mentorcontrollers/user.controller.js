@@ -84,7 +84,7 @@ exports.getProfile = async (req, res) => {
         "host"
       )}/utils/profilephotos/${userProfile.avatarId}`;
     }
-    if (userProfile.mentorvideolink) {
+    if (userProfile.mentorvideolink) {mentorvideolink
       userProfile.profileVideoUrl = `${req.protocol}://${req.get(
         "host"
       )}/utils/video/${userProfile.mentorvideolink}`;
