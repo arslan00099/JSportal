@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { generateAvatarUrl, generateVideoUrl } = require('../../url');
 
 class SettingJSViewmodel {
 
@@ -34,9 +35,7 @@ class SettingJSViewmodel {
         }
       });
 
-      // Base URLs for avatar and resume
-      const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos";
-      const videoBaseUrl = "http://54.144.76.160:5000/utils/video";
+
 
       // Iterate over mentors and construct full URLs
       mentors.forEach(mentor => {
@@ -44,11 +43,11 @@ class SettingJSViewmodel {
           const profile = mentor.Profile[0]; // Assuming only one profile per user
 
           if (profile.avatarId) {
-            profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
+            profile.avatarUrl = generateAvatarUrl(profile.avatarId);
           }
 
           if (profile.mentorvideolink) {
-            profile.mentorvideolink = `${videoBaseUrl}/${profile.mentorvideolink}`;
+            profile.mentorvideolink = generateVideoUrl(profile.mentorvideolink);
           }
         }
       });
