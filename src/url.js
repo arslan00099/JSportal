@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const generateAvatarUrl = (avatarId) => {
     const baseUrl = process.env.BASE_URL || "http://localhost:9000"; // Fallback to localhost if BASE_URL is not set
 

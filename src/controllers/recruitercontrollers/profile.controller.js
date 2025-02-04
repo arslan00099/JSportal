@@ -1,8 +1,10 @@
 // src/controllers/user.controller.js
 //const userViewModel = require('../../viewmodels/mentorviewmodels/profile.viewmodel');
+const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 const userViewModel = require("../../viewmodels/mentorviewmodels/profile.viewmodel");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+
 
 exports.postProfile = async (req, res) => {
   try {
@@ -62,7 +64,9 @@ exports.postProfile = async (req, res) => {
 
     // If the avatarId exists in the profile, append the base URL to it
     if (userProfile.avatarId) {
-      userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
+      console.log("test");
+      userProfile.avatarId=generateAvatarUrl(userProfile.avatarId);
+      //userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
     }
 
     // Remove fields with null or undefined values
@@ -105,16 +109,16 @@ exports.getProfile = async (req, res) => {
     // Base URLs for avatar and documents
     const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
     const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume"; // Replace with your actual URL
-    const videoBaseUrl = "http://54.144.76.160:5000/utils/video";
+    const videoBaseUrl = "http://54.144.76.160:55000/utils/video";
 
     // Add full URL for avatar in Profile (check if Profile exists first)
     if (userDetails.Profile && userDetails.Profile.length > 0) {
       userDetails.Profile.forEach((profile) => {
         if (profile.avatarId) {
-          profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
+          profile.avatarUrl = generateAvatarUrl(profile.avatarId);
         }
         if (profile.mentorvideolink) {
-          profile.mentorvideolink = `${videoBaseUrl}/${profile.mentorvideolink}`;
+          profile.mentorvideolink = generateVideoUrl( profile.mentorvideolink);
         }
       });
     }
@@ -123,10 +127,10 @@ exports.getProfile = async (req, res) => {
     if (userDetails.Documents && userDetails.Documents.length > 0) {
       userDetails.Documents.forEach((document) => {
         if (document.resumeLink) {
-          document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
+          document.resumeUrl =  generateResumeUrl( document.resumeLink);
         }
         if (document.portfolioLink) {
-          document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
+          document.portfolioUrl = generateResumeUrl(document.portfolioLink);
         }
       });
     }

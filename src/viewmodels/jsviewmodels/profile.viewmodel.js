@@ -13,7 +13,7 @@ class UserProfileViewModel {
 
     let updateData = {
       fullname,
-      phnumber:String(phnumber),
+      phnumber: String(phnumber),
     };
 
     // Only add avatarId to updateData if a new file is uploaded
@@ -34,7 +34,7 @@ class UserProfileViewModel {
         data: {
           userId,
           fullname,
-          phnumber:String(phnumber),
+          phnumber: String(phnumber),
           avatarId, // Save avatarId when creating a new profile
         },
       });
@@ -80,22 +80,31 @@ class UserProfileViewModel {
       const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume"; // Replace with your actual URL
 
       // Add full URL for avatar
-      userDetails.Profile.forEach((profile) => {
-        if (profile.avatarId) {
-          profile.avatarId = `/utils/profilephotos/${profile.avatarId}`;
-          profile.avatarUrl = `${avatarBaseUrl}/${profile.avatarId}`;
-        }
-      });
+      if (userDetails.Profile && userDetails.Profile.length > 0) {
+        userDetails.Profile.forEach((profile) => {
+          if (profile.avatarId) {
+            profile.avatarId = `/utils/profilephotos/${profile.avatarId}`;
+          }
+          if (profile.mentorvideolink) {
+            profile.mentorvideolink = `/utils/video/${profile.mentorvideolink}`;
 
-      // Add full URL for resume and portfolio documents
-      userDetails.Documents.forEach((document) => {
-        if (document.resumeLink) {
-          document.resumeUrl = `${resumeBaseUrl}/${document.resumeLink}`;
-        }
-        if (document.portfolioLink) {
-          document.portfolioUrl = `${resumeBaseUrl}/${document.portfolioLink}`;
-        }
-      });
+          }
+        });
+      }
+
+      // Add full URL for resume and portfolio documents (check if Documents exist first)
+      if (userDetails.Documents && userDetails.Documents.length > 0) {
+        userDetails.Documents.forEach((document) => {
+          if (document.resumeLink) {
+            document.resumeUrl = `/utils/resume/${document.resumeLink}`;
+
+          }
+          if (document.portfolioLink) {
+            document.portfolioUrl = `/utils/resume/${document.portfolioLink}`;
+
+          }
+        });
+      }
 
       // Remove password field
       delete userDetails.password;
