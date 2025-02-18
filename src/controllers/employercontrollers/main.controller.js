@@ -2,6 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const crypto = require("crypto");
 const bcrypt = require('bcryptjs');
+const multer = require("multer");
+const upload = multer(); 
 const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
 exports.updateProfile = async (req, res) => {
@@ -150,13 +152,23 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-exports.updatePoinofContact = async (req, res) => {
-  const { name, jobRole, phnumber, email, contactNumber } = req.body;
 
+exports.updatePoinofContact = async (req, res) => {
   try {
+    // Parse form-data correctly
+    const { name, jobRole, phnumber, email, contactNumber } = req.body;
+
+    console.log("Received Data:", req.body); // Debugging line
+
     const userId = Number(req.user.userId);
 
-    // Fetch existing user with PointOfContact details
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Name is required to create a new point of contact",
+      });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { EmployerPointOfContact: true },
@@ -166,33 +178,31 @@ exports.updatePoinofContact = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Prepare point of contact data
-    const pointOfContactData = {};
-    if (name) pointOfContactData.name = name;
+    const pointOfContactData = { name }; // Ensure name is always present
     if (jobRole) pointOfContactData.jobRole = jobRole;
     if (phnumber) pointOfContactData.phnumber = phnumber;
     if (email) pointOfContactData.email = email;
     if (contactNumber) pointOfContactData.contactNumber = contactNumber;
 
-    // Check if there is an existing point of contact
-    const pointOfContactId = user.EmployerPointOfContact ? user.EmployerPointOfContact.id : null;
+    const pointOfContactId = user.EmployerPointOfContact
+      ? user.EmployerPointOfContact.id
+      : null;
 
-    // Update or create PointOfContact
     const updatedPointOfContact = pointOfContactId
       ? await prisma.employerPointOfContact.update({
-        where: { id: pointOfContactId },
-        data: pointOfContactData,
-      })
+          where: { id: pointOfContactId },
+          data: pointOfContactData,
+        })
       : await prisma.employerPointOfContact.create({
-        data: {
-          userId,
-          ...pointOfContactData,
-        },
-      });
+          data: {
+            userId,
+            ...pointOfContactData,
+          },
+        });
 
     res.status(200).json({ success: true, data: updatedPointOfContact });
   } catch (error) {
-    console.error(error);
+    console.error("Error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update point of contact",
@@ -200,6 +210,7 @@ exports.updatePoinofContact = async (req, res) => {
     });
   }
 };
+
 
 exports.getJobs = async (req, res) => {
   try {

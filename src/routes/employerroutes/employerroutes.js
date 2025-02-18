@@ -80,7 +80,8 @@ router.post("/activecard",main.updateActiveCard);
 router.get("/staffmemberDetails/:userId",main.getStafmemberDetails)
 
 //Update point of contact
-router.put("/pointofcontact",middleware,main.updatePoinofContact)
+
+router.put("/pointofcontact",middleware, upload.none(), main.updatePoinofContact);
 
 
 module.exports = router;
