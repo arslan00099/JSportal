@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 const crypto = require("crypto");
 const bcrypt = require('bcryptjs');
 const multer = require("multer");
-const upload = multer(); 
+const upload = multer();
 const { generateAvatarUrl, generateResumeUrl, generateVideoUrl } = require("../../url");
 
 exports.updateProfile = async (req, res) => {
@@ -132,7 +132,7 @@ exports.getProfile = async (req, res) => {
   try {
     const userProfile = await prisma.user.findUnique({
       where: { id: Number(req.user.userId) },
-      include: { Profile: true, Location: true },
+      include: { Profile: true, Location: true, EmployerPointOfContact: true },
     });
 
     if (!userProfile) {
@@ -190,15 +190,15 @@ exports.updatePoinofContact = async (req, res) => {
 
     const updatedPointOfContact = pointOfContactId
       ? await prisma.employerPointOfContact.update({
-          where: { id: pointOfContactId },
-          data: pointOfContactData,
-        })
+        where: { id: pointOfContactId },
+        data: pointOfContactData,
+      })
       : await prisma.employerPointOfContact.create({
-          data: {
-            userId,
-            ...pointOfContactData,
-          },
-        });
+        data: {
+          userId,
+          ...pointOfContactData,
+        },
+      });
 
     res.status(200).json({ success: true, data: updatedPointOfContact });
   } catch (error) {
