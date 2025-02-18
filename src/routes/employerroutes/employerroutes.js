@@ -79,5 +79,8 @@ router.post("/transferaccount",main.transferEmployerAccount);
 router.post("/activecard",main.updateActiveCard);
 router.get("/staffmemberDetails/:userId",main.getStafmemberDetails)
 
+//Update point of contact
+router.put("/pointofcontact",middleware,main.updatePoinofContact)
+
 
 module.exports = router;

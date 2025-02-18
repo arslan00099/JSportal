@@ -150,6 +150,57 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+exports.updatePoinofContact = async (req, res) => {
+  const { name, jobRole, phnumber, email, contactNumber } = req.body;
+
+  try {
+    const userId = Number(req.user.userId);
+
+    // Fetch existing user with PointOfContact details
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { EmployerPointOfContact: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Prepare point of contact data
+    const pointOfContactData = {};
+    if (name) pointOfContactData.name = name;
+    if (jobRole) pointOfContactData.jobRole = jobRole;
+    if (phnumber) pointOfContactData.phnumber = phnumber;
+    if (email) pointOfContactData.email = email;
+    if (contactNumber) pointOfContactData.contactNumber = contactNumber;
+
+    // Check if there is an existing point of contact
+    const pointOfContactId = user.EmployerPointOfContact ? user.EmployerPointOfContact.id : null;
+
+    // Update or create PointOfContact
+    const updatedPointOfContact = pointOfContactId
+      ? await prisma.employerPointOfContact.update({
+        where: { id: pointOfContactId },
+        data: pointOfContactData,
+      })
+      : await prisma.employerPointOfContact.create({
+        data: {
+          userId,
+          ...pointOfContactData,
+        },
+      });
+
+    res.status(200).json({ success: true, data: updatedPointOfContact });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update point of contact",
+      error: error.message,
+    });
+  }
+};
+
 exports.getJobs = async (req, res) => {
   try {
     const userId = req.user.userId; // Get user ID from authenticated user
