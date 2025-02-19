@@ -53,7 +53,7 @@ class SettingJSViewmodel {
 
   async getMentorById(userId) {
     try {
-      const mentor = await prisma.user.findUnique({
+      const mentor = await prisma.user.findFirst({
         where: { id: userId, role: 'MENTOR' },
         select: {
           id: true,
