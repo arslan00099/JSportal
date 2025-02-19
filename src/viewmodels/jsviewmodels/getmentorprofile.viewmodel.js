@@ -7,9 +7,7 @@ class SettingJSViewmodel {
   async getAllMentors() {
     try {
       const mentors = await prisma.user.findMany({
-        where: {
-          role: 'MENTOR' // Fetch only users with the role 'MENTOR'
-        },
+        where: { role: 'MENTOR' },
         select: {
           id: true,
           Profile: {
@@ -35,19 +33,14 @@ class SettingJSViewmodel {
         }
       });
 
-
-
-      // Iterate over mentors and construct full URLs
+      // Process mentor profiles
       mentors.forEach(mentor => {
-        if (mentor.Profile && mentor.Profile.length > 0) {
-          const profile = mentor.Profile[0]; // Assuming only one profile per user
-
-          if (profile.avatarId) {
-            profile.avatarUrl = generateAvatarUrl(profile.avatarId);
+        if (mentor.Profile) {
+          if (mentor.Profile.avatarId) {
+            mentor.Profile.avatarUrl = generateAvatarUrl(mentor.Profile.avatarId);
           }
-
-          if (profile.mentorvideolink) {
-            profile.mentorvideolink = generateVideoUrl(profile.mentorvideolink);
+          if (mentor.Profile.mentorvideolink) {
+            mentor.Profile.mentorvideolink = generateVideoUrl(mentor.Profile.mentorvideolink);
           }
         }
       });
@@ -55,6 +48,55 @@ class SettingJSViewmodel {
       return mentors;
     } catch (error) {
       throw new Error('Error fetching mentors: ' + error.message);
+    }
+  }
+
+  async getMentorById(userId) {
+    try {
+      const mentor = await prisma.user.findUnique({
+        where: { id: userId, role: 'MENTOR' },
+        select: {
+          id: true,
+          Profile: {
+            select: {
+              avatarId: true,
+              fullname: true,
+              tagline: true,
+              location: true,
+              about: true,
+              language: true,
+              mentorvideolink: true,
+            }
+          },
+          services: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              pricing: true
+            }
+          },
+          Certificate: true
+        }
+      });
+
+      if (!mentor) {
+        throw new Error('Mentor not found');
+      }
+
+      // Process mentor profile
+      if (mentor.Profile) {
+        if (mentor.Profile.avatarId) {
+          mentor.Profile.avatarUrl = generateAvatarUrl(mentor.Profile.avatarId);
+        }
+        if (mentor.Profile.mentorvideolink) {
+          mentor.Profile.mentorvideolink = generateVideoUrl(mentor.Profile.mentorvideolink);
+        }
+      }
+
+      return mentor;
+    } catch (error) {
+      throw new Error('Error fetching mentor: ' + error.message);
     }
   }
 }
