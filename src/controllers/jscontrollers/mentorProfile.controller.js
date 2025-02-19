@@ -18,7 +18,7 @@ exports.getMentorProfileById = async (req, res) => {
       return res.status(400).json({ success: false, message: 'User ID is required' });
     }
 
-    const result = await settingJSViewmodel.getMentorById(req.params.id);
+    const result = await notificationViewModel.getMentorById(req.params.id);
 
     if (!result) {
       return res.status(404).json({ success: false, message: 'Mentor not found' });
