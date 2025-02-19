@@ -469,7 +469,7 @@ model EmployerPointOfContact {
   jobRole       String?
   phnumber      String?
   email         String?
-  userId        Int?
+  userId        Int     @unique
   user          User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   contactNumber String?
 }

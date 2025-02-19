@@ -153,13 +153,10 @@ exports.getProfile = async (req, res) => {
 };
 
 
-exports.updatePoinofContact = async (req, res) => {
+
+exports.updatePointOfContact = async (req, res) => {
   try {
-    // Parse form-data correctly
     const { name, jobRole, phnumber, email, contactNumber } = req.body;
-
-    console.log("Received Data:", req.body); // Debugging line
-
     const userId = Number(req.user.userId);
 
     if (!name) {
@@ -169,36 +166,21 @@ exports.updatePoinofContact = async (req, res) => {
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { EmployerPointOfContact: true },
+    const existingContact = await prisma.employerPointOfContact.findFirst({
+      where: { userId },
     });
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
-
-    const pointOfContactData = { name }; // Ensure name is always present
-    if (jobRole) pointOfContactData.jobRole = jobRole;
-    if (phnumber) pointOfContactData.phnumber = phnumber;
-    if (email) pointOfContactData.email = email;
-    if (contactNumber) pointOfContactData.contactNumber = contactNumber;
-
-    const pointOfContactId = user.EmployerPointOfContact
-      ? user.EmployerPointOfContact.id
-      : null;
-
-    const updatedPointOfContact = pointOfContactId
-      ? await prisma.employerPointOfContact.update({
-        where: { id: pointOfContactId },
-        data: pointOfContactData,
-      })
-      : await prisma.employerPointOfContact.create({
-        data: {
-          userId,
-          ...pointOfContactData,
-        },
+    let updatedPointOfContact;
+    if (existingContact) {
+      updatedPointOfContact = await prisma.employerPointOfContact.update({
+        where: { id: existingContact.id },
+        data: { name, jobRole, phnumber, email, contactNumber },
       });
+    } else {
+      updatedPointOfContact = await prisma.employerPointOfContact.create({
+        data: { userId, name, jobRole, phnumber, email, contactNumber },
+      });
+    }
 
     res.status(200).json({ success: true, data: updatedPointOfContact });
   } catch (error) {
@@ -210,6 +192,8 @@ exports.updatePoinofContact = async (req, res) => {
     });
   }
 };
+
+
 
 
 exports.getJobs = async (req, res) => {

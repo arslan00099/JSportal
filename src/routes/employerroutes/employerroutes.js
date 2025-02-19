@@ -81,7 +81,7 @@ router.get("/staffmemberDetails/:userId",main.getStafmemberDetails)
 
 //Update point of contact
 
-router.put("/pointofcontact",middleware, upload.none(), main.updatePoinofContact);
+router.put("/pointofcontact",middleware, upload.none(), main.updatePointOfContact);
 
 
 module.exports = router;

@@ -52,9 +52,15 @@ class SettingJSViewmodel {
   }
 
   async getMentorById(userId) {
+    console.log(userId);
     try {
       const mentor = await prisma.user.findFirst({
-        where: { id: userId, role: 'MENTOR' },
+        where: {
+          AND: [
+            { id: parseInt(userId, 10) },
+            { role: 'MENTOR' }
+          ]
+        },
         select: {
           id: true,
           Profile: {
@@ -99,6 +105,7 @@ class SettingJSViewmodel {
       throw new Error('Error fetching mentor: ' + error.message);
     }
   }
+
 }
 
 module.exports = new SettingJSViewmodel();
