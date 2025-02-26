@@ -5,6 +5,7 @@ const { generateAvatarUrl, generateVideoUrl } = require('../../url');
 class SettingJSViewmodel {
 
   async getAllMentors() {
+    console.log('getAllMentors');
     try {
       const mentors = await prisma.user.findMany({
         where: { role: 'MENTOR' },
@@ -36,14 +37,16 @@ class SettingJSViewmodel {
       // Process mentor profiles
       mentors.forEach(mentor => {
         if (mentor.Profile) {
-          if (mentor.Profile.avatarId) {
-            mentor.Profile.avatarUrl = generateAvatarUrl(mentor.Profile.avatarId);
-          }
-          if (mentor.Profile.mentorvideolink) {
-            mentor.Profile.mentorvideolink = generateVideoUrl(mentor.Profile.mentorvideolink);
-          }
+         
+            if (mentor.Profile[0].avatarId) {
+              
+                mentor.Profile[0].avatarId = generateAvatarUrl(mentor.Profile[0].avatarId);
+            }
+            if (mentor.Profile[0].mentorvideolink) {
+                mentor.Profile[0].mentorvideolink = generateVideoUrl(mentor.Profile[0].mentorvideolink);
+            }
         }
-      });
+    });
 
       return mentors;
     } catch (error) {
@@ -92,11 +95,11 @@ class SettingJSViewmodel {
 
       // Process mentor profile
       if (mentor.Profile) {
-        if (mentor.Profile.avatarId) {
-          mentor.Profile.avatarUrl = generateAvatarUrl(mentor.Profile.avatarId);
+        if (mentor.Profile[0].avatarId) {
+          mentor.Profile[0].avatarId = generateAvatarUrl(mentor.Profile[0].avatarId);
         }
-        if (mentor.Profile.mentorvideolink) {
-          mentor.Profile.mentorvideolink = generateVideoUrl(mentor.Profile.mentorvideolink);
+        if (mentor.Profile[0].mentorvideolink) {
+          mentor.Profile[0].mentorvideolink = generateVideoUrl(mentor.Profile[0].mentorvideolink);
         }
       }
 

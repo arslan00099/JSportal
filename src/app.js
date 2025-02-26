@@ -54,6 +54,11 @@ async function testConnection() {
 // Call the function to test the connection
 testConnection();
 
+
+app.get('/', (req, res) => {
+  res.send('Backend Server is running');
+});
+
 ////////////////////////////////////////////////////
 ///////////    JOB SEEKER ROUTERS   ////////////////
 ////////////////////////////////////////////////////
