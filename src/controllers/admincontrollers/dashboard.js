@@ -211,6 +211,84 @@ exports.getAllJS = async (req, res) => {
 };
 
 
+exports.getAllSF = async (req, res) => {
+    try {
+        console.log("Getting all the SF list");
+
+        // Get pagination parameters from query
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+
+        // Get sorting and search parameters
+        const sortOrder = req.query.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+        const searchQuery = req.query.search ? req.query.search.trim() : '';
+
+        // Calculate skip and take for pagination
+        const skip = (page - 1) * pageSize;
+        const take = pageSize;
+
+        // Prepare where condition for search
+        const userWhereCondition = {
+            role: "STAFF_MEMBER",
+            ...(searchQuery && {
+                OR: [
+                    { email: { contains: searchQuery } },
+                    { Profile: { some: { fullname: { contains: searchQuery } } } }
+                ]
+            })
+        };
+
+        // Fetch data from User with optional related Profile
+        const jobSeekers = await prisma.user.findMany({
+            where: userWhereCondition,
+            include: {
+                Profile: true,
+                Location: true,
+            },
+            orderBy: {
+                id: sortOrder,
+            },
+            skip: skip,
+            take: take,
+        });
+
+        // Fetch total count of job seekers for pagination
+        const totalJobSeekers = await prisma.user.count({
+            where: userWhereCondition,
+        });
+
+        // Transform data into the required format
+        const formattedJobSeekers = jobSeekers.map((user) => ({
+            userId: user.id,
+            name: user.Profile?.[0]?.fullname || null,
+            email: user.email,
+            phoneNo: user.Profile?.[0]?.phnumber || null,
+            city: user.Location.length > 0 ? user.Location[0]?.city : "N/A",
+            state: user.Location.length > 0 ? user.Location[0]?.state : "N/A",
+            resumeLink: generateResumeUrl(user.Profile?.[0]?.resumeLink) || null,
+        }));
+
+        // Prepare response with pagination metadata
+        const totalPages = Math.ceil(totalJobSeekers / pageSize);
+
+        res.status(200).json({
+            staffmember: formattedJobSeekers,
+            pagination: {
+                totalItems: totalJobSeekers,
+                totalPages: totalPages,
+                currentPage: page,
+                pageSize: pageSize,
+                sortOrder: sortOrder,
+                searchQuery: searchQuery,
+            },
+        });
+    } catch (error) {
+        console.error('Error fetching SF data:', error);
+        res.status(500).json({ error: 'An error occurred while fetching SF data.' });
+    }
+};
+
+
 
 
 
@@ -1415,14 +1493,7 @@ exports.getRecMenDetails = async (req, res) => {
                         paidOn: true,
                         adminApprovalStatus: true,
                         recruiterApprovalStatus: true,
-                        timeSheets: {
-                            select: {
-                                id: true,
-                                hoursWorked: true,
-                                workDescription: true,
-                                createdAt: true,
-                            }
-                        },
+                        timeSheets:true,
                         TimesheetReview: {
                             select: {
                                 id: true,

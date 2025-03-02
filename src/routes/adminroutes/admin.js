@@ -13,6 +13,7 @@ router.get('/mentorProfile', mentorProfile.getAllMentorsWithServices);
 router.get('/dashboard', dashboard.getDashboard);
 router.get('/getallMentors', dashboard.getAllMentors);
 router.get('/getallJS', dashboard.getAllJS);
+router.get('/getallFS', dashboard.getAllSF);
 router.get('/mentorProfile/:userId', mentorProfile.getMentorByid);
 router.get('/getMentorBookings/:userId', dashboard.getAllMentorBookings);
 router.put('/updateMentorSession/:bookingId', dashboard.updateMentorBookingStatus);
