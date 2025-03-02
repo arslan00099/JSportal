@@ -2644,7 +2644,7 @@ exports.getJobSeekerById = async (req, res) => {
             where: {
                 AND: [
                     { id: userId },
-                    { role: 'JOB_SEEKER' }  // Correct role filter
+                    { role: 'JOB_SEEKER' } // Ensuring we fetch only job seekers
                 ]
             },
             select: {
@@ -2657,7 +2657,7 @@ exports.getJobSeekerById = async (req, res) => {
                         location: true,
                         about: true,
                         language: true,
-                        mentorvideolink: true, // Keeping field in case some profiles have videos
+                        mentorvideolink: true,
                     }
                 },
                 services: {
@@ -2668,7 +2668,17 @@ exports.getJobSeekerById = async (req, res) => {
                         pricing: true
                     }
                 },
-                Certificate: true
+                Certificate: true,
+                Education: true,
+                Location: true,
+                Documents: {
+                    select: {
+                        resumeLink: true,
+                        portfolioLink: true,
+                        websiteLink: true,
+                        additionalLink: true,
+                    }
+                }
             }
         });
 
@@ -2678,11 +2688,18 @@ exports.getJobSeekerById = async (req, res) => {
 
         // Process profile details (if available)
         if (jobSeeker.Profile) {
-            if (jobSeeker.Profile[0].avatarId) {
-                jobSeeker.Profile[0].avatarId = generateAvatarUrl(jobSeeker.Profile[0].avatarId);
+            if (jobSeeker.Profile.avatarId) {
+                jobSeeker.Profile.avatarId = generateAvatarUrl(jobSeeker.Profile.avatarId);
             }
-            if (jobSeeker.Profile[0].mentorvideolink) {
-                jobSeeker.Profile[0].mentorvideolink = generateVideoUrl(jobSeeker.Profile[0].mentorvideolink);
+            if (jobSeeker.Profile.mentorvideolink) {
+                jobSeeker.Profile.mentorvideolink = generateVideoUrl(jobSeeker.Profile.mentorvideolink);
+            }
+        }
+
+        // Generate resume link if available
+        if (jobSeeker.Documents) {
+            if (jobSeeker.Documents.resumeLink) {
+                jobSeeker.Documents.resumeLink = generateResumeUrl(jobSeeker.Documents.resumeLink);
             }
         }
 
