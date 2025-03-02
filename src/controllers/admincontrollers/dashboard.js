@@ -1307,7 +1307,7 @@ exports.updateUserStatus = async (req, res) => {
     }
 };
 
-exports.getRecMenDetails = async (req, res) => {
+exports.getRecMenDetailsOLD = async (req, res) => {
     const { userId } = req.params; // Extract userId from params
 
     try {
@@ -1373,6 +1373,133 @@ exports.getRecMenDetails = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
+
+
+exports.getRecMenDetails = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        // Fetch user details along with Timesheet and Reviews
+        const user = await prisma.user.findUnique({
+            where: { id: parseInt(userId) },
+            select: {
+                id: true,
+                email: true, // Fetch only the email field from the User model
+                Profile: {
+                    select: {
+                        fullname: true,
+                        phnumber: true,
+                        avatarId: true,
+                        mentorvideolink: true,
+                        language: true,
+                        tagline: true,
+                        industry: true,
+                        resumeLink: true,
+                        linkedinLink: true,
+                        about: true,
+                    },
+                },
+                Location: {
+                    select: {
+                        city: true,
+                        state: true,
+                    },
+                },
+                services: true,
+                recruiterRecruiterHirings: {  // Fetch recruiter's hiring records
+                    select: {
+                        id: true,
+                        jobStatus: true,
+                        paymentStatus: true,
+                        invoice: true,
+                        paidOn: true,
+                        adminApprovalStatus: true,
+                        recruiterApprovalStatus: true,
+                        timeSheets: {
+                            select: {
+                                id: true,
+                                hoursWorked: true,
+                                workDescription: true,
+                                createdAt: true,
+                            }
+                        },
+                        TimesheetReview: {
+                            select: {
+                                id: true,
+                                content: true,
+                                rating: true,
+                                createdAt: true,
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Check if user exists
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Format response
+        const formattedUser = {
+            userId: user.id,
+            email: user.email,
+            fullName: user.Profile?.fullname || null,
+            phoneNumber: user.Profile?.phnumber || null,
+            avatarId: user.Profile?.avatarId ? generateAvatarUrl(user.Profile.avatarId) : null,
+            mentorVideoLink: user.Profile?.mentorvideolink ? generateVideoUrl(user.Profile.mentorvideolink) : null,
+            language: user.Profile?.language || null,
+            tagline: user.Profile?.tagline || null,
+            industry: user.Profile?.industry || null,
+            resumeLink: user.Profile?.resumeLink ? generateResumeUrl(user.Profile.resumeLink) : null,
+            linkedinLink: user.Profile?.linkedinLink || null,
+            about: user.Profile?.about || null,
+            city: user.Location?.city || null,
+            state: user.Location?.state || null,
+            services: user.services || [],
+
+            // Recruiter Hiring Details
+            recruiterHirings: user.recruiterRecruiterHirings.map(hiring => ({
+                hiringId: hiring.id,
+                jobStatus: hiring.jobStatus,
+                paymentStatus: hiring.paymentStatus,
+                invoice: hiring.invoice,
+                paidOn: hiring.paidOn,
+                adminApprovalStatus: hiring.adminApprovalStatus,
+                recruiterApprovalStatus: hiring.recruiterApprovalStatus,
+
+                // Timesheet Details
+                timeSheets: hiring.timeSheets.map(ts => ({
+                    timesheetId: ts.id,
+                    hoursWorked: ts.hoursWorked,
+                    workDescription: ts.workDescription,
+                    createdAt: ts.createdAt,
+                })),
+
+                // Reviews on Timesheets
+                timesheetReviews: hiring.TimesheetReview.map(review => ({
+                    reviewId: review.id,
+                    content: review.content,
+                    rating: review.rating,
+                    createdAt: review.createdAt,
+                })),
+            })),
+        };
+
+        // Send response
+        res.status(200).json({
+            success: true,
+            message: "User details fetched successfully.",
+            data: formattedUser
+        });
+
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 
 exports.getRecruiterHiring = async (req, res) => {
     const { page = 1, limit = 10, sort = 'asc', search = '' } = req.query; // Extract query params
