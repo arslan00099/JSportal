@@ -1757,36 +1757,70 @@ exports.getPaymentDetails = async (req, res) => {
 
 exports.getEmployerPlainDetial = async (req, res) => {
     try {
-        const userId = parseInt(req.params.id, 10);
+        const employerId = parseInt(req.params.id, 10);
 
-        if (isNaN(userId)) {
-            return res.status(400).json({ message: "Invalid user ID." });
+        if (isNaN(employerId)) {
+            return res.status(400).json({ success: false, message: "Invalid employer ID." });
         }
 
-        // Fetch all subscriptions for the user
+        // Fetch subscriptions bought by the employer
         const subscriptionsBought = await prisma.subscriptionBought.findMany({
-            where: { userId },
-            include: { subscription: true }, // Fetch subscription details
+            where: { userId: employerId },
+            select: {
+                id: true,
+                subscription: {
+                    select: {
+                        id: true,
+                        name: true,
+                        price: true,
+                        description: true,
+                    },
+                },
+                price: true,
+                jobSlots: true,
+                resumeSearches: true,
+                broughtAt: true,
+            },
         });
 
         if (!subscriptionsBought || subscriptionsBought.length === 0) {
-            return res.status(404).json({ message: "No subscriptions found for this user." });
+            return res.status(404).json({
+                success: false,
+                message: "No subscriptions found for this employer.",
+                data: [],
+            });
         }
 
-        // Extract only the subscription details & remove null values
-        const removeNulls = (obj) => 
-            Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== null));
+        // Format the response
+        const formattedSubscriptions = subscriptionsBought.map((subscription) => ({
+            subscriptionBoughtId: subscription.id,
+            subscriptionId: subscription.subscription.id,
+            name: subscription.subscription.name,
+            description: subscription.subscription.description,
+            pricePaid: subscription.price,
+            jobSlots: subscription.jobSlots,
+            resumeSearches: subscription.resumeSearches,
+            purchasedAt: subscription.broughtAt,
+        }));
 
-        const subscriptions = subscriptionsBought
-            .map(sub => sub.subscription ? removeNulls(sub.subscription) : null)
-            .filter(sub => sub !== null); // Remove null values if any
+        // Respond with data
+        return res.status(200).json({
+            success: true,
+            message: "Data fetched successfully.",
+            data: {
+                subscriptionsBought: formattedSubscriptions,
+            },
+        });
 
-        res.status(200).json({message:"data fetch sucessfull",data:subscriptions});
     } catch (error) {
-        console.error("Error fetching subscription details:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error("Error fetching employer subscriptions:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
     }
 };
+
 
 
 
