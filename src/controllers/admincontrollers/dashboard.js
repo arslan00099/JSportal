@@ -2678,11 +2678,11 @@ exports.getJobSeekerById = async (req, res) => {
 
         // Process profile details (if available)
         if (jobSeeker.Profile) {
-            if (jobSeeker.Profile.avatarId) {
-                jobSeeker.Profile.avatarId = generateAvatarUrl(jobSeeker.Profile.avatarId);
+            if (jobSeeker.Profile[0].avatarId) {
+                jobSeeker.Profile[0].avatarId = generateAvatarUrl(jobSeeker.Profile[0].avatarId);
             }
-            if (jobSeeker.Profile.mentorvideolink) {
-                jobSeeker.Profile.mentorvideolink = generateVideoUrl(jobSeeker.Profile.mentorvideolink);
+            if (jobSeeker.Profile[0].mentorvideolink) {
+                jobSeeker.Profile[0].mentorvideolink = generateVideoUrl(jobSeeker.Profile[0].mentorvideolink);
             }
         }
 
