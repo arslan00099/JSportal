@@ -2632,6 +2632,71 @@ exports.getTimesheetById = async (req, res) => {
     }
 };
 
+exports.getJobSeekerById = async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id, 10);
+
+        if (isNaN(userId)) {
+            return res.status(400).json({ success: false, message: "Invalid user ID." });
+        }
+
+        const jobSeeker = await prisma.user.findFirst({
+            where: {
+                AND: [
+                    { id: userId },
+                    { role: 'JOB_SEEKER' }  // Correct role filter
+                ]
+            },
+            select: {
+                id: true,
+                Profile: {
+                    select: {
+                        avatarId: true,
+                        fullname: true,
+                        tagline: true,
+                        location: true,
+                        about: true,
+                        language: true,
+                        mentorvideolink: true, // Keeping field in case some profiles have videos
+                    }
+                },
+                services: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        pricing: true
+                    }
+                },
+                Certificate: true
+            }
+        });
+
+        if (!jobSeeker) {
+            return res.status(404).json({ success: false, message: "Job Seeker not found." });
+        }
+
+        // Process profile details (if available)
+        if (jobSeeker.Profile) {
+            if (jobSeeker.Profile.avatarId) {
+                jobSeeker.Profile.avatarId = generateAvatarUrl(jobSeeker.Profile.avatarId);
+            }
+            if (jobSeeker.Profile.mentorvideolink) {
+                jobSeeker.Profile.mentorvideolink = generateVideoUrl(jobSeeker.Profile.mentorvideolink);
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Job Seeker data fetched successfully.",
+            data: jobSeeker
+        });
+
+    } catch (error) {
+        console.error("Error fetching job seeker:", error.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
 
 
 

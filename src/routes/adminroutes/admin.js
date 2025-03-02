@@ -100,6 +100,8 @@ router.post('/addInvoice/:timesheetId', dashboard.addInvoice);
 router.get('/adminNotification', dashboard.getNotification);
 router.get('/getTimesheetById/:id', dashboard.getTimesheetById);
 
+router.get('/jsbyid/:id', dashboard.getJobSeekerById);
+
 
 
 
