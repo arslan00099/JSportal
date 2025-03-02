@@ -1701,6 +1701,7 @@ exports.getPaymentDetails = async (req, res) => {
             source: 'EMPLOYER',
         }));
 
+        console.log(formattedEmployerData);
         // Fetch data from mentorSessionManagement table
         const jobSeekerData = await prisma.mentorSessionManagement.findMany({
             select: {
@@ -1752,6 +1753,44 @@ exports.getPaymentDetails = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+
+exports.getEmployerPlainDetial = async (req, res) => {
+    try {
+        const userId = parseInt(req.params.id, 10);
+
+        if (isNaN(userId)) {
+            return res.status(400).json({ message: "Invalid user ID." });
+        }
+
+        // Fetch all subscriptions for the user
+        const subscriptionsBought = await prisma.subscriptionBought.findMany({
+            where: { userId },
+            include: { subscription: true }, // Fetch subscription details
+        });
+
+        if (!subscriptionsBought || subscriptionsBought.length === 0) {
+            return res.status(404).json({ message: "No subscriptions found for this user." });
+        }
+
+        // Extract only the subscription details & remove null values
+        const removeNulls = (obj) => 
+            Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== null));
+
+        const subscriptions = subscriptionsBought
+            .map(sub => sub.subscription ? removeNulls(sub.subscription) : null)
+            .filter(sub => sub !== null); // Remove null values if any
+
+        res.status(200).json({message:"data fetch sucessfull",data:subscriptions});
+    } catch (error) {
+        console.error("Error fetching subscription details:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+
+
+
 
 
 

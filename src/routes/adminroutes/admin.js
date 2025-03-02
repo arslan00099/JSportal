@@ -74,6 +74,7 @@ router.put('/updateInvoice/:id', dashboard.updateInvoice);
 router.put('/updateInvoice/:id', dashboard.updateInvoice);
 router.get('/getRecruiterHiringDetail/:bookingId', dashboard.getRecruiterHiringDetail);
 router.get('/getPaymentDetails', dashboard.getPaymentDetails);
+router.get('/getPlainDetail/:id', dashboard.getEmployerPlainDetial);
 router.get('/getPaymentDetails:/role', dashboard.getPaymentDetailrole);
 
 

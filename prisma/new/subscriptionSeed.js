@@ -1,24 +1,11 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-
 async function main() {
-  // Step 1: Create a subscription
-  const subscription = await prisma.subscription.create({
-    data: {
-      name: 'GOLD', // Enum value from SubscriptionType
-      price: 99.99,
-      jobSlots: 10,
-      resumeSearches: 50,
-      description: 'Gold subscription with 10 job slots and 50 resume searches',
-    },
-  });
-
-  console.log('Created subscription:', subscription);
-
+  // Step 1: Create a user
   const user = await prisma.user.create({
     data: {
-      email: 'employer00@example.com',
+      email: 'employer1100@example.com',
       password: 'securepassword',
       role: 'EMPLOYER',
       profileStatus: 'UNVARIFIED',
@@ -27,7 +14,8 @@ async function main() {
       isAdmin: false,
     },
   });
-  
+
+  // Step 2: Create a profile linked to the user
   const profile = await prisma.profile.create({
     data: {
       userId: user.id,
@@ -38,11 +26,21 @@ async function main() {
       location: 'San Francisco, CA',
     },
   });
-  
 
   console.log('Created user:', user);
 
-  // Step 3: Create a subscription purchase
+  // Step 3: Fetch the subscription details
+  const subscription = await prisma.subscription.findUnique({
+    where: {
+      id: 1, // Assuming you want to fetch subscription with ID 1
+    },
+  });
+
+  if (!subscription) {
+    throw new Error("Subscription with ID 1 not found.");
+  }
+
+  // Step 4: Create a subscription purchase record
   const subscriptionBought = await prisma.subscriptionBought.create({
     data: {
       userId: user.id,
