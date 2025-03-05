@@ -987,7 +987,7 @@ exports.getRecByid = async (req, res) => {
             totalReview: mentor.totalReview || 0, // Default total reviews if missing
             location: mentor.location || "Not provided", // Default location if missing
             yearOfExperience: mentor.yearOfExperience || 0, // Default experience if missing
-            linkedinProfile: gmentor.companyLink || "Not provided", // Default LinkedIn profile if missing
+            linkedinProfile: mentor.companyLink || "Not provided", // Default LinkedIn profile if missing
             services: mentor.user?.services || [], // Services linked to the mentor (from user)
         }));
 
@@ -1493,7 +1493,7 @@ exports.getRecMenDetails = async (req, res) => {
                         paidOn: true,
                         adminApprovalStatus: true,
                         recruiterApprovalStatus: true,
-                        timeSheets:true,
+                        timeSheets: true,
                         TimesheetReview: {
                             select: {
                                 id: true,
