@@ -397,7 +397,7 @@ model MentorProfile {
   location         String?
   yearOfExperience Int?
   rating           Int
-  totalReview      Int?
+  totalReSSSSview      Int?
   userId           Int
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedinProfile  String?

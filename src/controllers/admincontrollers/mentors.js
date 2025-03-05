@@ -204,6 +204,7 @@ exports.getMentorByid = async (req, res) => {
     const formattedResponse = mentorsWithDetails.map((mentor) => ({
       id: mentor.id,
       email: mentor.user.email,
+      profilestatus:mentor.user.profileStatus,
       name: mentor.fullname,
       phnumber: mentor.phnumber,
       video: generateVideoUrl(mentor.mentorvideolink),
