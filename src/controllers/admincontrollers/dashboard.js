@@ -958,7 +958,7 @@ exports.getAllRec = async (req, res) => {
 };
 
 
-exports.getRecByid = async (req, res) => {
+exports.getRecByidOLD = async (req, res) => {
     const { userId } = req.params;
     console.log("userId will be here ");
     console.log(userId);
@@ -980,6 +980,7 @@ exports.getRecByid = async (req, res) => {
         const formattedResponse = mentorsWithServices.map((mentor) => ({
             id: mentor.id,
             name: mentor.fullname,
+            profilestatus : mentor.profilestatus,
             tagline: mentor.tagline,
             about: mentor.about,
             languages: mentor.language || [], // Default to empty array if no languages
@@ -1007,6 +1008,72 @@ exports.getRecByid = async (req, res) => {
         });
     }
 };
+
+exports.getRecByid = async (req, res) => {
+    const { userId } = req.params;
+    console.log("Fetching recruiter details for userId:", userId);
+
+    try {
+        // Fetch recruiters with services and timesheets
+        const recruiters = await prisma.profile.findMany({
+            where: { userId: parseInt(userId) },
+            include: {
+                user: {
+                    include: {
+                        services: true, // Fetch services for the user
+                        recruiterHirings: {
+                            include: {
+                                timeSheets: true, // Fetch related timesheets
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Format response
+        const formattedResponse = recruiters.map((recruiter) => ({
+            id: recruiter.id,
+            name: recruiter.fullname,
+            profileStatus: recruiter.profilestatus,
+            tagline: recruiter.tagline,
+            about: recruiter.about,
+            languages: recruiter.language || [],
+            rating: recruiter.rating || 0,
+            totalReview: recruiter.totalReview || 0,
+            location: recruiter.location || "Not provided",
+            yearOfExperience: recruiter.yearOfExperience || 0,
+            linkedinProfile: recruiter.companyLink || "Not provided",
+            services: recruiter.user?.services || [],
+            timesheets: recruiter.user?.recruiterHirings.flatMap(hiring =>
+                hiring.timeSheets.map(timesheet => ({
+                    id: timesheet.id,
+                    weeklyTimesheet: timesheet.weeklyTimesheet,
+                    totalHourWorked: timesheet.totalHourWorked,
+                    totalAmountDue: timesheet.totalAmountDue,
+                    totalPayableAmount: timesheet.totalPayableAmount,
+                    approvalStatusEmp: timesheet.approvalStatusEmp,
+                    createdAt: timesheet.createdAt,
+                    updatedAt: timesheet.updatedAt,
+                }))
+            ) || [],
+        }));
+
+        res.status(200).json({
+            success: true,
+            data: formattedResponse,
+        });
+    } catch (error) {
+        console.error("Error fetching recruiter details:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch recruiter details.",
+            error: error.message,
+        });
+    }
+};
+
 
 
 exports.getRecBookings = async (req, res) => {
