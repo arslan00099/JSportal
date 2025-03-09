@@ -293,8 +293,8 @@ exports.getAllSF = async (req, res) => {
 
 exports.updateStaffStatus = async (req, res) => {
     try {
-        const { userId } = req.params; 
-        const { staffStatus } = req.body; 
+        const { userId } = req.params;
+        const { staffStatus } = req.body;
 
 
         // Validate input
@@ -1054,7 +1054,7 @@ exports.getRecByid = async (req, res) => {
                 user: {
                     include: {
                         services: true, // Fetch services for the user
-                        recruiterHirings: {
+                        recruiterRecruiterHirings: {
                             include: {
                                 timeSheets: true, // Fetch related timesheets
                             },
