@@ -260,7 +260,9 @@ exports.getAllSF = async (req, res) => {
         // Transform data into the required format
         const formattedJobSeekers = jobSeekers.map((user) => ({
             userId: user.id,
+            staffStatus: user.staffStatus,
             name: user.Profile?.[0]?.fullname || null,
+            profileStatus: user.profilestatus,
             email: user.email,
             phoneNo: user.Profile?.[0]?.phnumber || null,
             city: user.Location.length > 0 ? user.Location[0]?.city : "N/A",
@@ -285,6 +287,37 @@ exports.getAllSF = async (req, res) => {
     } catch (error) {
         console.error('Error fetching SF data:', error);
         res.status(500).json({ error: 'An error occurred while fetching SF data.' });
+    }
+};
+
+
+exports.updateStaffStatus = async (req, res) => {
+    try {
+        const { userId } = req.params; 
+        const { staffStatus } = req.body; 
+
+
+        // Validate input
+        if (!userId || !staffStatus) {
+            return res.status(400).json({ error: 'User ID and staff status are required' });
+        }
+
+        // Validate staffStatus
+        const validStatuses = ['ENGAGED', 'NOT_ENGAGED'];
+        if (!validStatuses.includes(staffStatus)) {
+            return res.status(400).json({ error: 'Invalid staff status' });
+        }
+
+        // Update staffStatus
+        const updatedUser = await prisma.user.update({
+            where: { id: Number(userId) },
+            data: { staffStatus },
+        });
+
+        return res.status(200).json({ message: 'Staff status updated successfully', user: updatedUser });
+    } catch (error) {
+        console.error('Error updating staff status:', error);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 };
 
@@ -980,7 +1013,7 @@ exports.getRecByidOLD = async (req, res) => {
         const formattedResponse = mentorsWithServices.map((mentor) => ({
             id: mentor.id,
             name: mentor.fullname,
-            profilestatus : mentor.profilestatus,
+            profilestatus: mentor.profilestatus,
             tagline: mentor.tagline,
             about: mentor.about,
             languages: mentor.language || [], // Default to empty array if no languages

@@ -130,6 +130,11 @@ enum UserStatus {
   PENDING
 }
 
+enum StaffStatus {
+  ENGAGED
+  NOT_ENGAGED
+}
+
 enum SubscriptionType {
   GOLD
   DIAMOND
@@ -157,6 +162,7 @@ model User {
   activeCardId   Int?
   profileStatus  ProfileStatus? @default(UNVARIFIED)
   userStatus     UserStatus?    @default(PENDING)
+  staffStatus    StaffStatus?   @default(NOT_ENGAGED)
 
   // Relations
   Profile                 Profile[]
@@ -397,7 +403,7 @@ model MentorProfile {
   location         String?
   yearOfExperience Int?
   rating           Int
-  totalReSSSSview      Int?
+  totalReSSSSview  Int?
   userId           Int
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   linkedinProfile  String?
