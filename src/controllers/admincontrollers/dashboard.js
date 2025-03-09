@@ -1053,10 +1053,10 @@ exports.getRecByid = async (req, res) => {
             include: {
                 user: {
                     include: {
-                        services: true, // Fetch services for the user
-                        recruiterRecruiterHirings: {
+                        services: true, 
+                        recruiterRecruiterHirings: {  // <-- Corrected field name
                             include: {
-                                timeSheets: true, // Fetch related timesheets
+                                timeSheets: true,
                             },
                         },
                     },
@@ -1078,7 +1078,7 @@ exports.getRecByid = async (req, res) => {
             yearOfExperience: recruiter.yearOfExperience || 0,
             linkedinProfile: recruiter.companyLink || "Not provided",
             services: recruiter.user?.services || [],
-            timesheets: recruiter.user?.recruiterHirings.flatMap(hiring =>
+            timesheets: recruiter.user?.recruiterRecruiterHirings?.flatMap(hiring =>
                 hiring.timeSheets.map(timesheet => ({
                     id: timesheet.id,
                     weeklyTimesheet: timesheet.weeklyTimesheet,
@@ -1106,6 +1106,7 @@ exports.getRecByid = async (req, res) => {
         });
     }
 };
+
 
 
 
