@@ -145,25 +145,26 @@ enum SubscriptionType {
 }
 
 model User {
-  id             Int            @id @default(autoincrement())
-  email          String         @unique
-  secondaryEmail String?
-  password       String
-  role           UserRole
-  resume         String?
-  email_confirm  Boolean        @default(false)
-  profileId      Int?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  isActive       Boolean        @default(true)
-  isAdmin        Boolean        @default(false)
-  deActivate     Boolean        @default(false)
-  firstLogin     Boolean        @default(true)
-  activeCardId   Int?
-  profileStatus  ProfileStatus? @default(UNVARIFIED)
-  userStatus     UserStatus?    @default(PENDING)
-  staffStatus    StaffStatus?   @default(NOT_ENGAGED)
-
+  id                      Int                       @id @default(autoincrement())
+  email                   String                    @unique
+  secondaryEmail          String?
+  password                String
+  role                    UserRole
+  resume                  String?
+  email_confirm           Boolean                   @default(false)
+  profileId               Int?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  isActive                Boolean                   @default(true)
+  isAdmin                 Boolean                   @default(false)
+  deActivate              Boolean                   @default(false)
+  firstLogin              Boolean                   @default(true)
+  activeCardId            Int?
+  profileStatus           ProfileStatus?            @default(UNVARIFIED)
+  userStatus              UserStatus?               @default(PENDING)
+  staffStatus             StaffStatus?              @default(NOT_ENGAGED)
+  companyId               Int?
+  company                 companyDetails?           @relation(fields: [companyId], references: [id])
   // Relations
   Profile                 Profile[]
   Education               Education[]
@@ -199,7 +200,6 @@ model User {
 
   SubscriptionBought SubscriptionBought[]
   AdminNotification  AdminNotification[]
-  companyDetails     companyDetails[]
 
   @@index([email])
   @@index([role])
@@ -241,8 +241,7 @@ model companyDetails {
   companyName  String?
   companySize  String?
   companyLink  String?
-  userId       Int
-  user         User    @relation(fields: [userId], references: [id])
+  users        User[]
 }
 
 model SubscriptionBought {

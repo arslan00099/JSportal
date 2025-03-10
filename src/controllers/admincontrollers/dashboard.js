@@ -3067,6 +3067,44 @@ exports.getAllEmployerslist = async (req, res) => {
 };
 
 
+exports.getCompnaywithUser=async(req,res) =>{
+    try {
+        const userId = parseInt(req.params.id);
+    
+        // Fetch user with company details first
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          include: {
+            company: true,
+          },
+        });
+    
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.company && user.company.companyImage) {
+            user.company.companyImage = generateAvatarUrl(user.company.companyImage);
+          }
+      
+    
+        // Fetch profile details separately
+        const profile = await prisma.profile.findUnique({
+          where: { userId: user.id },
+        });
+    
+        res.json({
+          
+          company: user.company,
+          profile,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+};
+
+
 
 
 

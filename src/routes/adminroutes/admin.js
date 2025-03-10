@@ -104,6 +104,8 @@ router.get('/getTimesheetById/:id', dashboard.getTimesheetById);
 
 router.get('/jsbyid/:id', dashboard.getJobSeekerById);
 router.get('/employerslist',dashboard.getAllEmployerslist);
+router.get('/userwithcompany/:id',dashboard.getCompnaywithUser);
+
 
 
 
