@@ -782,8 +782,8 @@ exports.getEmployerBookings = async (req, res) => {
             select: {
                 id: true, // bookingId
                 jobStatus: true,
-                recruiterApprovalStatus:true,
-                adminApprovalStatus:true,
+                recruiterApprovalStatus: true,
+                adminApprovalStatus: true,
                 employer: {
                     select: {
                         Profile: {
@@ -832,8 +832,8 @@ exports.getEmployerBookings = async (req, res) => {
                 return {
                     bookingId: booking.id,
                     jobstatus: booking.jobStatus,
-                    recruiterApprovalStatus:booking.recruiterApprovalStatus,
-                    adminApprovalStatus:booking.adminApprovalStatus,
+                    recruiterApprovalStatus: booking.recruiterApprovalStatus,
+                    adminApprovalStatus: booking.adminApprovalStatus,
 
                     companyName: employerProfile?.companyName || null,
                     email: booking.employer.email,
@@ -966,7 +966,7 @@ exports.getAllRec = async (req, res) => {
         // Transform data into the required format
         const formattedRec = rec.map((user) => ({
             userId: user.id,
-            profileStatus:user.profileStatus,
+            profileStatus: user.profileStatus,
             name: user.Profile?.[0]?.fullname || null,
             email: user.email,
             phoneNo: user.Profile?.[0]?.phnumber || null,
@@ -1075,7 +1075,7 @@ exports.getRecByid = async (req, res) => {
             id: recruiter.id,
             name: recruiter.fullname,
             profileStatus: recruiter.profilestatus,
-            userStaus:recruiter.userStatus,
+            userStaus: recruiter.userStatus,
             tagline: recruiter.tagline,
             about: recruiter.about,
             languages: recruiter.language || [],
@@ -3067,41 +3067,45 @@ exports.getAllEmployerslist = async (req, res) => {
 };
 
 
-exports.getCompnaywithUser=async(req,res) =>{
+exports.getCompnaywithUser = async (req, res) => {
     try {
         const userId = parseInt(req.params.id);
-    
+
         // Fetch user with company details first
         const user = await prisma.user.findUnique({
-          where: { id: userId },
-          include: {
-            company: true,
-          },
+            where: { id: userId },
+            include: {
+                company: true,
+            },
         });
-    
+
         if (!user) {
-          return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ message: "User not found" });
         }
 
         if (user.company && user.company.companyImage) {
             user.company.companyImage = generateAvatarUrl(user.company.companyImage);
-          }
-      
-    
+        }
+
+
         // Fetch profile details separately
         const profile = await prisma.profile.findUnique({
-          where: { userId: user.id },
+            where: { userId: user.id },
         });
-    
+
         res.json({
-          
-          company: user.company,
-          profile,
+
+            company: user.company,
+location:user.location,
+            role: user.role,
+            number: profile.phnumber,
+            email: user.email,
+
         });
-      } catch (error) {
+    } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
-      }
+    }
 };
 
 
