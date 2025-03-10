@@ -495,7 +495,7 @@ model EmployerPointOfContact {
 model JobApplication {
   id               Int              @id @default(autoincrement())
   jobTitle         String
-  jobDescription   String
+  jobDescription   String     @db.LongText
   tags             String
   jsId             Int
   JobSeekerProfile JobSeekerProfile @relation(fields: [jsId], references: [id])
@@ -554,7 +554,7 @@ model HiredService {
   serviceId        Int
   serviceName      String?
   serviceAmount    Int             @default(400)
-  jobDetail        String
+  jobDetail        String  @db.LongText
   startDate        DateTime
   endDate          DateTime
   hiredRecruiter   RecruiterHiring @relation(fields: [hiredRecruiterId], references: [id])
