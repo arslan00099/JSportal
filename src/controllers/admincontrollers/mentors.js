@@ -205,6 +205,7 @@ exports.getMentorByid = async (req, res) => {
       id: mentor.id,
       email: mentor.user.email,
       profilestatus:mentor.user.profileStatus,
+      userstatus:mentor.user.userStatus,
       name: mentor.fullname,
       phnumber: mentor.phnumber,
       video: generateVideoUrl(mentor.mentorvideolink),

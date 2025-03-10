@@ -1075,6 +1075,7 @@ exports.getRecByid = async (req, res) => {
             id: recruiter.id,
             name: recruiter.fullname,
             profileStatus: recruiter.profilestatus,
+            userStaus:recruiter.userStatus,
             tagline: recruiter.tagline,
             about: recruiter.about,
             languages: recruiter.language || [],
@@ -3022,7 +3023,7 @@ exports.getJobSeekerById = async (req, res) => {
 
 
 
-exports.getAllEmployers = async (req, res) => {
+exports.getAllEmployerslist = async (req, res) => {
     try {
         const { search } = req.query; // Get search query from request
         console.log("Fetching employers", search ? `with search: ${search}` : "without search filter");
