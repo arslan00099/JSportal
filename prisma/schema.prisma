@@ -271,7 +271,7 @@ model Education {
   id             Int    @id @default(autoincrement())
   degreName      String
   universityName String
-  description    String
+  description    String @db.LongText
   startFrom      String
   endIn          String
   userId         Int
@@ -284,7 +284,7 @@ model Certificate {
   id          Int    @id @default(autoincrement())
   certName    String
   orgName     String
-  description String
+  description String @db.LongText
   completedOn String
   startedOn   String
   userId      Int
@@ -295,7 +295,7 @@ model EmpolymentHistory {
   id          Int    @id @default(autoincrement())
   company     String
   jobTitle    String
-  description String
+  description String @db.LongText
   startedOn   String
   endOn       String
   userId      Int

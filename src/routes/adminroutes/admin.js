@@ -103,7 +103,7 @@ router.get('/adminNotification', dashboard.getNotification);
 router.get('/getTimesheetById/:id', dashboard.getTimesheetById);
 
 router.get('/jsbyid/:id', dashboard.getJobSeekerById);
-
+router.get('/employerslist',dashboard.getAllEmployers);
 
 
 

@@ -782,6 +782,8 @@ exports.getEmployerBookings = async (req, res) => {
             select: {
                 id: true, // bookingId
                 jobStatus: true,
+                recruiterApprovalStatus:true,
+                adminApprovalStatus:true,
                 employer: {
                     select: {
                         Profile: {
@@ -829,7 +831,10 @@ exports.getEmployerBookings = async (req, res) => {
 
                 return {
                     bookingId: booking.id,
-                    status: booking.jobStatus,
+                    jobstatus: booking.jobStatus,
+                    recruiterApprovalStatus:booking.recruiterApprovalStatus,
+                    adminApprovalStatus:booking.adminApprovalStatus,
+
                     companyName: employerProfile?.companyName || null,
                     email: booking.employer.email,
                     phnumber: employerProfile?.phnumber || null,
@@ -961,6 +966,7 @@ exports.getAllRec = async (req, res) => {
         // Transform data into the required format
         const formattedRec = rec.map((user) => ({
             userId: user.id,
+            profileStatus:user.profileStatus,
             name: user.Profile?.[0]?.fullname || null,
             email: user.email,
             phoneNo: user.Profile?.[0]?.phnumber || null,
@@ -1053,7 +1059,7 @@ exports.getRecByid = async (req, res) => {
             include: {
                 user: {
                     include: {
-                        services: true, 
+                        services: true,
                         recruiterRecruiterHirings: {  // <-- Corrected field name
                             include: {
                                 timeSheets: true,
@@ -3013,6 +3019,53 @@ exports.getJobSeekerById = async (req, res) => {
         return res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
+
+
+
+exports.getAllEmployers = async (req, res) => {
+    try {
+        const { search } = req.query; // Get search query from request
+        console.log("Fetching employers", search ? `with search: ${search}` : "without search filter");
+
+        // Fetch employers where user's role is "EMPLOYER"
+        const employers = await prisma.profile.findMany({
+            where: {
+                user: {
+                    role: "EMPLOYER",
+                },
+                ...(search ? { fullname: { contains: search } } : {}) // Apply search filter only if provided
+            },
+            select: {
+                userId: true,
+                fullname: true,
+            },
+        });
+
+        // Check if data exists
+        if (employers.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: search ? "No employers found matching the search criteria." : "No employers found.",
+                data: [],
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: employers,
+        });
+    } catch (error) {
+        console.error("Error fetching employers:", error.message);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch employers.",
+            error: error.message,
+        });
+    }
+};
+
+
 
 
 
