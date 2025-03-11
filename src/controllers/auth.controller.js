@@ -3,6 +3,7 @@
 const userViewModel = require('../viewmodels/user.viewmodel'); // Ensure only one instance
 
 exports.signup = async (req, res) => {
+  console.log("Signup route hit");
   try {
     const { username, password, email, role ,fullname} = req.body;
     console.log(username);

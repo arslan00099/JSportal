@@ -31,7 +31,7 @@ const { PrismaClient } = require("@prisma/client");
 const path = require("path");
 
 // Serve static files from the 'utils/profilephoto' directory
-app.use("/utils/profilephotos",express.static(path.join(__dirname, "utils/profilephotos")));
+app.use("/utils/profilephotos", express.static(path.join(__dirname, "utils/profilephotos")));
 app.use("/utils/resume", express.static(path.join(__dirname, "utils/resume")));
 app.use("/utils/video", express.static(path.join(__dirname, "utils/video")));
 
@@ -55,7 +55,7 @@ async function testConnection() {
 testConnection();
 
 
-app.get('/', (req, res) => {
+app.get('/api/', (req, res) => {
   res.send('Backend Server is running');
 });
 
