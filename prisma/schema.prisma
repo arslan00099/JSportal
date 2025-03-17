@@ -225,6 +225,7 @@ model Profile {
   companyName      String?
   companySize      String?
   companyLink      String?
+  calendlyLink     String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   JobSeekerProfile JobSeekerProfile?
@@ -495,7 +496,7 @@ model EmployerPointOfContact {
 model JobApplication {
   id               Int              @id @default(autoincrement())
   jobTitle         String
-  jobDescription   String     @db.LongText
+  jobDescription   String           @db.LongText
   tags             String
   jsId             Int
   JobSeekerProfile JobSeekerProfile @relation(fields: [jsId], references: [id])
@@ -554,7 +555,7 @@ model HiredService {
   serviceId        Int
   serviceName      String?
   serviceAmount    Int             @default(400)
-  jobDetail        String  @db.LongText
+  jobDetail        String          @db.LongText
   startDate        DateTime
   endDate          DateTime
   hiredRecruiter   RecruiterHiring @relation(fields: [hiredRecruiterId], references: [id])
