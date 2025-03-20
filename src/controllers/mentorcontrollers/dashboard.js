@@ -128,7 +128,6 @@ exports.getUpcomingSessions = async (req, res) => {
             userEmail: session.user.email, // Flattened email
             fullname: session.user.Profile[0].fullname,
             profile: generateAvatarUrl(session.user.Profile[0].avatarId),
-
             serviceName: session.Service.name, // Flattened service name
             servicePricing: session.Service.pricing, // Flattened service pricing
         }));
@@ -362,8 +361,8 @@ exports.linkCalendly = async (req, res) => {
 
         return res.status(200).json({ message: "Calendly link updated successfully", profile: updatedProfile });
     } catch (error) {
-        console.error("Error updating Calendly link:", error);
-        return res.status(500).json({ message: "Internal server error" });
+    console.error("Error updating Calendly link:", error);
+    return res.status(500).json({ message: "Internal server error" });
     }
 };
 

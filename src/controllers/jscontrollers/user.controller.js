@@ -352,12 +352,12 @@ exports.deleteDocuments = async (req, res) => {
 
 
 exports.createMentorSession = async (req, res) => {
-  const { selectedService, selectedDateTime, mentorId } = req.body;
+  const { selectedService, mentorId } = req.body;
   let { userId } = req.user;
 
   try {
     // Ensure selectedDateTime is in ISO-8601 format
-    const formattedDateTime = new Date(selectedDateTime).toISOString();
+  //  const formattedDateTime = new Date(selectedDateTime).toISOString();
 
     // Fetch the service name from the selectedService ID
     const service = await prisma.service.findUnique({
@@ -374,7 +374,6 @@ exports.createMentorSession = async (req, res) => {
     const newSession = await prisma.mentorSessionManagement.create({
       data: {
         selectedService,
-        selectedDateTime: formattedDateTime, // Use ISO 8601 formatted date
         userId,
         mentorProfileId: mentorId,
       },

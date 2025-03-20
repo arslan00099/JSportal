@@ -442,7 +442,7 @@ model MentorSessionManagement {
   transactionNumber String?
   selectedService   Int? // Optional field
   Service           Service?       @relation(fields: [selectedService], references: [id])
-  selectedDateTime  DateTime? // Optional field
+  selectedDateTime  DateTime? // this is removed by zubair
   status            SessionStatus? @default(ACCEPTED) // Optional field
   userId            Int
   user              User           @relation("UserSessions", fields: [userId], references: [id], map: "FK_User_Session", onDelete: Cascade)
