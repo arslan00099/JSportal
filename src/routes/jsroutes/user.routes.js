@@ -6,6 +6,7 @@ const router = express.Router();
 const userController = require('../../controllers/jscontrollers/user.controller');
 const blogcontroller=require('../../controllers/jscontrollers/blog.controller');
 const middleware = require('../../middleware/middleware');
+const authroize=require('../../controllers/jscontrollers/authorize');
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -68,6 +69,8 @@ router.post('/documents', middleware, cvupload.fields([
 router.post('/postBlog',middleware,blogcontroller.createBlog);
 router.get('/getBlog',blogcontroller.getBlogs);
 router.get('/getBlogDetials/:id',blogcontroller.getBlogDetails);
+
+router.post('/charge',middleware,authroize.charge);
 
 
 
