@@ -4,13 +4,13 @@ const path = require('path');
 const router = express.Router();
 
 const controller = require('../../controllers/mentorcontrollers/mentorProfile.controller');
-const booking=require('../../controllers/mentorcontrollers/session.controller');
+const booking = require('../../controllers/mentorcontrollers/session.controller');
 const notificationController = require('../../controllers/mentorcontrollers/notification.controller');
-const userController=require ('../../controllers/mentorcontrollers/user.controller');
+const userController = require('../../controllers/mentorcontrollers/user.controller');
 const middleware = require('../../middleware/middleware');
 const settingController = require('../../controllers/mentorcontrollers/setting.controller');
 const serviceController = require('../../controllers/mentorcontrollers/service.controller');
-const dashboard=require('../../controllers/mentorcontrollers/dashboard');
+const dashboard = require('../../controllers/mentorcontrollers/dashboard');
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -52,10 +52,10 @@ const upload = multer({ storage: storage });
 const cvupload = multer({ storage: cvstorage });
 const uploadVideo = multer({ storage: videostorage });
 
-router.post('/testprofile', middleware,controller.insert);
+router.post('/testprofile', middleware, controller.insert);
 router.get('/testprofile', controller.getMentorProfile);
-router.get('/session',middleware,booking.getMentorSession);
-router.get('/earnings',middleware,booking.getMentorEarnings);
+router.get('/session', middleware, booking.getMentorSession);
+router.get('/earnings', middleware, booking.getMentorEarnings);
 
 //NOTIFICATIONS
 router.get('/', middleware, notificationController.getNotifications);
@@ -97,10 +97,10 @@ router.post('/documents', middleware, cvupload.fields([
 ]), userController.uploadDocuments);
 
 
-router.post("/about",middleware,userController.post_about);
-router.get("/about",middleware,userController.get_about);
-router.get("/notification",middleware, userController.getNotification);
-router.get("/review",middleware, userController.getReview);
+router.post("/about", middleware, userController.post_about);
+router.get("/about", middleware, userController.get_about);
+router.get("/notification", middleware, userController.getNotification);
+router.get("/review", middleware, userController.getReview);
 
 router.put('/change-email', middleware, settingController.changeEmail);
 router.put('/change-password', middleware, settingController.changePassword);
@@ -114,14 +114,14 @@ router.put('/service', serviceController.updateService);
 router.delete('/service', serviceController.deleteService);
 
 
-router.post('/upload-video', uploadVideo.single('mentorVideo'),middleware, userController.uploadVideo);
+router.post('/upload-video', uploadVideo.single('mentorVideo'), middleware, userController.uploadVideo);
 
 //dashbord
-router.get('/getMentorStatsCount/:mentorId',dashboard.getMentorStats);
-router.get('/UpcomingSessions/:mentorId',dashboard.getUpcomingSessions);
-router.get('/getMentorReviews/:mentorId',dashboard.getMentorReviews);
-router.get('/getMentorEarnings/:mentorId',dashboard.getMentorEarnings);
-router.post('/linkCalendly/:Id',dashboard.linkCalendly);
+router.get('/getMentorStatsCount/:mentorId', dashboard.getMentorStats);
+router.get('/UpcomingSessions/:mentorId', dashboard.getUpcomingSessions);
+router.get('/getMentorReviews/:mentorId', dashboard.getMentorReviews);
+router.get('/getMentorEarnings/:mentorId', dashboard.getMentorEarnings);
+router.post('/linkCalendly/:id', dashboard.linkCalendly);
 
 
 module.exports = router;
