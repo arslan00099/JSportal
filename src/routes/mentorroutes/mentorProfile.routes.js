@@ -121,7 +121,7 @@ router.get('/getMentorStatsCount/:mentorId', dashboard.getMentorStats);
 router.get('/UpcomingSessions/:mentorId', dashboard.getUpcomingSessions);
 router.get('/getMentorReviews/:mentorId', dashboard.getMentorReviews);
 router.get('/getMentorEarnings/:mentorId', dashboard.getMentorEarnings);
-router.post('/linkCalendly/:id', dashboard.linkCalendly);
+router.post('/linkCalendly/:userId', dashboard.linkCalendly);
 
 
 module.exports = router;

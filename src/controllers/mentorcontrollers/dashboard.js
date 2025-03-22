@@ -346,8 +346,10 @@ exports.getMentorEarnings = async (req, res) => {
 
 exports.linkCalendly = async (req, res) => {
     try {
-        const { userId } = req.id;
-        const {  calendlyLink } = req.body;
+        const { userId } = req.params;
+        console.log(userId);
+        const { calendlyLink } = req.body;
+        console.log(calendlyLink);
 
         if (!userId || !calendlyLink) {
             return res.status(400).json({ message: "userId and calendlyLink are required" });
@@ -361,8 +363,8 @@ exports.linkCalendly = async (req, res) => {
 
         return res.status(200).json({ message: "Calendly link updated successfully", profile: updatedProfile });
     } catch (error) {
-    console.error("Error updating Calendly link:", error);
-    return res.status(500).json({ message: "Internal server error" });
+        console.error("Error updating Calendly link:", error);
+        return res.status(500).json({ message: "Internal server error" });
     }
 };
 
