@@ -20,6 +20,7 @@ class SettingJSViewmodel {
               about: true,
               language: true,
               mentorvideolink: true,
+              calendlyLink: true,
             }
           },
           services: {
@@ -37,16 +38,16 @@ class SettingJSViewmodel {
       // Process mentor profiles
       mentors.forEach(mentor => {
         if (mentor.Profile) {
-         
-            if (mentor.Profile[0].avatarId) {
-              
-                mentor.Profile[0].avatarId = generateAvatarUrl(mentor.Profile[0].avatarId);
-            }
-            if (mentor.Profile[0].mentorvideolink) {
-                mentor.Profile[0].mentorvideolink = generateVideoUrl(mentor.Profile[0].mentorvideolink);
-            }
+
+          if (mentor.Profile[0].avatarId) {
+
+            mentor.Profile[0].avatarId = generateAvatarUrl(mentor.Profile[0].avatarId);
+          }
+          if (mentor.Profile[0].mentorvideolink) {
+            mentor.Profile[0].mentorvideolink = generateVideoUrl(mentor.Profile[0].mentorvideolink);
+          }
         }
-    });
+      });
 
       return mentors;
     } catch (error) {
@@ -75,6 +76,7 @@ class SettingJSViewmodel {
               about: true,
               language: true,
               mentorvideolink: true,
+              calendlyLink: true,
             }
           },
           services: {
