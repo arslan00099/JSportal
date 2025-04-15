@@ -21,7 +21,7 @@ const app = express();
 const cors = require("cors");
 const corsOptions = {
   credentials: true,
-  origin: "http://localhost:3000",
+  origin: "*", // Allow requests from any origin
 };
 
 // Middleware

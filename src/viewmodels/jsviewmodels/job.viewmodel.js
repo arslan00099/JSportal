@@ -13,9 +13,11 @@ class JobViewModel {
     status = "OPEN",
     time,
     salary,
-    jobType
+    jobType,
+    minPrice,
+    maxPrice,
+    userId
   ) {
-    // Create the job post
     const newJobPost = await prisma.jobPost.create({
       data: {
         jobTitle,
@@ -28,11 +30,15 @@ class JobViewModel {
         time,
         salary,
         jobType,
+        minPrice,
+        maxPrice,
+        userId
       },
     });
-
+  
     return newJobPost;
   }
+  
 
   // Method to search for job posts based on dynamic filters
   async searchJobPosts({

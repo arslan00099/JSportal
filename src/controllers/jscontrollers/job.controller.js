@@ -18,9 +18,11 @@ exports.postJob = async (req, res) => {
       time,
       salary,
       jobType,
+      minPrice,
+      maxPrice,
+      userId
     } = req.body;
-    console.log(time);
-    console.log(salary);
+
     const result = await jobviewmodel.postJob(
       jobTitle,
       companyName,
@@ -31,13 +33,18 @@ exports.postJob = async (req, res) => {
       status,
       time,
       salary,
-      jobType
+      jobType,
+      minPrice,
+      maxPrice,
+      userId
     );
+
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 exports.getJobOld = async (req, res) => {
   try {

@@ -4,7 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class UserViewModel {
-  async signup(username, password, email, role,fullname, avatarId) {
+  async signup(username, password, email, role, fullname, avatarId) {
     const userExists = await prisma.user.findUnique({ where: { email } });
     if (userExists) {
       throw new Error("User already exists");
@@ -21,8 +21,8 @@ class UserViewModel {
       },
     });
 
-     // Create the profile associated with the user
-     await prisma.profile.create({
+    // Create the profile associated with the user
+    await prisma.profile.create({
       data: {
         userId: newUser.id,
         fullname,
@@ -36,9 +36,8 @@ class UserViewModel {
   }
 
   async login(email, password) {
-    console.log(email, password);
     const user = await prisma.user.findUnique({ where: { email } });
-    console.log(user);
+
     if (!user) {
       throw new Error("User not found");
     }
@@ -48,45 +47,48 @@ class UserViewModel {
       throw new Error("Invalid credentials");
     }
 
+    // Check if the user is deactivated
+    if (user.deActivate === true) {
+      throw new Error("Account deactivated");
+    }
+
     // Generate token
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "30d",
-      }
+      { expiresIn: "30d" }
     );
 
-    // Destructure password out of the user object before returning
     const { password: _, ...userWithoutPassword } = user;
 
     return { user: userWithoutPassword, token };
   }
 
 
+
   async adminLogin(email, password) {
     console.log(email, password);
-  
+
     // Find the user by email
     const user = await prisma.user.findUnique({ where: { email } });
     console.log(user);
-  
+
     // Check if user exists
     if (!user) {
       throw new Error("User not found");
     }
-  
+
     // Check if password matches
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       throw new Error("Invalid credentials");
     }
-  
+
     // Check if the user role is ADMIN
     if (user.role !== "ADMIN") {
       throw new Error("Access denied: User is not an admin");
     }
-  
+
     // Generate token
     const token = jwt.sign(
       { userId: user.id, role: user.role },
@@ -95,13 +97,13 @@ class UserViewModel {
         expiresIn: "30d",
       }
     );
-  
+
     // Exclude password before returning the user object
     const { password: _, ...userWithoutPassword } = user;
-  
+
     return { user: userWithoutPassword, token };
   }
-  
+
 }
 
 module.exports = new UserViewModel();
