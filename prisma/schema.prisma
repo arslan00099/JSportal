@@ -160,7 +160,7 @@ model User {
   deActivate              Boolean                   @default(false)
   firstLogin              Boolean                   @default(true)
   activeCardId            Int?
-  resetToken             String?
+  resetToken              String?
   resetTokenExpiry        DateTime?
   profileStatus           ProfileStatus?            @default(UNVARIFIED)
   userStatus              UserStatus?               @default(PENDING)
