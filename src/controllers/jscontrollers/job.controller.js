@@ -309,8 +309,8 @@ exports.getJobDetails = async (req, res) => {
     const transformedJob = {
       jobId: job.id,
       title: job.jobTitle,
-      companyName: job.user?.Profile?.companyName || null,
-      companyIcon: generateAvatarUrl(job.user?.Profile?.avatarId) || null,
+      companyName: job.user?.Profile[0].companyName || null,
+      companyIcon: generateAvatarUrl(job.user?.Profile[0].avatarId) || null,
       jobType: job.jobType,
       minPrice: job.minPrice,
       maxPrice: job.maxPrice,
@@ -342,7 +342,7 @@ exports.saveJobpost = async (req, res) => {
   try {
     const { jobId } = req.body;
     const { userId } = req.user;
-    //const  userId= 11;
+    
 
     if (!jobId) {
       return res.status(400).json({ success: false, message: "Job ID is required" });
@@ -431,8 +431,9 @@ exports.saveJobpost = async (req, res) => {
 exports.appliedjob = async (req, res) => {
   try {
     const { jobId } = req.body;
-    // const { userId } = req.user;
-    const userId = 11;
+    const { userId } = req.user;
+
+   
     if (!jobId) {
       return res.status(400).json({ success: false, message: "Job ID is required" });
     }

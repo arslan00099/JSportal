@@ -33,5 +33,7 @@ const upload = multer({
 router.post('/signup', upload.single('profilePic'), authController.signup);
 router.post('/login', authController.login);
 router.post('/adminlogin', authController.adminlogin);
+router.post('/forgetpassword', authController.forgotPassword);
+router.post('/resetpassword', authController.resetPassword);
 
 module.exports = router;

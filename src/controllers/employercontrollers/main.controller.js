@@ -128,7 +128,6 @@ exports.updateLocation = async (req, res) => {
 };
 
 exports.getProfile = async (req, res) => {
-  console.log(req.user.userId);
   try {
     const userProfile = await prisma.user.findUnique({
       where: { id: Number(req.user.userId) },
@@ -136,22 +135,30 @@ exports.getProfile = async (req, res) => {
     });
 
     if (!userProfile) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User profile not found" });
+      return res.status(404).json({ success: false, message: "User profile not found" });
     }
 
     const { password, ...userWithoutPassword } = userProfile;
 
-    res.status(200).json({ success: true, data: userWithoutPassword });
+    // Replace avatarId and resumeLink with URLs in Profile
+    const updatedProfile = userWithoutPassword.Profile?.map((profile) => ({
+      ...profile,
+      avatarId: profile.avatarId ? generateAvatarUrl(profile.avatarId) : null,
+      resumeLink: profile.resumeLink ? generateResumeUrl(profile.resumeLink) : null,
+    }));
+
+    // Replace original Profile with updatedProfile
+    const updatedUser = {
+      ...userWithoutPassword,
+      Profile: updatedProfile,
+    };
+
+    res.status(200).json({ success: true, data: updatedUser });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to retrieve profile", error });
+    res.status(500).json({ success: false, message: "Failed to retrieve profile", error });
   }
 };
-
 
 
 exports.updatePointOfContact = async (req, res) => {
@@ -583,7 +590,7 @@ exports.getTalentList = async (req, res) => {
       fullname: item.Profile[0]?.fullname,
       location: item.Profile[0]?.location,
       avatarId: item.Profile[0]?.avatarId
-        ? "/utils/profilePhotos/" + item.Profile[0]?.avatarId
+        ? generateAvatarUrl( item.Profile[0]?.avatarId)
         : null,
       services: item.services,
       rating: 0,

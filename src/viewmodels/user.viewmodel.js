@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { sendEmail } = require("../emailService");
 
 class UserViewModel {
   async signup(username, password, email, role, fullname, avatarId) {
@@ -9,9 +10,8 @@ class UserViewModel {
     if (userExists) {
       throw new Error("User already exists");
     }
-    console.log(role);
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log(hashedPassword);
     const newUser = await prisma.user.create({
       data: {
         username,
@@ -21,7 +21,6 @@ class UserViewModel {
       },
     });
 
-    // Create the profile associated with the user
     await prisma.profile.create({
       data: {
         userId: newUser.id,
@@ -29,6 +28,19 @@ class UserViewModel {
         avatarId,
       },
     });
+
+    // Send welcome email
+    try {
+      await sendEmail(
+        email,
+        "Welcome to WwFuseww!",
+        "Thanks for joining WwFuseww.com.",
+        `<p>Hi ${fullname},</p><p>Thanks for registering at <strong>WwFuseww.com</strong>! We're excited to have you onboard.</p><p>Feel free to explore and get started!</p><br/><p>Best regards,<br/>WwFuseww Team</p>`
+      );
+    } catch (error) {
+      console.error("Failed to send welcome email:", error.message);
+      // Optionally continue or rollback based on email criticality
+    }
 
     const { password: _, ...userWithoutPassword } = newUser;
 

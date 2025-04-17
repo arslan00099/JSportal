@@ -15,7 +15,7 @@ router.post(
   main.updateProfile
 );
 router.post("/location", middleware, main.updateLocation);
-router.get("/profile", middleware,main.getProfile);
+router.get("/profile",main.getProfile);
 
 // DASHBOARD ROUTES
 // JOB ROUTES
@@ -40,7 +40,7 @@ router.get(
 router.post("/hire", middleware, main.hireRecruiter);
 router.get("/hired-recruiters", middleware, main.getHiredRecruiters);
 router.get("/staff", middleware, main.getStaffMemberList);
-router.get("/talents", middleware, main.getTalentList);
+router.get("/talents", main.getTalentList);
 router.get("/talent/:id", middleware, main.getTalentDetail);
 router.get("/counts", middleware, main.getCountsByEmployerId);
 router.get("/activities", middleware, main.getActivities);

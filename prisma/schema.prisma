@@ -160,6 +160,8 @@ model User {
   deActivate              Boolean                   @default(false)
   firstLogin              Boolean                   @default(true)
   activeCardId            Int?
+  resetToken             String?
+  resetTokenExpiry        DateTime?
   profileStatus           ProfileStatus?            @default(UNVARIFIED)
   userStatus              UserStatus?               @default(PENDING)
   staffStatus             StaffStatus?              @default(NOT_ENGAGED)
@@ -213,11 +215,13 @@ model Profile {
   phnumber         String?
   mentorvideolink  String?
   avatarId         String?
-  location         String?
   about            String?           @db.Text
   language         String?
   tagline          String?
   industry         String?
+  discipline       String?
+  yearOfExperience Int?
+  location         String?
   services         String?
   resumeLink       String?
   linkedinLink     String?
