@@ -15,7 +15,7 @@ router.post(
   main.updateProfile
 );
 router.post("/location", middleware, main.updateLocation);
-router.get("/profile",main.getProfile);
+router.get("/profile", middleware, main.getProfile);
 
 // DASHBOARD ROUTES
 // JOB ROUTES
@@ -52,36 +52,36 @@ router.delete("/cards/:cardId", middleware, main.deleteCard);
 
 //OTHER ROUTES
 
-router.get("/getallrecruiter", allrecruiter.getallRecruiterProfile);
-router.post("/postjob", timesheet.postJob);
-router.post("/approveTimesheet", timesheet.approveTimesheet);
-router.get("/timesheet", timesheet.getTimesheetsByRecruitingId);
+router.get("/getallrecruiter", middleware, allrecruiter.getallRecruiterProfile);
+router.post("/postjob", middleware, timesheet.postJob);
+router.post("/approveTimesheet", middleware, timesheet.approveTimesheet);
+router.get("/timesheet", middleware, timesheet.getTimesheetsByRecruitingId);
 
 
 //new
-router.get("/getStaffMember/:employerId",main.getStaffMembersByEmployerCompany);
-router.get("/getActivites",main.getActivities);
-router.get("/subscription/:userId",main.getSubscriptionDetails);
-router.get("/getAllstaffmembers", main.getAllStaffMembers);
-router.put("/userSetting",main.manageUser);
-router.post("/buySubscription",main.buySubscription);
-router.get("/buySubscription/:userId",main.getBoughtSubscriptions);
+router.get("/getStaffMember/:employerId", middleware, main.getStaffMembersByEmployerCompany);
+router.get("/getActivites", middleware, main.getActivities);
+router.get("/subscription/:userId", middleware, main.getSubscriptionDetails);
+router.get("/getAllstaffmembers", middleware, main.getAllStaffMembers);
+router.put("/userSetting", middleware, main.manageUser);
+router.post("/buySubscription", middleware, main.buySubscription);
+router.get("/buySubscription/:userId", middleware, main.getBoughtSubscriptions);
 
 
 //setting
-router.put("/secondaryemail/:userId",main.updateEmail);
-router.put("/changepassword/:userId",main.changePassword);
-router.post("/deactivate/:userId",main.deactivateProfile);
-router.delete("/account/:userId",main.deleteProfile);
+router.put("/secondaryemail/:userId", middleware, main.updateEmail);
+router.put("/changepassword/:userId", middleware, main.changePassword);
+router.post("/deactivate/:userId", middleware, main.deactivateProfile);
+router.delete("/account/:userId", middleware, main.deleteProfile);
 
 //TransferAccount
-router.post("/transferaccount",main.transferEmployerAccount);
-router.post("/activecard",main.updateActiveCard);
-router.get("/staffmemberDetails/:userId",main.getStafmemberDetails)
+router.post("/transferaccount", middleware, main.transferEmployerAccount);
+router.post("/activecard", middleware, main.updateActiveCard);
+router.get("/staffmemberDetails/:userId", middleware, main.getStafmemberDetails)
 
 //Update point of contact
 
-router.put("/pointofcontact",middleware, upload.none(), main.updatePointOfContact);
+router.put("/pointofcontact", middleware, upload.none(), main.updatePointOfContact);
 
 
 module.exports = router;

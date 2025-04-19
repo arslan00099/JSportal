@@ -4,10 +4,10 @@ const notificationController = require('../../controllers/jscontrollers/notifica
 const middleware = require('../../middleware/auth.middleware');    // Ensure the path is correct
 
 // Notification routes
-router.get('/', notificationController.getNotifications);
-router.post('/', notificationController.createNotification);
+router.get('/', middleware, notificationController.getNotifications);
+router.post('/', middleware, notificationController.createNotification);
 
 // Review routes
-router.post('/review', notificationController.submitReview);
+router.post('/review', middleware,notificationController.submitReview);
 
 module.exports = router;

@@ -53,7 +53,7 @@ const cvupload = multer({ storage: cvstorage });
 const uploadVideo = multer({ storage: videostorage });
 
 router.post('/testprofile', middleware, controller.insert);
-router.get('/testprofile', controller.getMentorProfile);
+router.get('/testprofile', middleware, controller.getMentorProfile);
 router.get('/session', middleware, booking.getMentorSession);
 router.get('/earnings', middleware, booking.getMentorEarnings);
 
@@ -109,19 +109,19 @@ router.delete('/delete', middleware, settingController.deleteUser);
 
 
 // Route to add a new service
-router.post('/service', serviceController.addService);
-router.put('/service', serviceController.updateService);
-router.delete('/service', serviceController.deleteService);
+router.post('/service', middleware, serviceController.addService);
+router.put('/service', middleware, serviceController.updateService);
+router.delete('/service', middleware, serviceController.deleteService);
 
 
 router.post('/upload-video', uploadVideo.single('mentorVideo'), middleware, userController.uploadVideo);
 
 //dashbord
-router.get('/getMentorStatsCount/:mentorId', dashboard.getMentorStats);
-router.get('/UpcomingSessions/:mentorId', dashboard.getUpcomingSessions);
-router.get('/getMentorReviews/:mentorId', dashboard.getMentorReviews);
-router.get('/getMentorEarnings/:mentorId', dashboard.getMentorEarnings);
-router.post('/linkCalendly/:userId', dashboard.linkCalendly);
+router.get('/getMentorStatsCount/:mentorId', middleware, dashboard.getMentorStats);
+router.get('/UpcomingSessions/:mentorId', middleware, dashboard.getUpcomingSessions);
+router.get('/getMentorReviews/:mentorId', middleware, dashboard.getMentorReviews);
+router.get('/getMentorEarnings/:mentorId', middleware, dashboard.getMentorEarnings);
+router.post('/linkCalendly/:userId', middleware, dashboard.linkCalendly);
 
 
 module.exports = router;

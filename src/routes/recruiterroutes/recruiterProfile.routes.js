@@ -126,9 +126,9 @@ router.put("/deactivate", middleware, settingController.deactivateUser);
 router.delete("/delete", middleware, settingController.deleteUser);
 
 // // Route to add a new service
-router.post("/service", serviceController.addService);
-router.put("/service", serviceController.updateService);
-router.delete("/service", serviceController.deleteService);
+router.post("/service", middleware, serviceController.addService);
+router.put("/service", middleware, serviceController.updateService);
+router.delete("/service", middleware, serviceController.deleteService);
 
 router.post(
   "/upload-video",
@@ -139,16 +139,16 @@ router.post(
 router.get("/getAllJobseeker", middleware, main.getAllJobSeeker);
 router.get("/jobseeker/detail/:id", middleware, main.getJobSeekerDetail);
 router.get("/notification", middleware, timesheet.getRecNotification);
-router.get("/recruting/details", timesheet.getDetails);
-router.post("/job/approve", timesheet.updateRecApprovalStatus);
+router.get("/recruting/details", middleware, timesheet.getDetails);
+router.post("/job/approve", middleware, timesheet.updateRecApprovalStatus);
 router.get("/upcommingbookings", middleware, timesheet.getUpcomingBookings);
-router.post("/job/status", timesheet.markedasCompleted);
-router.post("/timesheet", timesheet.createTimesheets);
+router.post("/job/status", middleware, timesheet.markedasCompleted);
+router.post("/timesheet", middleware, timesheet.createTimesheets);
 router.get(
   "/getRecruiterAndEmployerDetails",
   timesheet.getRecruiterAndEmployerDetailsByHiringId
 );
-router.get("/timesheet", timesheet.getTimeSheetsByRecruiterId);
+router.get("/timesheet", middleware, timesheet.getTimeSheetsByRecruiterId);
 router.get("/progress-roles", middleware, timesheet.getProgressRole);
 router.get("/roles", middleware, timesheet.getRole);
 router.get("/add-timesheet-list", middleware, timesheet.addTimeSheet);
@@ -160,27 +160,27 @@ router.post(
   profileController.uploadVideo
 );
 router.get("/notification", middleware, timesheet.getRecNotification);
-router.get("/recruting/details", timesheet.getDetails);
-router.post("/job/approve", timesheet.updateRecApprovalStatus);
+router.get("/recruting/details", middleware, timesheet.getDetails);
+router.post("/job/approve", middleware, timesheet.updateRecApprovalStatus);
 router.get("/upcommingbookings", middleware, timesheet.getUpcomingBookings);
-router.post("/job/status", timesheet.markedasCompleted);
+router.post("/job/status", middleware, timesheet.markedasCompleted);
 router.post("/timesheet", middleware, timesheet.createTimesheets);
 router.get(
   "/getRecruiterAndEmployerDetails",
   timesheet.getRecruiterAndEmployerDetailsByHiringId
 );
-router.get("/timesheet", timesheet.getTimeSheetsByRecruiterId);
+router.get("/timesheet", middleware, timesheet.getTimeSheetsByRecruiterId);
 router.get("/progress-roles", middleware, timesheet.getProgressRole);
 router.get("/roles", middleware, timesheet.getRole);
 router.get("/add-timesheet-list", middleware, timesheet.addTimeSheet);
 router.get("/view-timesheet-list", middleware, timesheet.viewTimeSheet);
-router.get("/getAllJobseeker", allJobSeeker.getallJobseekerProfile);
+router.get("/getAllJobseeker", middleware, allJobSeeker.getallJobseekerProfile);
 
 router.get("/earnings", middleware, earnings.getEarnings);
 router.get("/bookings", middleware, earnings.getBookings);
-router.get("/getCounts/:recruiterId", earnings.getRecruiterStats);
-router.get("/upcommingbookings/:recruiterId", earnings.getBookings);
-router.get("/getreview/:recruiterId", earnings.getReviews);
-router.get("/earnings/:recruiterId",earnings.getRecruiterEarnings);
+router.get("/getCounts/:recruiterId", middleware, earnings.getRecruiterStats);
+router.get("/upcommingbookings/:recruiterId", middleware, earnings.getBookings);
+router.get("/getreview/:recruiterId", middleware, earnings.getReviews);
+router.get("/earnings/:recruiterId", middleware, earnings.getRecruiterEarnings);
 
 module.exports = router;

@@ -6,13 +6,13 @@ const jobController = require('../../controllers/jscontrollers/job.controller');
 const middleware = require('../../middleware/auth.middleware');    // Ensure the path is correct
 
 // Define routes
-router.post('/post', jobController.postJob);
-router.get('/post', jobController.getJob);
-router.get('/jobDetials/:id', jobController.getJobDetails);
-router.post('/apply', jobController.appliedjob);
-router.post('/save', jobController.saveJobpost);
-router.get('/type', jobController.getJobType);
-router.get('/city', jobController.getCities);
-router.get('/compnaynames', jobController.getCompanyNames);
+router.post('/post', middleware, jobController.postJob);
+router.get('/post', middleware, jobController.getJob);
+router.get('/jobDetials/:id', middleware, jobController.getJobDetails);
+router.post('/apply', middleware, jobController.appliedjob);
+router.post('/save', middleware, jobController.saveJobpost);
+router.get('/type', middleware, jobController.getJobType);
+router.get('/city', middleware, jobController.getCities);
+router.get('/compnaynames', middleware, jobController.getCompanyNames);
 
 module.exports = router;

@@ -5,29 +5,30 @@ const router = express.Router();
 const timesheet = require('../../controllers/timesheetcontrollers/timesheet');
 const mentorProfile = require('../../controllers/admincontrollers/mentors');
 const dashboard = require('../../controllers/admincontrollers/dashboard');
+const middleware=require('../../middleware/middleware');
 
 
-router.post('/job/approve', timesheet.updateAdminApprovalStatus);
+router.post('/job/approve',middleware, timesheet.updateAdminApprovalStatus);
 
-router.get('/mentorProfile', mentorProfile.getAllMentorsWithServices);
-router.get('/dashboard', dashboard.getDashboard);
-router.get('/getallMentors', dashboard.getAllMentors);
-router.get('/getallJS', dashboard.getAllJS);
-router.get('/getallFS', dashboard.getAllSF);
-router.put('/SFstatus/:userId', dashboard.updateStaffStatus);
-router.get('/mentorProfile/:userId', mentorProfile.getMentorByid);
-router.get('/getMentorBookings/:userId', dashboard.getAllMentorBookings);
-router.put('/updateMentorSession/:bookingId', dashboard.updateMentorBookingStatus);
+router.get('/mentorProfile', middleware, mentorProfile.getAllMentorsWithServices);
+router.get('/dashboard', middleware, dashboard.getDashboard);
+router.get('/getallMentors', middleware, dashboard.getAllMentors);
+router.get('/getallJS', middleware, dashboard.getAllJS);
+router.get('/getallFS', middleware, dashboard.getAllSF);
+router.put('/SFstatus/:userId',middleware, dashboard.updateStaffStatus);
+router.get('/mentorProfile/:userId', middleware, mentorProfile.getMentorByid);
+router.get('/getMentorBookings/:userId', middleware, dashboard.getAllMentorBookings);
+router.put('/updateMentorSession/:bookingId', middleware, dashboard.updateMentorBookingStatus);
 //router.get('/getJSBookings/:userId',dashboard.getAllJSBookings);
 //router.get('/getJSReviews/:userId',dashboard.getJSReviews);
-router.get('/getMentorReviews/:userId', dashboard.getMentorReviews);
-router.get('/getAllEmployers', dashboard.getAllEmployers);
-router.get('/getEmployerBookings/:userId', dashboard.getEmployerBookings);
-router.put('/updateEmployerBookingStatus/:bookingId', dashboard.updateEmployerBookingStatus);
-router.get('/getallRec', dashboard.getAllRec);
-router.get('/recProfile/:userId', dashboard.getRecByid);
-router.get('/recBooking/:userId', dashboard.getRecBookings);
-router.delete('/deleteAccount/:userId', dashboard.deleteUserAndProfile);
+router.get('/getMentorReviews/:userId', middleware, dashboard.getMentorReviews);
+router.get('/getAllEmployers', middleware, dashboard.getAllEmployers);
+router.get('/getEmployerBookings/:userId', middleware, dashboard.getEmployerBookings);
+router.put('/updateEmployerBookingStatus/:bookingId', middleware, dashboard.updateEmployerBookingStatus);
+router.get('/getallRec',middleware, dashboard.getAllRec);
+router.get('/recProfile/:userId', middleware, dashboard.getRecByid);
+router.get('/recBooking/:userId', middleware, dashboard.getRecBookings);
+router.delete('/deleteAccount/:userId', middleware, dashboard.deleteUserAndProfile);
 
 router.post('/addIndustry', (req, res) => dashboard.createEntry({ ...req, params: { model: 'industry' } }, res));
 router.put('/updateIndustry', (req, res) => dashboard.updateEntry({ ...req, params: { model: 'industry' } }, res));
@@ -66,45 +67,45 @@ router.delete('/deleteSkill', (req, res) => dashboard.deleteEntry({ ...req, para
 router.get('/getSkills', (req, res) => { dashboard.getEntries({ ...req, params: { ...req.params, model: 'skill' } }, res); });
 
 //  // Profile Approvals
-router.get('/mentorApproval/:role', dashboard.mentorApproval);
-router.put('/updateUserStatus', dashboard.updateUserStatus);
-router.get('/getRecDetail/:userId', dashboard.getRecMenDetails);
+router.get('/mentorApproval/:role', middleware, dashboard.mentorApproval);
+router.put('/updateUserStatus',middleware,  dashboard.updateUserStatus);
+router.get('/getRecDetail/:userId', middleware, dashboard.getRecMenDetails);
 
 
-router.get('/getRecruiterHiring', dashboard.getRecruiterHiring);
-router.put('/updateInvoice/:id', dashboard.updateInvoice);
-router.put('/updateInvoice/:id', dashboard.updateInvoice);
-router.get('/getRecruiterHiringDetail/:bookingId', dashboard.getRecruiterHiringDetail);
-router.get('/getPaymentDetails', dashboard.getPaymentDetails);
-router.get('/getPlainDetail/:id', dashboard.getEmployerPlainDetial);
-router.get('/getPaymentDetails:/role', dashboard.getPaymentDetailrole);
+router.get('/getRecruiterHiring',middleware,  dashboard.getRecruiterHiring);
+router.put('/updateInvoice/:id', middleware, dashboard.updateInvoice);
+router.put('/updateInvoice/:id',middleware, dashboard.updateInvoice);
+router.get('/getRecruiterHiringDetail/:bookingId', middleware, dashboard.getRecruiterHiringDetail);
+router.get('/getPaymentDetails', middleware,dashboard.getPaymentDetails);
+router.get('/getPlainDetail/:id', middleware,dashboard.getEmployerPlainDetial);
+router.get('/getPaymentDetails:/role',middleware, dashboard.getPaymentDetailrole);
 
 
-router.post('/AdminSettings', dashboard.upsertAdminSettings);
-router.get('/AdminSettings', dashboard.getAdminSettings);
-router.post('/postPages', dashboard.postPages);
-router.post('/postSelection', dashboard.postSection);
-router.post('/postContents', dashboard.postContents);
+router.post('/AdminSettings', middleware,dashboard.upsertAdminSettings);
+router.get('/AdminSettings',middleware, dashboard.getAdminSettings);
+router.post('/postPages', middleware,dashboard.postPages);
+router.post('/postSelection', middleware,dashboard.postSection);
+router.post('/postContents', middleware, dashboard.postContents);
 
-router.get('/getProfile/:id', dashboard.getProfile);
-router.put('/manageUser/:id', dashboard.manageUser);
+router.get('/getProfile/:id', middleware, dashboard.getProfile);
+router.put('/manageUser/:id', middleware, dashboard.manageUser);
 
-router.get('/getBlogs', dashboard.getBlog);
-router.put('/blogStatus/:id', dashboard.updateBlogStatus);
-router.get('/blogs/:id', dashboard.getBlogById);
-router.put('/blogs/:id', dashboard.updateBlogContent);
+router.get('/getBlogs', middleware, dashboard.getBlog);
+router.put('/blogStatus/:id', middleware, dashboard.updateBlogStatus);
+router.get('/blogs/:id',middleware,  dashboard.getBlogById);
+router.put('/blogs/:id', middleware, dashboard.updateBlogContent);
 
-router.get('/timesheetCounts', dashboard.getCountsTimesheet);
-router.get('/timesheetDetails', dashboard.getTimesheetDetails);
-router.put('/paymentstatus/:timesheetId', dashboard.updatePaymentStatus);
-router.put('/adminapprovalstatus/:timesheetId', dashboard.updateAdminApprovalStatus);
-router.post('/addInvoice/:timesheetId', dashboard.addInvoice);
-router.get('/adminNotification', dashboard.getNotification);
-router.get('/getTimesheetById/:id', dashboard.getTimesheetById);
+router.get('/timesheetCounts', middleware,dashboard.getCountsTimesheet);
+router.get('/timesheetDetails',middleware,  dashboard.getTimesheetDetails);
+router.put('/paymentstatus/:timesheetId', middleware, dashboard.updatePaymentStatus);
+router.put('/adminapprovalstatus/:timesheetId', middleware, dashboard.updateAdminApprovalStatus);
+router.post('/addInvoice/:timesheetId', middleware, dashboard.addInvoice);
+router.get('/adminNotification',middleware,  dashboard.getNotification);
+router.get('/getTimesheetById/:id', middleware, dashboard.getTimesheetById);
 
-router.get('/jsbyid/:id', dashboard.getJobSeekerById);
-router.get('/employerslist',dashboard.getAllEmployerslist);
-router.get('/userwithcompany/:id',dashboard.getCompnaywithUser);
+router.get('/jsbyid/:id', middleware, dashboard.getJobSeekerById);
+router.get('/employerslist',middleware, dashboard.getAllEmployerslist);
+router.get('/userwithcompany/:id',middleware, dashboard.getCompnaywithUser);
 
 
 
