@@ -60,7 +60,7 @@ class UserViewModel {
     }
 
     // Check if the user is deactivated
-    if (user.deActivate === true) {
+    if (user.deActivate === false) {
       throw new Error("Account deactivated");
     }
 
