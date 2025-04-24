@@ -51,7 +51,7 @@ exports.login = async (req, res) => {
     res.status(200).json({ success: true, token, data: filteredUser });
   } catch (error) {
     if (error.message === "Account deactivated") {
-      return res.status(200).json({ success: false, message: "Your account is deactivated" });
+      return res.status(403).json({ success: false, message: "Your account is deactivated" });
     }
 
     res.status(400).json({ success: false, message: error.message });
