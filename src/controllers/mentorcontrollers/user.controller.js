@@ -69,6 +69,7 @@ exports.uploadDocuments = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const { userId } = req.user;
+    
     console.log(userId);
     const userProfile = await userViewModel.getProfile(userId);
 

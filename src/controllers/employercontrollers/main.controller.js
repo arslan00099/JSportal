@@ -406,6 +406,7 @@ exports.getRecruiterList = async (req, res) => {
     const recruiters = await prisma.user.findMany({
       where: {
         role: "RECRUITER",
+        userStatus: "APPROVED",
       },
       include: {
         Profile: true,
@@ -416,7 +417,7 @@ exports.getRecruiterList = async (req, res) => {
       id: item.id,
       fullname: item.Profile[0]?.fullname,
       location: item.Profile[0]?.location,
-      avatarId: "/utils/profilephotos/" + item.Profile[0]?.avatarId,
+      avatarId:generateAvatarUrl( item.Profile[0]?.avatarId),
       services: item.services,
       rating: 0,
       reviews: 0,

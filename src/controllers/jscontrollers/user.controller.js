@@ -57,10 +57,6 @@ exports.getProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Construct the URL to access the profile picture
-    if (userProfile.avatarId) {
-      userProfile.profilePhotoUrl = `${req.protocol}://${req.get('host')}/utils/profilephotos/${userProfile.avatarId}`;
-    }
 
     res.status(200).json({ success: true, data: userProfile });
   } catch (error) {
@@ -357,7 +353,7 @@ exports.createMentorSession = async (req, res) => {
 
   try {
     // Ensure selectedDateTime is in ISO-8601 format
-  //  const formattedDateTime = new Date(selectedDateTime).toISOString();
+    //  const formattedDateTime = new Date(selectedDateTime).toISOString();
 
     // Fetch the service name from the selectedService ID
     const service = await prisma.service.findUnique({

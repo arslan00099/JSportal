@@ -65,7 +65,7 @@ exports.postProfile = async (req, res) => {
     // If the avatarId exists in the profile, append the base URL to it
     if (userProfile.avatarId) {
       console.log("test");
-      userProfile.avatarId=generateAvatarUrl(userProfile.avatarId);
+      userProfile.avatarId = generateAvatarUrl(userProfile.avatarId);
       //userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
     }
 
@@ -82,6 +82,7 @@ exports.postProfile = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   const { userId } = req.user;
+
   try {
     const userDetails = await prisma.user.findUnique({
       where: { id: userId },
@@ -106,19 +107,15 @@ exports.getProfile = async (req, res) => {
       throw new Error("User not found");
     }
 
-    // Base URLs for avatar and documents
-    const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
-    const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume"; // Replace with your actual URL
-    const videoBaseUrl = "http://54.144.76.160:55000/utils/video";
 
-    // Add full URL for avatar in Profile (check if Profile exists first)
+    // Add full URL for avatar and mentor video link
     if (userDetails.Profile && userDetails.Profile.length > 0) {
       userDetails.Profile.forEach((profile) => {
         if (profile.avatarId) {
-          profile.avatarUrl = generateAvatarUrl(profile.avatarId);
+          profile.avatarId = generateAvatarUrl(profile.avatarId);
         }
         if (profile.mentorvideolink) {
-          profile.mentorvideolink = generateVideoUrl( profile.mentorvideolink);
+          profile.mentorvideolink = generateVideoUrl(profile.mentorvideolink);
         }
       });
     }
@@ -127,7 +124,7 @@ exports.getProfile = async (req, res) => {
     if (userDetails.Documents && userDetails.Documents.length > 0) {
       userDetails.Documents.forEach((document) => {
         if (document.resumeLink) {
-          document.resumeUrl =  generateResumeUrl( document.resumeLink);
+          document.resumeUrl = generateResumeUrl(document.resumeLink);
         }
         if (document.portfolioLink) {
           document.portfolioUrl = generateResumeUrl(document.portfolioLink);
@@ -160,7 +157,7 @@ exports.getProfile = async (req, res) => {
         ...userDetails,
         Profile: userDetails.Profile.map((item) => ({
           ...item,
-          avatarId: `/utils/profilephotos/${item.avatarId}`,
+
         })),
       },
     });

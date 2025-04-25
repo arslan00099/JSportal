@@ -25,7 +25,7 @@ router.get("/job/:jobId", middleware, main.getJobDetail);
 router.patch("/job/:jobId", middleware, main.updateJob);
 router.delete("/job/:jobId", middleware, main.deleteJob);
 router.get("/job-applied/:jobId", middleware, main.getAppliedJobsByJobId);
-router.get("/recruiters", middleware, main.getRecruiterList);
+router.get("/recruiters", middleware,main.getRecruiterList);
 router.get("/recruiter/:recruiterId", middleware, main.getRecruiterDetails);
 router.get(
   "/recruiter/timesheet/:recruiterId",

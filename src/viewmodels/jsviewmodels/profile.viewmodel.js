@@ -3,6 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 const {
   deleteDocument,
 } = require("../../controllers/jscontrollers/user.controller");
+const { generateAvatarUrl, generateVideoUrl, generateResumeUrl } = require("../../url");
 const prisma = new PrismaClient();
 
 class UserProfileViewModel {
@@ -75,19 +76,15 @@ class UserProfileViewModel {
         throw new Error("User not found");
       }
 
-      // Base URLs for avatar and documents
-      const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Replace with your actual URL
-      const resumeBaseUrl = "http://54.144.76.160:5000/utils/resume"; // Replace with your actual URL
 
       // Add full URL for avatar
       if (userDetails.Profile && userDetails.Profile.length > 0) {
         userDetails.Profile.forEach((profile) => {
           if (profile.avatarId) {
-            profile.avatarId = `/utils/profilephotos/${profile.avatarId}`;
+            profile.avatarId = generateAvatarUrl(profile.avatarId);
           }
           if (profile.mentorvideolink) {
-            profile.mentorvideolink = `/utils/video/${profile.mentorvideolink}`;
-
+            profile.mentorvideolink = generateVideoUrl(profile.mentorvideolink);
           }
         });
       }
@@ -96,13 +93,9 @@ class UserProfileViewModel {
       if (userDetails.Documents && userDetails.Documents.length > 0) {
         userDetails.Documents.forEach((document) => {
           if (document.resumeLink) {
-            document.resumeUrl = `/utils/resume/${document.resumeLink}`;
-
+            document.resumeLink = generateResumeUrl(document.resumeLink);
           }
-          if (document.portfolioLink) {
-            document.portfolioUrl = `/utils/resume/${document.portfolioLink}`;
 
-          }
         });
       }
 

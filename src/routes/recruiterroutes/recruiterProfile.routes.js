@@ -72,7 +72,7 @@ router.post(
   profileController.postProfile
 );
 router.delete("/profile", middleware, profileController.deleteProfile);
-router.get("/profile", middleware, profileController.getProfile);
+router.get("/profile",middleware, profileController.getProfile);
 
 router.post("/education", middleware, profileController.postEducation);
 router.put("/education", middleware, profileController.updateEducation);

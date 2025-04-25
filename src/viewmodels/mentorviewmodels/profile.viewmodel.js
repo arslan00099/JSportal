@@ -3,6 +3,7 @@ const { PrismaClient } = require("@prisma/client");
 const {
   deleteDocument,
 } = require("../../controllers/jscontrollers/user.controller");
+const { generateAvatarUrl, generateVideoUrl } = require("../../url");
 const prisma = new PrismaClient();
 
 class UserProfileViewModel {
@@ -143,10 +144,10 @@ class UserProfileViewModel {
       if (userDetails.Profile && userDetails.Profile.length > 0) {
         userDetails.Profile.forEach((profile) => {
           if (profile.avatarId) {
-            profile.avatarId = `/utils/profilephotos/${profile.avatarId}`;
+            profile.avatarId = generateAvatarUrl(profile.avatarId);
           }
           if (profile.mentorvideolink) {
-            profile.mentorvideolink = `/utils/video/${profile.mentorvideolink}`;
+            profile.mentorvideolink =generateVideoUrl( profile.mentorvideolink);
          
           }
         });

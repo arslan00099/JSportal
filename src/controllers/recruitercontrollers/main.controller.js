@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const { generateAvatarUrl } = require("../../url");
 const prisma = new PrismaClient();
 
 exports.getAllJobSeeker = async (req, res) => {
@@ -24,7 +25,7 @@ exports.getAllJobSeeker = async (req, res) => {
     });
     const listFiltered = jobseekers.map((user) => ({
       id: user.id,
-      avatarId: user.Profile[0]?.avatarId,
+      avatarId: generateAvatarUrl(user.Profile[0]?.avatarId),
       fullname: user.Profile[0]?.fullname,
       location: user.Profile[0]?.location,
       phnumber: user.Profile[0]?.phnumber,

@@ -224,11 +224,12 @@ exports.getJob = async (req, res) => {
 
 
 exports.getJobDetails = async (req, res) => {
+  //console.log("API HIT");
   try {
     const { id } = req.params; // Extract job post ID from URL params
     const { userId } = req.query; // Extract userId from query params
-
-    console.log("Fetching job details for ID:", id);
+    console.log("userId", userId);
+    /// console.log("Fetching job details for ID:", id);
 
     // Query to fetch the job by ID
     const job = await prisma.jobPost.findUnique({
@@ -262,6 +263,8 @@ exports.getJobDetails = async (req, res) => {
                 city: true,
               },
             },
+
+
           },
         },
       },
@@ -318,7 +321,7 @@ exports.getJobDetails = async (req, res) => {
       applicationLink: job.applicationLink,
       salary: job.salary,
       time: job.time,
-      city: job.user?.Location?.city || null,
+      city: job.user?.Location[0]?.city || null,
       createdAt: job.createdAt,
       jobApply,
       appliedDate, // Include appliedDate in the response
@@ -342,7 +345,7 @@ exports.saveJobpost = async (req, res) => {
   try {
     const { jobId } = req.body;
     const { userId } = req.user;
-    
+
 
     if (!jobId) {
       return res.status(400).json({ success: false, message: "Job ID is required" });
@@ -433,7 +436,7 @@ exports.appliedjob = async (req, res) => {
     const { jobId } = req.body;
     const { userId } = req.user;
 
-   
+
     if (!jobId) {
       return res.status(400).json({ success: false, message: "Job ID is required" });
     }
