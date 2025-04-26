@@ -417,7 +417,7 @@ exports.getRecruiterList = async (req, res) => {
       id: item.id,
       fullname: item.Profile[0]?.fullname,
       location: item.Profile[0]?.location,
-      avatarId:generateAvatarUrl( item.Profile[0]?.avatarId),
+      avatarId: generateAvatarUrl(item.Profile[0]?.avatarId),
       services: item.services,
       rating: 0,
       reviews: 0,
@@ -591,7 +591,7 @@ exports.getTalentList = async (req, res) => {
       fullname: item.Profile[0]?.fullname,
       location: item.Profile[0]?.location,
       avatarId: item.Profile[0]?.avatarId
-        ? generateAvatarUrl( item.Profile[0]?.avatarId)
+        ? generateAvatarUrl(item.Profile[0]?.avatarId)
         : null,
       services: item.services,
       rating: 0,
@@ -813,7 +813,7 @@ exports.getHiredRecruiters = async (req, res) => {
     const filteredData = await hiredRecruiters.map((hire) => ({
       id: hire.id,
       recruiterId: hire.recruiterId,
-      avatarId: "/utils/profilephotos/" + hire.recruiter.Profile[0]?.avatarId,
+      avatarId: generateAvatarUrl(hire.recruiter.Profile[0]?.avatarId),
       fullname: hire.recruiter.Profile[0]?.fullname,
       location: hire.recruiter.Profile[0]?.location,
       services: hire.hiredServices,

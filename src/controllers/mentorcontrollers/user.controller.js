@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 exports.postProfile = async (req, res) => {
   try {
     const {
+
       fullname,
       phnumber,
       location,
@@ -17,7 +18,7 @@ exports.postProfile = async (req, res) => {
     } = req.body;
     console.log(location);
     const { userId, role } = req.user;
-    const phoneNumber = parseInt(phnumber, 10);
+
 
     // Check if a file is uploaded
     let avatarId = null;
@@ -28,7 +29,7 @@ exports.postProfile = async (req, res) => {
     const result = await userViewModel.basicprofile(
       userId,
       fullname,
-      phoneNumber,
+      phnumber,
       avatarId,
       location,
       companyName,
@@ -69,7 +70,7 @@ exports.uploadDocuments = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const { userId } = req.user;
-    
+
     console.log(userId);
     const userProfile = await userViewModel.getProfile(userId);
 

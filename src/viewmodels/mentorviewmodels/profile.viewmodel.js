@@ -18,13 +18,13 @@ class UserProfileViewModel {
     language,
     tagline
   ) {
-    const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
+   
 
     const userExists = await prisma.profile.findUnique({ where: { userId } });
 
     let updateData = {
       fullname,
-      phnumber: String(phnumber),
+      phnumber,
       location,
       companyName,
       about,
@@ -50,7 +50,7 @@ class UserProfileViewModel {
         data: {
           userId,
           fullname,
-          phnumber: String(phnumber),
+          phnumber,
           avatarId,
           location,
           companyName,
@@ -63,7 +63,7 @@ class UserProfileViewModel {
 
     // If the avatarId exists in the profile, append the base URL to it
     if (userProfile.avatarId) {
-      userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
+      userProfile.avatarId = generateAvatarUrl(userProfile.avatarId);
     }
 
     return userProfile;
@@ -138,7 +138,7 @@ class UserProfileViewModel {
         throw new Error("User not found");
       }
 
-    
+
 
       // Add full URL for avatar in Profile (check if Profile exists first)
       if (userDetails.Profile && userDetails.Profile.length > 0) {
@@ -147,8 +147,8 @@ class UserProfileViewModel {
             profile.avatarId = generateAvatarUrl(profile.avatarId);
           }
           if (profile.mentorvideolink) {
-            profile.mentorvideolink =generateVideoUrl( profile.mentorvideolink);
-         
+            profile.mentorvideolink = generateVideoUrl(profile.mentorvideolink);
+
           }
         });
       }
@@ -157,12 +157,12 @@ class UserProfileViewModel {
       if (userDetails.Documents && userDetails.Documents.length > 0) {
         userDetails.Documents.forEach((document) => {
           if (document.resumeLink) {
-            document.resumeUrl=`/utils/resume/${document.resumeLink}`;
-            
+            document.resumeUrl = `/utils/resume/${document.resumeLink}`;
+
           }
           if (document.portfolioLink) {
-            document.portfolioUrl=`/utils/resume/${document.portfolioLink}`;
-          
+            document.portfolioUrl = `/utils/resume/${document.portfolioLink}`;
+
           }
         });
       }

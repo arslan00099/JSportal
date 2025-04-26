@@ -8,10 +8,10 @@ const prisma = new PrismaClient();
 
 exports.postProfile = async (req, res) => {
   try {
-    const { fullname, phnumber, services, industry, about, language } =
+    const { fullname, phnumber, services, industry, about, language, tagline } =
       req.body;
     const { userId } = req.user;
-    const phoneNumber = parseInt(phnumber, 10);
+
 
     // Check if a file is uploaded
     let avatarId = null;
@@ -19,7 +19,7 @@ exports.postProfile = async (req, res) => {
       avatarId = req.file.filename; // Save the file name to use as avatarId
     }
 
-    const avatarBaseUrl = "http://54.144.76.160:5000/utils/profilephotos"; // Your actual URL
+
 
     // Check if the user profile already exists
     const userExists = await prisma.profile.findUnique({ where: { userId } });
@@ -27,7 +27,8 @@ exports.postProfile = async (req, res) => {
     // Data to update or create
     let updateData = {
       fullname,
-      phnumber: String(phoneNumber),
+      phnumber,
+      tagline,
       about,
       language,
       services,
@@ -52,7 +53,8 @@ exports.postProfile = async (req, res) => {
         data: {
           userId,
           fullname,
-          phnumber: String(phoneNumber),
+          phnumber,
+          tagline,
           about,
           language,
           services,
@@ -66,7 +68,7 @@ exports.postProfile = async (req, res) => {
     if (userProfile.avatarId) {
       console.log("test");
       userProfile.avatarId = generateAvatarUrl(userProfile.avatarId);
-      //userProfile.avatarId = `${avatarBaseUrl}/${userProfile.avatarId}`;
+
     }
 
     // Remove fields with null or undefined values
