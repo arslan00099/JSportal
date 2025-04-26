@@ -7,6 +7,7 @@ const userController = require('../../controllers/jscontrollers/user.controller'
 const blogcontroller = require('../../controllers/jscontrollers/blog.controller');
 const middleware = require('../../middleware/middleware');
 const authroize = require('../../controllers/jscontrollers/authorize');
+const servicesController = require('../../controllers/admincontrollers/services');
 
 // Set up multer storage configuration
 const storage = multer.diskStorage({
@@ -71,6 +72,7 @@ router.get('/getBlog', middleware, blogcontroller.getBlogs);
 router.get('/getBlogDetials/:id', middleware, blogcontroller.getBlogDetails);
 
 router.post('/charge', middleware, authroize.charge);
+router.get('/services', servicesController.getservicesName);
 
 
 
