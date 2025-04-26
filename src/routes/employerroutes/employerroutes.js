@@ -15,7 +15,7 @@ router.post(
   main.updateProfile
 );
 router.post("/location", middleware, main.updateLocation);
-router.get("/profile", middleware, main.getProfile);
+router.get("/profile", main.getProfile);
 
 // DASHBOARD ROUTES
 // JOB ROUTES

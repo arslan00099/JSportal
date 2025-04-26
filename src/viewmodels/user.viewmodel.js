@@ -59,8 +59,8 @@ class UserViewModel {
       throw new Error("Invalid credentials");
     }
 
-    // Check if the user is deactivated
-    if (user.deActivate === false) {
+    
+    if (user.isActive === false) {
       throw new Error("Account deactivated");
     }
 
