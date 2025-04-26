@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 
 exports.postProfile = async (req, res) => {
   try {
-    const { fullname, phnumber, services, industry, about, language, tagline } =
+    const { fullname, phnumber, services, industry, about, language, tagline, location } =
       req.body;
     const { userId } = req.user;
 
@@ -33,6 +33,7 @@ exports.postProfile = async (req, res) => {
       language,
       services,
       industry,
+      location,
     };
 
     // Only add avatarId if a file is uploaded
@@ -60,6 +61,7 @@ exports.postProfile = async (req, res) => {
           services,
           industry,
           avatarId,
+          location,
         },
       });
     }
